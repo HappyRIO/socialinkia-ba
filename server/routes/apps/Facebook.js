@@ -84,7 +84,7 @@ const validateAndRefreshToken = async (req, res, next) => {
 //<------------- next section ----------->
 
 // Route to create a Facebook post
-router.post("/facebook/posts", ensureAuthenticated, async (req, res) => {
+router.post("/facebook/posts", validateAndRefreshToken, async (req, res) => {
   try {
     const { message, link } = req.body;
 
@@ -112,7 +112,7 @@ router.post("/facebook/posts", ensureAuthenticated, async (req, res) => {
 });
 
 // Route to get all Facebook posts
-router.get("/facebook/posts", ensureAuthenticated, async (req, res) => {
+router.get("/facebook/posts", validateAndRefreshToken, async (req, res) => {
   try {
     const response = await axios.get(
       `https://graph.facebook.com/v17.0/me/posts?fields=id,message,created_time,story&access_token=${req.session.accessToken}`
@@ -126,7 +126,7 @@ router.get("/facebook/posts", ensureAuthenticated, async (req, res) => {
 });
 
 // Route to get a specific Facebook post by ID
-router.get("/facebook/posts/:id", ensureAuthenticated, async (req, res) => {
+router.get("/facebook/posts/:id", validateAndRefreshToken, async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -146,42 +146,46 @@ router.get("/facebook/posts/:id", ensureAuthenticated, async (req, res) => {
 });
 
 // Route to get the number of likes for all posts within a week
-router.get("/facebook/likes/week", ensureAuthenticated, async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://graph.facebook.com/v17.0/me/posts?fields=id,created_time&access_token=${req.session.accessToken}`
-    );
+router.get(
+  "/facebook/likes/week",
+  validateAndRefreshToken,
+  async (req, res) => {
+    try {
+      const response = await axios.get(
+        `https://graph.facebook.com/v17.0/me/posts?fields=id,created_time&access_token=${req.session.accessToken}`
+      );
 
-    const postsThisWeek = response.data.data.filter((post) => {
-      const postDate = new Date(post.created_time);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return postDate >= weekAgo;
-    });
+      const postsThisWeek = response.data.data.filter((post) => {
+        const postDate = new Date(post.created_time);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return postDate >= weekAgo;
+      });
 
-    // Calculate total likes for posts within the past week
-    const likeCounts = await Promise.all(
-      postsThisWeek.map(async (post) => {
-        const likesResponse = await axios.get(
-          `https://graph.facebook.com/v17.0/${post.id}/likes?summary=true&access_token=${req.session.accessToken}`
-        );
-        return likesResponse.data.summary.total_count || 0;
-      })
-    );
+      // Calculate total likes for posts within the past week
+      const likeCounts = await Promise.all(
+        postsThisWeek.map(async (post) => {
+          const likesResponse = await axios.get(
+            `https://graph.facebook.com/v17.0/${post.id}/likes?summary=true&access_token=${req.session.accessToken}`
+          );
+          return likesResponse.data.summary.total_count || 0;
+        })
+      );
 
-    const totalLikes = likeCounts.reduce((sum, count) => sum + count, 0);
+      const totalLikes = likeCounts.reduce((sum, count) => sum + count, 0);
 
-    res.json({ totalLikes });
-  } catch (error) {
-    console.error("Error fetching Facebook likes:", error);
-    res.status(500).json({ error: "Failed to fetch Facebook likes." });
+      res.json({ totalLikes });
+    } catch (error) {
+      console.error("Error fetching Facebook likes:", error);
+      res.status(500).json({ error: "Failed to fetch Facebook likes." });
+    }
   }
-});
+);
 
 // Route to track follower growth on Facebook (using insights)
 router.get(
   "/facebook/follower-growth",
-  ensureAuthenticated,
+  validateAndRefreshToken,
   async (req, res) => {
     try {
       const response = await axios.get(
@@ -199,7 +203,7 @@ router.get(
 // Route to show performance of posts with a specific hashtag
 router.get(
   "/facebook/hashtag/:hashtag/performance",
-  ensureAuthenticated,
+  validateAndRefreshToken,
   async (req, res) => {
     const { hashtag } = req.params;
 
