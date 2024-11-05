@@ -1,6 +1,8 @@
 "use client";
 import FacebookCard from "@/components/fragments/FacebookCard";
 import InstagramCard from "@/components/fragments/InstagramCard";
+import Link from "next/link";
+import { Menu } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 export default function Page() {
@@ -219,15 +221,15 @@ export default function Page() {
   }
 
   return (
-    <div className="dashboard flex bg-red-500 flex-col w-full justify-center items-center">
-      <div className="analysis">
-        
+    <div className="dashboard flex flex-col w-full justify-center items-center">
+      <div className="section-title w-full text-md text-center mb-4">
+        <h1>Dashboard</h1>
       </div>
       <div className="social">
-        <div className="social-bar">
+        <div className="social-bar flex w-full px-2 justify-between items-center flex-row">
           <div className="grid-swaper-button">
             <select
-              className="rounded-lg px-3 py-2 bg-text text-background"
+              className="rounded-lg p-2 bg-text text-background"
               name="dropdown"
               id="dropdown"
               onChange={handleDropdownChange}
@@ -252,11 +254,28 @@ export default function Page() {
               </option>
             </select>
           </div>
+          <div className="sm:hidden w-fit">
+            <p id="menu-btn">
+              <Menu />
+            </p>
+          </div>
+          <div className="navigation">
+            <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
+              <Link href={"/dashboard/feed/instagram"}>instagram</Link>
+              <Link href={"/dashboard/feed/facebook"}>facebook</Link>
+              <Link href={"/dashboard/design"}>design</Link>
+            </div>
+            <div className="mobile-navigation sm:hidden absolute left-0 bottom-0 flex gap-2 bg-red-300 w-full flex-col justify-center items-center">
+              <Link href={"/dashboard/feed/instagram"}>instagram</Link>
+              <Link href={"/dashboard/feed/facebook"}>facebook</Link>
+              <Link href={"/dashboard/design"}>design</Link>
+            </div>
+          </div>
         </div>
         <div className="social-grid-zone">
           <div
             id="social-grid"
-            className="w-full grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             {insta.map((data, index) => (
               <InstagramCard key={index} data={data} />
@@ -267,7 +286,7 @@ export default function Page() {
           </div>
           <div
             id="inst-grid"
-            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="w-full hidden gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             {insta.map((data, index) => (
               <InstagramCard key={index} data={data} />
@@ -275,7 +294,7 @@ export default function Page() {
           </div>
           <div
             id="fbook-grid"
-            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="w-full hidden gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             {faceb.map((data, index) => (
               <FacebookCard data={data} key={index} />

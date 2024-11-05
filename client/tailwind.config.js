@@ -14,6 +14,9 @@ module.exports = {
         secondary: "var(--secondary)",
         accent: "var(--accent)",
       },
+      screens: {
+        xsm: { max: "400px" },
+      },
     },
   },
   plugins: [],
