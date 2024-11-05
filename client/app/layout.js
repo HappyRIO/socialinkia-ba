@@ -20,7 +20,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html
-      className="dark bg-background text-text w-screen h-full flex flex-col justify-center items-center"
+      className="dark bg-background text-text flex flex-col justify-center items-center"
       lang="en"
     >
       <head>
@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
         ></link>
       </head>
       <body
-        className={`${geistSans.variable} flex flex-col justify-center items-center w-full ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} flex overflow-x-hidden flex-col justify-center items-center w-full ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

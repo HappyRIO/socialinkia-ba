@@ -3,9 +3,9 @@ import FacebookCard from "@/components/fragments/FacebookCard";
 import InstagramCard from "@/components/fragments/InstagramCard";
 import React, { useEffect, useState } from "react";
 
-export default function page() {
-  const [insta, setinsta] = useState([]);
-  const [faceb, setfaceb] = useState([]);
+export default function Page() {
+  const [insta, setInsta] = useState([]);
+  const [faceb, setFaceb] = useState([]);
 
   const fake = [
     {
@@ -158,17 +158,131 @@ export default function page() {
   ];
 
   useEffect(() => {
-    setinsta(fake);
-    setfaceb(fake);
-  });
+    setInsta(fake);
+    setFaceb(fake);
+  }, []);
+
+  function handlefbgrid() {
+    const fbookgrid = document.getElementById("fbook-grid");
+    const instagrid = document.getElementById("inst-grid");
+    const socialgrid = document.getElementById("social-grid");
+
+    if (fbookgrid && instagrid && socialgrid) {
+      fbookgrid.classList.remove("hidden");
+      fbookgrid.classList.add("grid");
+      instagrid.classList.add("hidden");
+      instagrid.classList.remove("grid");
+      socialgrid.classList.add("hidden");
+      socialgrid.classList.remove("grid");
+    }
+  }
+
+  function handleiggrid() {
+    const fbookgrid = document.getElementById("fbook-grid");
+    const instagrid = document.getElementById("inst-grid");
+    const socialgrid = document.getElementById("social-grid");
+
+    if (fbookgrid && instagrid && socialgrid) {
+      fbookgrid.classList.add("hidden");
+      fbookgrid.classList.remove("grid");
+      instagrid.classList.remove("hidden");
+      instagrid.classList.add("grid");
+      socialgrid.classList.add("hidden");
+      socialgrid.classList.remove("grid");
+    }
+  }
+
+  function handlesocialgrid() {
+    const fbookgrid = document.getElementById("fbook-grid");
+    const instagrid = document.getElementById("inst-grid");
+    const socialgrid = document.getElementById("social-grid");
+
+    if (fbookgrid && instagrid && socialgrid) {
+      fbookgrid.classList.add("hidden");
+      fbookgrid.classList.remove("grid");
+      instagrid.classList.add("hidden");
+      instagrid.classList.remove("grid");
+      socialgrid.classList.add("grid");
+      socialgrid.classList.remove("hidden");
+    }
+  }
+
+  function handleDropdownChange(event) {
+    const value = event.target.value;
+    if (value === "all") {
+      handlesocialgrid();
+    } else if (value === "instagram") {
+      handleiggrid();
+    } else if (value === "facebook") {
+      handlefbgrid();
+    }
+  }
+
   return (
-    <div>
-      {insta.map((data, index) => (
-        <InstagramCard key={index} data={data} />
-      ))}
-      {faceb.map((data, index) => (
-        <FacebookCard data={data} key={index} />
-      ))}
+    <div className="dashboard flex bg-red-500 flex-col w-full justify-center items-center">
+      <div className="analysis">
+        
+      </div>
+      <div className="social">
+        <div className="social-bar">
+          <div className="grid-swaper-button">
+            <select
+              className="rounded-lg px-3 py-2 bg-text text-background"
+              name="dropdown"
+              id="dropdown"
+              onChange={handleDropdownChange}
+            >
+              <option
+                className="text-text bg-background border-b-[2px] border-accent"
+                value="all"
+              >
+                All
+              </option>
+              <option
+                className="text-text bg-background border-b-[2px] border-accent"
+                value="instagram"
+              >
+                Instagram
+              </option>
+              <option
+                className="text-text bg-background border-b-[2px] border-accent"
+                value="facebook"
+              >
+                Facebook
+              </option>
+            </select>
+          </div>
+        </div>
+        <div className="social-grid-zone">
+          <div
+            id="social-grid"
+            className="w-full grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          >
+            {insta.map((data, index) => (
+              <InstagramCard key={index} data={data} />
+            ))}
+            {faceb.map((data, index) => (
+              <FacebookCard data={data} key={index} />
+            ))}
+          </div>
+          <div
+            id="inst-grid"
+            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          >
+            {insta.map((data, index) => (
+              <InstagramCard key={index} data={data} />
+            ))}
+          </div>
+          <div
+            id="fbook-grid"
+            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+          >
+            {faceb.map((data, index) => (
+              <FacebookCard data={data} key={index} />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
