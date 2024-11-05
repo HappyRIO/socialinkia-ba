@@ -1,7 +1,10 @@
+"use client";
 import Toaster from "@/components/fragments/Toast";
 import Link from "next/link";
+import React, { useEffect, useState } from "react";
 
 export default function Hero() {
+
   return (
     <div>
       <div className="w-full flex justify-center items-center">
