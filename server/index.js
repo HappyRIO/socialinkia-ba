@@ -38,9 +38,9 @@ app.get("/", (req, res) => {
 //main routes defination
 app.use("/api/google", google);
 app.use("/api/auth", mainauth);
-// app.use("/api/facebook", facebook);
-// app.use("/api/instagram", instagram);
-// app.use("/api/templates", templateRoutes);
+app.use("/api/facebook", facebook);
+app.use("/api/instagram", instagram);
+app.use("/api/templates", templateRoutes);
 
 app.listen(4000, () => {
   console.log({ saerver: "http://localhost:4000" });
