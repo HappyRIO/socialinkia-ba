@@ -1,14 +1,12 @@
-//pending poats in the dashboard
 import FacebookCard from "../../../components/fragments/FacebookCard";
-import {Link} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
 
 export default function FacebookDraft() {
   const [faceb, setFaceb] = useState([]);
   const [openmenu, setopenmenu] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const fake = [
     {
@@ -171,11 +169,11 @@ export default function FacebookDraft() {
   function handleDropdownChange(event) {
     const value = event.target.value;
     if (value === "all") {
-      router.push("/dashboard/draft");
+      navigate("/dashboard/draft");
     } else if (value === "instagram") {
-      router.push("/dashboard/draft/instagram");
+      navigate("/dashboard/draft/instagram");
     } else if (value === "facebook") {
-      router.refresh();
+      navigate(0); // For a refresh, you can use `window.location.reload()` as needed
     }
   }
 
@@ -221,15 +219,15 @@ export default function FacebookDraft() {
                 <p onClick={handlemenu}>
                   <CircleX />
                 </p>
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">instagram</Link>
+                <Link to="/dashboard/draft/facebook">facebook</Link>
+                <Link to="/dashboard/design">design</Link>
               </div>
             ) : (
               <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">instagram</Link>
+                <Link to="/dashboard/draft/facebook">facebook</Link>
+                <Link to="/dashboard/design">design</Link>
               </div>
             )}
           </div>

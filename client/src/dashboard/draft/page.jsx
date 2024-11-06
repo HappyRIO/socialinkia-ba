@@ -1,16 +1,14 @@
-//pending poats in the dashboard
+//pending posts in the dashboard
 import FacebookCard from "../../components/fragments/FacebookCard";
 import InstagramCard from "../../components/fragments/InstagramCard";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
 
 export default function DraftPage() {
   const [insta, setInsta] = useState([]);
   const [faceb, setFaceb] = useState([]);
-  const [openmenu, setopenmenu] = useState(false);
-  const router = useRouter();
+  const [openmenu, setOpenMenu] = useState(false);
 
   const fake = [
     {
@@ -167,20 +165,21 @@ export default function DraftPage() {
     setFaceb(fake);
   }, []);
 
-  function handlemenu() {
-    setopenmenu(!openmenu);
+  function handleMenu() {
+    setOpenMenu(!openmenu);
   }
 
   function handleDropdownChange(event) {
     const value = event.target.value;
     if (value === "all") {
-      router.refresh();
+      window.location.reload();
     } else if (value === "instagram") {
-      router.push("/dashboard/draft/instagram");
+      window.location.href = "/dashboard/draft/instagram";
     } else if (value === "facebook") {
-      router.push("/dashboard/draft/facebook");
+      window.location.href = "/dashboard/draft/facebook";
     }
   }
+
   return (
     <div className="dashboard flex flex-col w-full justify-center items-center">
       <div className="social w-full">
@@ -213,32 +212,32 @@ export default function DraftPage() {
             </select>
           </div>
           <div className="sm:hidden w-fit">
-            <p className="w-fit" onClick={handlemenu} id="menu-btn">
+            <p className="w-fit" onClick={handleMenu} id="menu-btn">
               <Menu />
             </p>
           </div>
           <div className="navigation w-fit">
             {openmenu ? (
               <div className="mobile-navigation py-3 sm:hidden absolute left-0 top-0 flex gap-2 bg-accent text-text w-full flex-col justify-center items-center">
-                <p onClick={handlemenu}>
+                <p onClick={handleMenu}>
                   <CircleX />
                 </p>
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">Instagram</Link>
+                <Link to="/dashboard/draft/facebook">Facebook</Link>
+                <Link to="/dashboard/design">Design</Link>
               </div>
             ) : (
               <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">Instagram</Link>
+                <Link to="/dashboard/draft/facebook">Facebook</Link>
+                <Link to="/dashboard/design">Design</Link>
               </div>
             )}
           </div>
         </div>
         <div className="section-title w-full text-md text-center py-4">
-          <h1 className="text-3xl">pending</h1>
-          <p>pending posts</p>
+          <h1 className="text-3xl">Pending</h1>
+          <p>Pending posts</p>
         </div>
         <div className="social-grid-zone px-2">
           <div

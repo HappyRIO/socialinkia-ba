@@ -1,14 +1,12 @@
-//pending poats in the dashboard
 import InstagramCard from "../../../components/fragments/InstagramCard";
-import {Link} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
 
 export default function InstagramDraft() {
   const [insta, setInsta] = useState([]);
-  const [openmenu, setopenmenu] = useState(false);
-  const router = useRouter();
+  const [openmenu, setOpenMenu] = useState(false);
+  const navigate = useNavigate(); // Use useNavigate instead of useRouter
 
   const fake = [
     {
@@ -164,18 +162,18 @@ export default function InstagramDraft() {
     setInsta(fake);
   }, []);
 
-  function handlemenu() {
-    setopenmenu(!openmenu);
+  function handleMenu() {
+    setOpenMenu(!openmenu);
   }
 
   function handleDropdownChange(event) {
     const value = event.target.value;
     if (value === "all") {
-      router.push("/dashboard/draft");
+      navigate("/dashboard/draft");
     } else if (value === "instagram") {
-      router.refresh();
+      window.location.reload();
     } else if (value === "facebook") {
-      router.push("/dashboard/draft/facebook");
+      navigate("/dashboard/draft/facebook");
     }
   }
 
@@ -190,59 +188,41 @@ export default function InstagramDraft() {
               id="dropdown"
               onChange={handleDropdownChange}
             >
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="instagram"
-              >
-                Instagram
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="all"
-              >
-                All
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="facebook"
-              >
-                Facebook
-              </option>
+              <option value="instagram">Instagram</option>
+              <option value="all">All</option>
+              <option value="facebook">Facebook</option>
             </select>
           </div>
           <div className="sm:hidden w-fit">
-            <p className="w-fit" onClick={handlemenu} id="menu-btn">
+            <p onClick={handleMenu} id="menu-btn">
               <Menu />
             </p>
           </div>
           <div className="navigation w-fit">
             {openmenu ? (
               <div className="mobile-navigation py-3 sm:hidden absolute left-0 top-0 flex gap-2 bg-accent text-text w-full flex-col justify-center items-center">
-                <p onClick={handlemenu}>
+                <p onClick={handleMenu}>
                   <CircleX />
                 </p>
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">instagram</Link>
+                <Link to="/dashboard/draft/facebook">facebook</Link>
+                <Link to="/dashboard/design">design</Link>
               </div>
             ) : (
               <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
-                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
-                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
-                <Link href={"/dashboard/design"}>design</Link>
+                <Link to="/dashboard/draft/instagram">instagram</Link>
+                <Link to="/dashboard/draft/facebook">facebook</Link>
+                <Link to="/dashboard/design">design</Link>
               </div>
             )}
           </div>
         </div>
         <div className="section-title w-full text-md text-center py-4">
-          <h1 className="text-3xl">instagram</h1>
+          <h1 className="text-3xl">Instagram</h1>
           <p>pending posts</p>
         </div>
         <div className="social-grid-zone px-2">
-          <div
-            id="social-grid"
-            className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-          >
+          <div className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {insta.map((data, index) => (
               <InstagramCard key={index} data={data} />
             ))}
