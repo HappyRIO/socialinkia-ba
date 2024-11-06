@@ -1,4 +1,4 @@
-import { Router, Route } from "react-browser-router";
+import { Router, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./page";
 import Error from "./error";
@@ -26,7 +26,8 @@ function App() {
     <div className="bg-background text-text">
       <Router>
         {/* home page */}
-        <Route index path="/" component={<Home />} />
+        <Route index component={<Home />} />
+        <Route path="/" component={<Home />} />
         {/* dashboard section */}
         <Route path="/dashboard" component={<Dashboard />} />
         {/* creation section */}

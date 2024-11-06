@@ -1,6 +1,6 @@
 //pending poats in the dashboard
 import FacebookCard from "../../../components/fragments/FacebookCard";
-import Link from "react-browser-router";
+import Link from "react-router-dom";
 import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
 // import { useRouter } from "next/navigation";
