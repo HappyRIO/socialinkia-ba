@@ -1,4 +1,3 @@
-// components/FabricEditor.js
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { fabric } from "fabric";
@@ -11,9 +10,9 @@ const FabricEditor = () => {
   const [DefaultTemplate, setDefaultTemplate] = useState([]);
 
   useEffect(() => {
-    //fetch all template
+    // Fetch all templates
     fetch(`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/api/templates/all`)
-      .then((res) => res.json()) // Corrected this line to parse JSON correctly
+      .then((res) => res.json())
       .then((data) => {
         setDefaultTemplate(data);
       })
@@ -92,6 +91,18 @@ const FabricEditor = () => {
     }
   };
 
+  // Delete the active object
+  const deleteObject = () => {
+    const activeObject = fabricCanvasRef.current.getActiveObject();
+    if (activeObject) {
+      fabricCanvasRef.current.remove(activeObject);
+      fabricCanvasRef.current.discardActiveObject(); // Discard the active object after deletion
+      fabricCanvasRef.current.renderAll();
+    } else {
+      alert("No object selected for deletion.");
+    }
+  };
+
   return (
     <div>
       <h2>Fabric.js Image Editor</h2>
@@ -108,6 +119,7 @@ const FabricEditor = () => {
         {isLoading ? "Saving..." : "Save Template"}
       </button>
       <button onClick={() => loadTemplate("template-id")}>Load Template</button>
+      <button onClick={deleteObject}>Delete Active Object</button>
 
       <canvas ref={canvasRef}></canvas>
     </div>

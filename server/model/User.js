@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
-const Shcema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
-const UserSchema = new Shcema({
+const UserSchema = new Schema({
   email: {
     type: String,
     required: true,
+    unique: true, // Ensure email is unique
   },
   password: {
     type: String,
@@ -15,15 +16,21 @@ const UserSchema = new Shcema({
     default: false,
   },
   subscription: {
-    type: Shcema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "subscription",
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
+  sessionToken: {
+    type: String,
+  },
+  sessionExpiresAt: {
+    type: Date,
+  },
 });
 
-const User = mongoose.model("user", UserSchema);
+const User = mongoose.model("User", UserSchema);
 
 module.exports = User;
