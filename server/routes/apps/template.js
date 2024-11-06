@@ -8,7 +8,6 @@ router.get("/test", (req, res) => res.send("Hello World!"));
 
 router.get("/all", async (req, res) => {
   connectDB();
-
   try {
     const data = await Template.find({});
     res.status(200).json(data);
