@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../model/User");
@@ -132,5 +134,74 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
     res.status(500).json({ error: "Failed to refresh session." });
   }
 });
+
+// Check if user is registered and session is valid
+router.get("/check-user", isSessionValid, (req, res) => {
+  res.json({
+    message: "User is registered and session is valid",
+    user: {
+      email: req.user.email,
+      userId: req.user._id,
+    },
+  });
+});
+
+// Configure multer for photo uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/photos/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// PUT route to update company details
+router.put(
+  "/details",
+  isSessionValid,
+  upload.array("photos"),
+  async (req, res) => {
+    try {
+      const {
+        name,
+        companyCreationDate,
+        slogan,
+        numEmployees,
+        contactInfo,
+        businessPurpose,
+        preferredLanguage,
+      } = req.body;
+
+      // Map uploaded files to photo paths
+      const photos = req.files.map((file) => file.path);
+
+      // Find and update user's company details
+      await User.findByIdAndUpdate(
+        req.session.userId, // Ensure you have `userId` stored in session
+        {
+          companyDetails: {
+            name,
+            companyCreationDate,
+            slogan,
+            numEmployees: parseInt(numEmployees),
+            contactInfo,
+            businessPurpose,
+            photos,
+            preferredLanguage,
+          },
+        },
+        { new: true, runValidators: true }
+      );
+
+      res.status(200).json({ message: "Company details updated successfully" });
+    } catch (error) {
+      console.error("Error updating company details:", error);
+      res.status(500).json({ error: "Failed to update company details" });
+    }
+  }
+);
 
 module.exports = router;

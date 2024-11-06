@@ -37,7 +37,7 @@ function Showuploads() {
   );
 }
 
-export default function CreateDesign() {
+export default function Testtest() {
   const [openUploads, setOpenuploads] = useState(false);
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);

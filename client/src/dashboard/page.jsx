@@ -3,7 +3,7 @@ import FacebookCard from "../components/fragments/FacebookCard";
 import InstagramCard from "../components/fragments/InstagramCard";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, CircleX } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const [insta, setInsta] = useState([]);
