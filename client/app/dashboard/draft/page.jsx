@@ -241,7 +241,7 @@ export default function Page() {
           <h1 className="text-3xl">pending</h1>
           <p>pending posts</p>
         </div>
-        <div className="social-grid-zone w-full flex justify-center items-center px-2">
+        <div className="social-grid-zone px-2">
           <div
             id="social-grid"
             className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"

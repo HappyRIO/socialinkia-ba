@@ -15,7 +15,7 @@ module.exports = {
         accent: "var(--accent)",
       },
       screens: {
-        xsm: { max: "400px" },
+        xsm: "400px",
       },
     },
   },

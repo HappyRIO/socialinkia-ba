@@ -27,6 +27,7 @@ const google = require("./routes/auth/Google");
 const mainauth = require("./routes/auth/Mainauth");
 const facebook = require("./routes/apps/Facebook");
 const instagram = require("./routes/apps/Instagram");
+const templateRoutes = require("./routes/apps/template");
 
 //test route
 app.get("/", (req, res) => {
@@ -39,6 +40,7 @@ app.use("/api/google", google);
 app.use("/api/auth", mainauth);
 app.use("/api/facebook", facebook);
 app.use("/api/instagram", instagram);
+app.use("/api/templates", templateRoutes);
 
 app.listen(4000, () => {
   console.log({ saerver: "http://localhost:4000" });

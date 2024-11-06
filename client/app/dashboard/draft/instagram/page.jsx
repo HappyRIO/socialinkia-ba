@@ -1,11 +1,15 @@
 "use client";
-import FacebookCard from "@/components/fragments/FacebookCard";
+//pending poats in the dashboard
 import InstagramCard from "@/components/fragments/InstagramCard";
+import Link from "next/link";
+import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const [insta, setInsta] = useState([]);
-  const [faceb, setFaceb] = useState([]);
+  const [openmenu, setopenmenu] = useState(false);
+  const router = useRouter();
 
   const fake = [
     {
@@ -159,87 +163,45 @@ export default function Page() {
 
   useEffect(() => {
     setInsta(fake);
-    setFaceb(fake);
   }, []);
 
-  function handlefbgrid() {
-    const fbookgrid = document.getElementById("fbook-grid");
-    const instagrid = document.getElementById("inst-grid");
-    const socialgrid = document.getElementById("social-grid");
-
-    if (fbookgrid && instagrid && socialgrid) {
-      fbookgrid.classList.remove("hidden");
-      fbookgrid.classList.add("grid");
-      instagrid.classList.add("hidden");
-      instagrid.classList.remove("grid");
-      socialgrid.classList.add("hidden");
-      socialgrid.classList.remove("grid");
-    }
-  }
-
-  function handleiggrid() {
-    const fbookgrid = document.getElementById("fbook-grid");
-    const instagrid = document.getElementById("inst-grid");
-    const socialgrid = document.getElementById("social-grid");
-
-    if (fbookgrid && instagrid && socialgrid) {
-      fbookgrid.classList.add("hidden");
-      fbookgrid.classList.remove("grid");
-      instagrid.classList.remove("hidden");
-      instagrid.classList.add("grid");
-      socialgrid.classList.add("hidden");
-      socialgrid.classList.remove("grid");
-    }
-  }
-
-  function handlesocialgrid() {
-    const fbookgrid = document.getElementById("fbook-grid");
-    const instagrid = document.getElementById("inst-grid");
-    const socialgrid = document.getElementById("social-grid");
-
-    if (fbookgrid && instagrid && socialgrid) {
-      fbookgrid.classList.add("hidden");
-      fbookgrid.classList.remove("grid");
-      instagrid.classList.add("hidden");
-      instagrid.classList.remove("grid");
-      socialgrid.classList.add("grid");
-      socialgrid.classList.remove("hidden");
-    }
+  function handlemenu() {
+    setopenmenu(!openmenu);
   }
 
   function handleDropdownChange(event) {
     const value = event.target.value;
     if (value === "all") {
-      handlesocialgrid();
+      router.push("/dashboard/draft");
     } else if (value === "instagram") {
-      handleiggrid();
+      router.refresh();
     } else if (value === "facebook") {
-      handlefbgrid();
+      router.push("/dashboard/draft/facebook");
     }
   }
 
   return (
-    <div className="dashboard flex bg-red-500 flex-col w-full justify-center items-center">
-      <div className="social">
-        <div className="social-bar">
-          <div className="grid-swaper-button">
+    <div className="dashboard flex flex-col w-full justify-center items-center">
+      <div className="social w-full">
+        <div className="social-bar py-3 flex w-full px-2 justify-between items-center flex-row">
+          <div className="grid-swaper-button w-fit">
             <select
-              className="rounded-lg px-3 py-2 bg-text text-background"
+              className="rounded-lg p-2 bg-text text-background"
               name="dropdown"
               id="dropdown"
               onChange={handleDropdownChange}
             >
               <option
                 className="text-text bg-background border-b-[2px] border-accent"
-                value="all"
-              >
-                All
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
                 value="instagram"
               >
                 Instagram
+              </option>
+              <option
+                className="text-text bg-background border-b-[2px] border-accent"
+                value="all"
+              >
+                All
               </option>
               <option
                 className="text-text bg-background border-b-[2px] border-accent"
@@ -249,33 +211,41 @@ export default function Page() {
               </option>
             </select>
           </div>
+          <div className="sm:hidden w-fit">
+            <p className="w-fit" onClick={handlemenu} id="menu-btn">
+              <Menu />
+            </p>
+          </div>
+          <div className="navigation w-fit">
+            {openmenu ? (
+              <div className="mobile-navigation py-3 sm:hidden absolute left-0 top-0 flex gap-2 bg-accent text-text w-full flex-col justify-center items-center">
+                <p onClick={handlemenu}>
+                  <CircleX />
+                </p>
+                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
+                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
+                <Link href={"/dashboard/design"}>design</Link>
+              </div>
+            ) : (
+              <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
+                <Link href={"/dashboard/draft/instagram"}>instagram</Link>
+                <Link href={"/dashboard/draft/facebook"}>facebook</Link>
+                <Link href={"/dashboard/design"}>design</Link>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="social-grid-zone">
+        <div className="section-title w-full text-md text-center py-4">
+          <h1 className="text-3xl">instagram</h1>
+          <p>pending posts</p>
+        </div>
+        <div className="social-grid-zone px-2">
           <div
             id="social-grid"
-            className="w-full grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
             {insta.map((data, index) => (
               <InstagramCard key={index} data={data} />
-            ))}
-            {faceb.map((data, index) => (
-              <FacebookCard data={data} key={index} />
-            ))}
-          </div>
-          <div
-            id="inst-grid"
-            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {insta.map((data, index) => (
-              <InstagramCard key={index} data={data} />
-            ))}
-          </div>
-          <div
-            id="fbook-grid"
-            className="w-full hidden gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {faceb.map((data, index) => (
-              <FacebookCard data={data} key={index} />
             ))}
           </div>
         </div>

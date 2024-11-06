@@ -1,14 +1,12 @@
 "use client";
 //pending poats in the dashboard
 import FacebookCard from "@/components/fragments/FacebookCard";
-import InstagramCard from "@/components/fragments/InstagramCard";
 import Link from "next/link";
 import { Menu, CircleX } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Page() {
-  const [insta, setInsta] = useState([]);
   const [faceb, setFaceb] = useState([]);
   const [openmenu, setopenmenu] = useState(false);
   const router = useRouter();
@@ -164,7 +162,6 @@ export default function Page() {
   ];
 
   useEffect(() => {
-    setInsta(fake);
     setFaceb(fake);
   }, []);
 
@@ -175,13 +172,14 @@ export default function Page() {
   function handleDropdownChange(event) {
     const value = event.target.value;
     if (value === "all") {
-      router.refresh();
+      router.push("/dashboard/draft");
     } else if (value === "instagram") {
       router.push("/dashboard/draft/instagram");
     } else if (value === "facebook") {
-      router.push("/dashboard/draft/facebook");
+      router.refresh();
     }
   }
+
   return (
     <div className="dashboard flex flex-col w-full justify-center items-center">
       <div className="social w-full">
@@ -195,6 +193,12 @@ export default function Page() {
             >
               <option
                 className="text-text bg-background border-b-[2px] border-accent"
+                value="facebook"
+              >
+                Facebook
+              </option>
+              <option
+                className="text-text bg-background border-b-[2px] border-accent"
                 value="all"
               >
                 All
@@ -204,12 +208,6 @@ export default function Page() {
                 value="instagram"
               >
                 Instagram
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="facebook"
-              >
-                Facebook
               </option>
             </select>
           </div>
@@ -238,17 +236,14 @@ export default function Page() {
           </div>
         </div>
         <div className="section-title w-full text-md text-center py-4">
-          <h1 className="text-3xl">pending</h1>
+          <h1 className="text-3xl">Facebook</h1>
           <p>pending posts</p>
         </div>
-        <div className="social-grid-zone w-full flex justify-center items-center px-2">
+        <div className="social-grid-zone px-2">
           <div
             id="social-grid"
             className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
           >
-            {insta.map((data, index) => (
-              <InstagramCard key={index} data={data} />
-            ))}
             {faceb.map((data, index) => (
               <FacebookCard data={data} key={index} />
             ))}
