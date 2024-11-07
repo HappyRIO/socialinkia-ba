@@ -3,8 +3,8 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 
-// const MONGO_URI = process.env.DATA_BASE_URL;
-const MONGO_URI = 'mongodb+srv://new:passward@cluster0.fn6dw.mongodb.net/autosocial?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.DATA_BASE_URL;
+// const MONGO_URI = 'mongodb+srv://new:passward@cluster0.fn6dw.mongodb.net/autosocial?retryWrites=true&w=majority&appName=Cluster0';
 
 if (!MONGO_URI) {
   console.log('invalid url')
