@@ -2,6 +2,7 @@ const express = require("express");
 const querystring = require("querystring");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
+const connectDB = require("../../data/db");
 const router = express.Router();
 const User = require("../../model/User");
 
@@ -33,7 +34,7 @@ router.get("/auth/google", (req, res) => {
 router.get("/auth/google/callback", async (req, res) => {
   const tokenEndpoint = "https://oauth2.googleapis.com/token";
   const { code } = req.query;
-
+  connectDB();
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
