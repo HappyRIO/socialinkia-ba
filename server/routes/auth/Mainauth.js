@@ -8,6 +8,7 @@ const connectDB = require("../../data/db")
 const router = express.Router();
 
 const isSessionValid = (req, res, next) => {
+  connectDB();
   const { sessionToken } = req.cookies;
 
   if (!sessionToken) {
