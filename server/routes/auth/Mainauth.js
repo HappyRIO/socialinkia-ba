@@ -9,6 +9,7 @@ const router = express.Router();
 
 const isSessionValid = (req, res, next) => {
   connectDB();
+  console.log("validating user");
   const { sessionToken } = req.cookies;
 
   if (!sessionToken) {
@@ -41,6 +42,7 @@ const isSessionValid = (req, res, next) => {
 // Register Route
 router.post("/register", async (req, res) => {
   connectDB();
+  console.log("registring new user");
   const { email, password } = req.body;
 
   // Check if email already exists
@@ -68,11 +70,13 @@ router.post("/register", async (req, res) => {
 // Login Route
 router.post("/login", async (req, res) => {
   connectDB();
+  console.log("logging in ...............");
   const { email, password } = req.body;
 
   // Find user by email
   const user = await User.findOne({ email });
   if (!user) {
+    console.log("usernot found")
     return res.status(400).json({ error: "Invalid credentials." });
   }
 
@@ -109,6 +113,7 @@ router.post("/login", async (req, res) => {
 // Refresh Session Route (Called whenever user interacts with the server)
 router.post("/refresh-session", isSessionValid, async (req, res) => {
   connectDB();
+  console.log("refreshing session");
   const { sessionToken } = req.cookies;
 
   // Create a new session with a new expiration time
@@ -172,6 +177,7 @@ router.put(
   upload.array("photos"),
   async (req, res) => {
     connectDB();
+    console.log("adding companies details");
     try {
       const {
         name,

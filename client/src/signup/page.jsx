@@ -62,6 +62,7 @@ export default function Signup() {
           className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
           type="email"
           id="email"
+          autoComplete="off"
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
@@ -72,6 +73,7 @@ export default function Signup() {
           className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
           type="password"
           id="password"
+          autoComplete="off"
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}

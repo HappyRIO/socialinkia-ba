@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import Loader from "../components/fragments/Loader";
 
 export default function Login() {
+  const [loading, setloading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -13,6 +15,7 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
+    setloading(true);
     e.preventDefault();
     try {
       const response = await fetch(
@@ -27,9 +30,11 @@ export default function Login() {
       );
 
       if (response.ok) {
-        alert("Signup successful!");
+        setloading(false);
+        window.location.href = "/dashboard";
       } else {
-        alert("Signup failed. Please try again.");
+        setloading(false);
+        window.location.href = "/signup";
       }
     } catch (error) {
       console.error("Error:", error);
@@ -46,11 +51,13 @@ export default function Login() {
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
+      {loading ? <Loader /> : null}
       <form onSubmit={handleSubmit} className="form space-y-4 p-4">
         <input
           className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
           type="email"
           id="email"
+          autoComplete="off"
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
@@ -61,6 +68,7 @@ export default function Login() {
           className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
           type="password"
           id="password"
+          autoComplete="off"
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}

@@ -16,6 +16,7 @@ const googleScopes = ["openid", "profile", "email"];
 
 // Step 1: Redirect user to Google OAuth endpoint
 router.get("/auth/google", (req, res) => {
+  console.log("accessing goole auth system");
   const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth?";
   const queryParams = new URLSearchParams({
     client_id: CLIENT_ID,
@@ -32,6 +33,7 @@ router.get("/auth/google", (req, res) => {
 
 // Google OAuth callback
 router.get("/auth/google/callback", async (req, res) => {
+  console.log("callback activated");
   const tokenEndpoint = "https://oauth2.googleapis.com/token";
   const { code } = req.query;
   connectDB();
