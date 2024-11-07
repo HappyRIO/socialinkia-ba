@@ -54,10 +54,10 @@ export default function Privatepage({ children }) {
   }
 
   // Render children if authenticated
-  return <div>{children}</div>;
+  return <>{children}</>; // Correctly render children
 }
 
 // Define prop types for `children`
 Privatepage.propTypes = {
-  children: PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired, // Ensure that 'children' is passed correctly
 };

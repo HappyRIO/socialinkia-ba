@@ -90,7 +90,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signup/details" element={<CompaniesDetails />} />
-
         <Route path="/contact" element={<Contact />} />
         <Route path="/subscription" element={<Subscription />} />
 
