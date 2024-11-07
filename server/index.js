@@ -12,6 +12,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser()); // Parse cookies
 
+console.log(process.env.ACCEPTED_ORIGIN);
 // CORS configuration (for local development)
 app.use(
   cors({

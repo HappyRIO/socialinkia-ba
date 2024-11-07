@@ -1,7 +1,9 @@
-import React from 'react'
-
 export default function Create() {
   return (
-    <div></div>
-  )
+    <div>
+      <div className="createTemplate">
+        <h1>creation page</h1>
+      </div>
+    </div>
+  );
 }
