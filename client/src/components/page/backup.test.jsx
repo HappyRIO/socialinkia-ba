@@ -1,4 +1,12 @@
-import { Shapes, SwatchBook, MonitorUp, CaseUpper, CopyX } from "lucide-react";
+import {
+  Shapes,
+  SwatchBook,
+  MonitorUp,
+  CaseUpper,
+  CopyX,
+  Layers3,
+} from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useState, useEffect, useRef } from "react";
 import { Stage, Layer, Rect, Circle, Image, Text } from "react-konva";
 
@@ -145,9 +153,82 @@ function Showuploads({ onClick }) {
   );
 }
 
-const Layermanager = () => {
+// Layer Manager component to list and reorder layers
+const ShowLayermanager = ({ layerRef }) => {
   const [layers, setLayers] = useState([]);
-  const [activeLayer, setActiveLayer] = useState(null);
+
+  // Fetch the layers from Konva and set them in state
+  useEffect(() => {
+    if (layerRef.current) {
+      const layerArray = layerRef.current.getChildren().map((layer, index) => ({
+        id: layer._id,
+        type: layer.className,
+        index: index,
+      }));
+      setLayers(layerArray);
+    }
+  }, [layerRef]);
+
+  // Handle drag end to reorder layers
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const reorderedLayers = Array.from(layers);
+    const [movedLayer] = reorderedLayers.splice(result.source.index, 1);
+    reorderedLayers.splice(result.destination.index, 0, movedLayer);
+
+    setLayers(reorderedLayers);
+    updateLayerOrder(reorderedLayers);
+  };
+
+  // Function to update layer indices in Konva
+  const updateLayerOrder = (layerArray) => {
+    layerArray.forEach((layer, newIndex) => {
+      const konvaLayer = layerRef.current.findOne(`#${layer.id}`);
+      konvaLayer.zIndex(newIndex);
+    });
+    layerRef.current.batchDraw();
+  };
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="w-full h-full flex flex-col justify-start items-center">
+        <div className="title">
+          <h1>Layer Manager</h1>
+        </div>
+        {/* Ensure the Droppable component has a unique ID */}
+        <Droppable droppableId="layerList">
+          {(provided) => (
+            <div
+              className="layerlist"
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+            >
+              {layers.map((layer, index) => (
+                <Draggable
+                  key={layer.id}
+                  draggableId={String(layer.id)}
+                  index={index}
+                >
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className="layer-item"
+                    >
+                      {layer.type} - {index + 1}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </div>
+    </DragDropContext>
+  );
 };
 
 export default function CreateDesign() {
@@ -155,6 +236,7 @@ export default function CreateDesign() {
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);
   const [opentemplate, setopentemplate] = useState(false);
+  const [openLayermanager, setopenLayermanager] = useState(false);
   //for switching tools for elements
   const [openelementtoolbar, setopenelementtoolbar] = useState(false);
   //for switching tools for text
@@ -170,9 +252,11 @@ export default function CreateDesign() {
     setOpentextelement(false);
     setopenshapeelement(false);
     setopentemplate(false);
+    setopenLayermanager(false);
   }
   function handleopentemplate() {
     setOpenuploads(false);
+    setopenLayermanager(false);
     setOpentextelement(false);
     setopenshapeelement(false);
     setopentemplate(!opentemplate);
@@ -181,19 +265,29 @@ export default function CreateDesign() {
     setOpentextelement(false);
     setopenshapeelement(false);
     setopentemplate(false);
+    setopenLayermanager(false);
     setOpenuploads(!openUploads);
   }
   function handleopenshape() {
     setOpenuploads(false);
     setOpentextelement(false);
     setopentemplate(false);
+    setopenLayermanager(false);
     setopenshapeelement(!openshapelement);
   }
   function handleopentext() {
     setOpenuploads(false);
     setopentemplate(false);
     setopenshapeelement(false);
+    setopenLayermanager(false);
     setOpentextelement(!openTextelement);
+  }
+  function handleopenlayermanager() {
+    setOpenuploads(false);
+    setOpentextelement(false);
+    setopenshapeelement(false);
+    setopentemplate(false);
+    setopenLayermanager(!openLayermanager);
   }
 
   const handleDragStart = (e) => {
@@ -282,9 +376,22 @@ export default function CreateDesign() {
     layerRef.current.batchDraw();
   }
 
+  function handlelayerlist() {
+    // le\ist all layers
+  }
+
   return (
     <div className="w-full h-screen flex flex-row bg-green-200">
       <div className="elementsbar bg-green-500 w-[80px] py-3 flex flex-col justify-evenly items-center">
+        <div id="design sidebar">
+          <button
+            onClick={handleopenlayermanager}
+            className="flex flex-col justify-center items-center text-[15px] hover:text-red-500"
+          >
+            <Layers3 />
+            <p>layer</p>
+          </button>
+        </div>
         <div id="design sidebar">
           <button
             onClick={handleopentemplate}
@@ -322,6 +429,17 @@ export default function CreateDesign() {
           </button>
         </div>
       </div>
+      {/* openLayermanager */}
+      {openLayermanager && (
+        <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
+          <div className="topinnerspace py-3 translate-x-28">
+            <button onClick={handleCloseSideBarMenu}>
+              <CopyX />
+            </button>
+          </div>
+          <ShowLayermanager layerRef={layerRef} />
+        </div>
+      )}
       {openUploads && (
         <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
