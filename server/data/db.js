@@ -7,6 +7,7 @@ dotenv.config();
 const MONGO_URI = 'mongodb+srv://new:passward@cluster0.fn6dw.mongodb.net/autosocial?retryWrites=true&w=majority&appName=Cluster0';
 
 if (!MONGO_URI) {
+  console.log('invalid url')
   throw new Error("MongoDB URI is not set in environment variables");
 }
 
