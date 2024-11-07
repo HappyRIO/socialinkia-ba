@@ -17,7 +17,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // If no origin is provided (e.g., for same-origin requests), allow it
-      if (!origin || origin === "http://localhost:5173") {
+      if (!origin || origin === process.env.ACCEPTED_ORIGIN) {
         return callback(null, true); // Allow the specified origin
       }
       // Block any other origin
