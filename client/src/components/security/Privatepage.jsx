@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 export default function Privatepage({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // State to hold error messages
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,39 +14,47 @@ export default function Privatepage({ children }) {
           `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/check-user`,
           {
             method: "GET",
-            credentials: "include", // Important for cookies
+            credentials: "include", // Include cookies
           }
         );
         if (response.ok) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
-          setError("Authentication failed. Redirecting to login...");
-          navigate("/login");
+          setError("Authentication failed. Please log in again.");
         }
       } catch (error) {
         setIsAuthenticated(false);
-        setError("Error authenticating. Redirecting to login...");
+        setError("Error validating user. Please try again later.");
         console.error("Error validating user:", error);
-        navigate("/login");
       }
     };
 
     validateUser();
-  }, [navigate]); // Removed `isAuthenticated` from dependency array
+  }, [navigate]);
 
-  // Render loading state while authentication is in progress
+  // Show loading state while authentication is in progress
   if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+    return (
+      <div className="loading-spinner">
+        {/* Optionally add a spinner or animation */}
+        Loading...
+      </div>
+    );
   }
 
-  // Display error if any occurs
-  if (error) {
-    return <div>{error}</div>;
+  // If authentication fails, display error message and redirect to login page
+  if (!isAuthenticated) {
+    return (
+      <div>
+        <p>{error}</p>
+        <Navigate to="/login" />
+      </div>
+    );
   }
 
-  // If authenticated, render children; otherwise, navigate to login
-  return isAuthenticated ? <div>{children}</div> : <Navigate to="/login" />;
+  // Render children if authenticated
+  return <div>{children}</div>;
 }
 
 // Define prop types for `children`

@@ -7,18 +7,21 @@ const User = require("../../model/User");
 const connectDB = require("../../data/db");
 const router = express.Router();
 
+// Check if session token is valid
 const isSessionValid = (req, res, next) => {
   connectDB();
-  console.log("validating user");
+  console.log("Validating session");
   const { sessionToken } = req.cookies;
 
   if (!sessionToken) {
+    console.log("no session token");
     return res.status(401).json({ error: "No session token provided." });
   }
 
   User.findOne({ sessionToken })
     .then((user) => {
       if (!user) {
+        console.log({ error: "Invalid session token." });
         return res.status(401).json({ error: "Invalid session token." });
       }
 
@@ -34,72 +37,102 @@ const isSessionValid = (req, res, next) => {
       next();
     })
     .catch((error) => {
-      console.error("Error checking session validity:", error); // Log the error
+      console.error("Error checking session validity:", error);
       res.status(500).json({ error: "Server error" });
     });
 };
 
-// Register Route
+// Register route
 router.post("/register", async (req, res) => {
   connectDB();
-  console.log("registring new user");
+  console.log("Registering new user");
   const { email, password } = req.body;
 
-  // Check if email already exists
+  // Check if email exists
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return res.status(201).json({ error: "Email already exists." });
+    return res.status(409).json({ error: "Email already exists." });
   }
 
-  // Hash the password before storing
+  // Hash password before storing
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const newUser = new User({
     email,
     password: hashedPassword,
   });
+  console.log({ hashedPassword: hashedPassword });
 
   try {
     await newUser.save();
+
+    // Generate session token
+    const sessionToken = jwt.sign(
+      { userId: newUser._id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "2h", // Token expires in 2 hours
+      }
+    );
+
+    const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // Session expires in 2 hours
+
+    // Store session token and expiration
+    newUser.sessionToken = sessionToken;
+    newUser.sessionExpiresAt = sessionExpiresAt;
+
+    await newUser.save();
+
+    // Set session token as an HTTP-only cookie
+    res.cookie("sessionToken", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
+    });
+
     res.status(201).json({ message: "User registered successfully!" });
   } catch (error) {
+    console.error("Error registering user:", error);
     res.status(500).json({ error: "Failed to register user." });
   }
 });
 
-// Login Route
+// Login route
 router.post("/login", async (req, res) => {
   connectDB();
-  console.log("logging in ...............");
+  console.log("Logging in ...");
   const { email, password } = req.body;
 
   // Find user by email
   const user = await User.findOne({ email });
   if (!user) {
-    console.log("usernot found")
-    return res.status(400).json({ error: "Invalid credentials." });
+    return res.status(400).json({ error: "user not found" });
   }
 
-  // Check if password matches
+  // Compare passwords
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return res.status(400).json({ error: "Invalid credentials." });
+    return res.status(400).json({ error: "wrong pass" });
   }
 
-  // Generate session token and set expiration time (2 hours)
+  // Generate session token
   const sessionToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
     expiresIn: "2h", // Token expires in 2 hours
   });
 
-  const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // Session expiration time (2 hours)
+  const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // Session expiration (2 hours)
 
-  // Store sessionToken and sessionExpiresAt in the user's record
+  // Store session token and expiration in user record
   user.sessionToken = sessionToken;
   user.sessionExpiresAt = sessionExpiresAt;
 
   try {
     await user.save();
-    res.cookie("sessionToken", sessionToken, { httpOnly: true, secure: true }); // Set session cookie
+    res.cookie("sessionToken", sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Secure in production
+      maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
+    });
 
     res.json({
       message: "Login successful",
@@ -110,10 +143,9 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Refresh Session Route (Called whenever user interacts with the server)
+// Session refresh route (validates session and refreshes token)
 router.post("/refresh-session", isSessionValid, async (req, res) => {
-  connectDB();
-  console.log("refreshing session");
+  console.log("Refreshing session...");
   const { sessionToken } = req.cookies;
 
   // Create a new session with a new expiration time
@@ -128,14 +160,15 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
       { userId: req.user._id },
       process.env.JWT_SECRET,
       {
-        expiresIn: "2h",
+        expiresIn: "2h", // Token expires in 2 hours
       }
     );
 
     res.cookie("sessionToken", newSessionToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production", // Secure in production
     });
+
     res.json({
       message: "Session refreshed",
       sessionToken: newSessionToken,
@@ -145,10 +178,8 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
   }
 });
 
-// Check if user is registered and session is valid
+// Check if user is logged in and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
-  consoel.log("validating user");
-  connectDB();
   res.json({
     message: "User is registered and session is valid",
     user: {
@@ -158,7 +189,7 @@ router.get("/check-user", isSessionValid, (req, res) => {
   });
 });
 
-// Configure multer for photo uploads
+// File upload route for company details (uses multer)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/photos/");
@@ -170,14 +201,11 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// PUT route to update company details
 router.put(
   "/details",
   isSessionValid,
   upload.array("photos"),
   async (req, res) => {
-    connectDB();
-    console.log("adding companies details");
     try {
       const {
         name,
@@ -189,12 +217,11 @@ router.put(
         preferredLanguage,
       } = req.body;
 
-      // Map uploaded files to photo paths
       const photos = req.files.map((file) => file.path);
 
-      // Find and update user's company details
+      // Update user's company details
       await User.findByIdAndUpdate(
-        req.session.userId, // Ensure you have `userId` stored in session
+        req.user._id,
         {
           companyDetails: {
             name,

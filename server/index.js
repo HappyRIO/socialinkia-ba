@@ -2,46 +2,52 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const session = require("express-session");
 require("dotenv").config();
 
-//init express js for server startingg
+// Initialize express
 const app = express();
 
-// config middlewares
+// Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser()); // Parse cookies
+
+// CORS configuration (for local development)
 app.use(
-  session({
-    secret: "deathwishmankilledbailler",
-    resave: false,
-    saveUninitialized: true,
+  cors({
+    origin: (origin, callback) => {
+      // If no origin is provided (e.g., for same-origin requests), allow it
+      if (!origin || origin === "http://localhost:5173") {
+        return callback(null, true); // Allow the specified origin
+      }
+      // Block any other origin
+      return callback(new Error("Not allowed by CORS"), false);
+    },
+    credentials: true, // Allow cookies to be sent
   })
 );
 
-//cors set up
-app.use(cors("*"));
-
+// Routes
 const google = require("./routes/auth/Google");
 const mainauth = require("./routes/auth/Mainauth");
 const facebook = require("./routes/apps/Facebook");
 const instagram = require("./routes/apps/Instagram");
 const templateRoutes = require("./routes/apps/template");
 
-//test route
+// Test route
 app.get("/", (req, res) => {
   console.log({ request: "get info" });
   res.json({ message: "hello world" });
 });
 
-//main routes defination
+// Main routes
 app.use("/api/google", google);
 app.use("/api/auth", mainauth);
 app.use("/api/facebook", facebook);
 app.use("/api/instagram", instagram);
 app.use("/api/templates", templateRoutes);
 
+// Start server
 app.listen(4000, () => {
-  console.log({ saerver: "http://localhost:4000" });
+  console.log("Server running on http://localhost:4000");
 });

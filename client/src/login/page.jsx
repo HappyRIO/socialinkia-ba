@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Loader from "../components/fragments/Loader";
 
 export default function Login() {
-  const [loading, setloading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -15,7 +16,7 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
-    setloading(true);
+    setLoading(true);
     e.preventDefault();
     try {
       const response = await fetch(
@@ -25,33 +26,36 @@ export default function Login() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Include credentials (cookies)
           body: JSON.stringify(formData),
         }
       );
 
       if (response.ok) {
-        setloading(false);
-        window.location.href = "/dashboard";
+        // Redirect to dashboard after successful login
+        setLoading(false);
+        navigate("/dashboard"); // Use navigate instead of window.location.href
       } else {
-        setloading(false);
-        window.location.href = "/signup";
+        setLoading(false);
+        alert("Invalid credentials. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred. Please try again.");
+      setLoading(false);
     }
   };
 
-  function googlelogin() {
+  const googlelogin = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
-    }/api/google/auth/google`; // Replace with your actual backend URL
+    }/api/google/auth/google`; // Adjust with your actual backend URL
     window.open(backendUrl, "_blank", "width=500,height=600");
-  }
+  };
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      {loading ? <Loader /> : null}
+      {loading && <Loader />}
       <form onSubmit={handleSubmit} className="form space-y-4 p-4">
         <input
           className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
@@ -87,12 +91,12 @@ export default function Login() {
           onClick={googlelogin}
           className="rounded-lg px-3 py-2 bg-red-500 text-white"
         >
-          login with google{" "}
+          Login with Google
         </button>
       </div>
       <div className="dont-have-account">
         <Link to={"/signup"}>
-          <p>dont have an account? sign up</p>
+          <p>Dont have an account? Sign up</p>
         </Link>
       </div>
     </div>

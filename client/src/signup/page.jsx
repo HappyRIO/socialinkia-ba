@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -7,53 +7,56 @@ export default function Signup() {
     password: "",
   });
 
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/register`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      }
-    );
+    e.preventDefault();
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+          credentials: "include", // Send cookies with the request
+        }
+      );
 
-    if (response.ok) {
-      // Successful registration, proceed to the next signup step
-      window.location.href = "/signup/details";
-    } else {
-      // Handle non-OK responses
-      const data = await response.json();
-
-      if (data.error === "Email already exists.") {
-        // Redirect to login page if email already exists
-        window.location.href = "/login";
+      if (response.ok) {
+        // Successful registration, proceed to the next signup step
+        navigate("/signup/details"); // Use navigate for internal routing
       } else {
-        // Show a general error alert for other cases
-        alert("Signup failed. Please try again.");
+        const data = await response.json();
+
+        if (data.error === "Email already exists.") {
+          // Redirect to login page if email already exists
+          alert("Email already exists. Redirecting to login...");
+          navigate("/login");
+        } else {
+          // Show a general error alert for other cases
+          alert("Signup failed. Please try again.");
+        }
       }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred. Please try again.");
     }
-  } catch (error) {
-    console.error("Error:", error);
-    alert("An error occurred. Please try again.");
-  }
-};
+  };
 
-
-  function googlesignin() {
+  const googlesignin = () => {
     const backendUrl = `${
-      import.meta.env.SERVER_BASE_URL
+      import.meta.env.VITE_SERVER_BASE_URL
     }/api/google/auth/google`; // Replace with your actual backend URL
+    console.log(backendUrl);
     window.open(backendUrl, "_blank", "width=500,height=600");
-  }
+  };
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
@@ -92,12 +95,12 @@ export default function Signup() {
           onClick={googlesignin}
           className="rounded-lg px-3 py-2 bg-red-500 text-white"
         >
-          signup with google{" "}
+          Sign up with Google
         </button>
       </div>
       <div className="dont-have-account">
         <Link to={"/login"}>
-          <p>already have an account? sign in</p>
+          <p>Already have an account? Sign in</p>
         </Link>
       </div>
     </div>

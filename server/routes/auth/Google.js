@@ -16,6 +16,7 @@ const googleScopes = ["openid", "profile", "email"];
 
 // Step 1: Redirect user to Google OAuth endpoint
 router.get("/auth/google", (req, res) => {
+  console.log(CLIENT_SECRET);
   console.log("accessing goole auth system");
   const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth?";
   const queryParams = new URLSearchParams({
@@ -32,11 +33,16 @@ router.get("/auth/google", (req, res) => {
 });
 
 // Google OAuth callback
+// Google OAuth callback route
 router.get("/auth/google/callback", async (req, res) => {
   console.log("callback activated");
+
   const tokenEndpoint = "https://oauth2.googleapis.com/token";
   const { code } = req.query;
-  connectDB();
+
+  connectDB(); // Ensure database connection is established
+
+  // Ensure the authorization code is present
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
@@ -49,6 +55,8 @@ router.get("/auth/google/callback", async (req, res) => {
     grant_type: "authorization_code",
   });
 
+  console.log("Token request body:", requestBody);
+
   const options = {
     method: "POST",
     url: tokenEndpoint,
@@ -59,6 +67,8 @@ router.get("/auth/google/callback", async (req, res) => {
   try {
     // Exchange authorization code for tokens
     const response = await axios(options);
+    console.log("Token exchange response:", response.data);
+
     const { access_token, id_token, expires_in } = response.data;
 
     // Get user profile from Google's userinfo endpoint
@@ -71,35 +81,48 @@ router.get("/auth/google/callback", async (req, res) => {
 
     const { name, picture, email } = profileResponse.data;
 
-    // Check if user exists in the database
+    // Check if user already exists in the database
     let user = await User.findOne({ email });
+
     if (!user) {
-      // If user doesn't exist, create a new record
-      user = new User({ name, email, picture });
+      // If user doesn't exist, create a new record and hash a password
+      const hashedPassword = await bcrypt.hash("password", 10); // Set a default password or generate one
+
+      user = new User({
+        name,
+        email,
+        picture,
+        password: hashedPassword, // Store the hashed password
+      });
       await user.save();
+      console.log("New user created.");
+    } else {
+      console.log("User already exists.");
     }
 
-    // Generate session token (JWT) and set expiration
-    const sessionToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
-      expiresIn: "2h",
-    });
-    const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    // Generate session token (JWT)
+    const sessionToken = jwt.sign(
+      { userId: user._id },
+      JWT_SECRET,
+      { expiresIn: "2h" } // Token expires in 2 hours
+    );
+
+    const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // Session expires in 2 hours
 
     // Store session token and expiration in the database
     user.sessionToken = sessionToken;
     user.sessionExpiresAt = sessionExpiresAt;
     await user.save();
 
-    // Set the session token as a secure, HTTP-only cookie
+    // Set session token as an HTTP-only cookie
     res.cookie("sessionToken", sessionToken, {
       httpOnly: true,
-      secure: true,
-      maxAge: 2 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
     });
 
-    // Redirect to the frontend or send user data
-    res.json({
-      message: "Google login successful",
+    res.status(200).json({
+      message: "User authenticated successfully!",
       user: { name, email, picture },
     });
   } catch (error) {
