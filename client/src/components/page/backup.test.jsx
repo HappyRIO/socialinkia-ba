@@ -162,7 +162,7 @@ export default function CreateDesign() {
         </div>
       )}
       <div className="board flex-grow bg-red-900 flex flex-col p-2 h-full">
-        {!opentexttoolbar && (
+        {opentexttoolbar && (
           <div className="toolbar rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
             <div className="font">
               <select
@@ -198,30 +198,47 @@ export default function CreateDesign() {
             </div>
 
             <div className="border-edit">
-              <button type="button">Border</button>
-              <div className="border-menu w-fit px-2 py-2 flex flex-col">
-                <div className="border-style">
-                  <select
-                    name="border-style"
-                    id="border-style"
-                    aria-label="Border Style"
-                  >
-                    <option value="dashed">Dashed</option>
-                    <option value="solid">Solid</option>
-                  </select>
+              <details className="open">
+                <summary className="block cursor-pointer">
+                  <p>Border</p>
+                </summary>
+
+                <div className="bg-white rounded-2xl w-[50%] h-[40%] my-auto mx-auto absolute inset-0 text-gray-600 p-4 py-8">
+                  <div className="border-menu w-fit flex flex-col gap-2 px-2 py-2">
+                    <div className="border-style">
+                      <select
+                        name="border-style"
+                        id="border-style"
+                        aria-label="Border Style"
+                      >
+                        <option value="dashed">Dashed</option>
+                        <option value="solid">Solid</option>
+                      </select>
+                    </div>
+                    <div className="borderSize">
+                      <label htmlFor="bodre-thickness" className="sr-only">
+                        Border thickness
+                      </label>
+                      <input
+                        type="range"
+                        name="bodre-thickness"
+                        id="bodre-thickness"
+                      />
+                    </div>
+                    <div className="border-color">
+                      <label htmlFor="bordercolor" className="sr-only">
+                        Border Color
+                      </label>
+                      <input
+                        type="color"
+                        name="bordercolor"
+                        id="bordercolor"
+                        aria-label="Border Color"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="border-color">
-                  <label htmlFor="bordercolor" className="sr-only">
-                    Border Color
-                  </label>
-                  <input
-                    type="color"
-                    name="bordercolor"
-                    id="bordercolor"
-                    aria-label="Border Color"
-                  />
-                </div>
-              </div>
+              </details>
             </div>
 
             <div className="align-text">
@@ -256,29 +273,106 @@ export default function CreateDesign() {
             </div>
           </div>
         )}
-        {openelementtoolbar && (
+        {!openelementtoolbar && (
           <div className="toolbar rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
-            <div className="changeshape">
-              <button>changeshape</button>
+            <div className="shange-shape">
+              <select
+                name="shapeselector"
+                id="changeshape"
+                aria-label="change shape"
+              >
+                <option value="areal">rectangle</option>
+                <option value="courial">square</option>
+                <option value="helvetical">circle</option>
+                <option value="helvetical">triangle</option>
+                <option value="helvetical">star</option>
+              </select>
             </div>
-            <div className="colorinput">
-              <label htmlFor="shapecolor">shape color</label>
-              <input type="color" name="shapecolor" id="shapecolor" />
+
+            <div className="color-input">
+              <label htmlFor="shapecolor" className="sr-only">
+                Shape Color
+              </label>
+              <input
+                type="color"
+                name="shapecolor"
+                id="shapecolor"
+                aria-label="Shape Color"
+              />
             </div>
-            <div className="borderedit">
-              <button>border</button>
+
+            <div className="border-edit">
+              <details className="open">
+                <summary className="block cursor-pointer">
+                  <p>Border</p>
+                </summary>
+
+                <div className="bg-white rounded-2xl w-[50%] h-[40%] my-auto mx-auto absolute inset-0 text-gray-600 p-4 py-8">
+                  <div className="border-menu w-fit flex flex-col gap-2 px-2 py-2">
+                    <div className="border-style">
+                      <select
+                        name="border-style"
+                        id="border-style"
+                        aria-label="Border Style"
+                      >
+                        <option value="dashed">Dashed</option>
+                        <option value="solid">Solid</option>
+                      </select>
+                    </div>
+                    <div className="borderSize">
+                      <label htmlFor="bodre-thickness" className="sr-only">
+                        Border thickness
+                      </label>
+                      <input
+                        type="range"
+                        name="bodre-thickness"
+                        id="bodre-thickness"
+                      />
+                    </div>
+                    <div className="border-color">
+                      <label htmlFor="bordercolor" className="sr-only">
+                        Border Color
+                      </label>
+                      <input
+                        type="color"
+                        name="bordercolor"
+                        id="bordercolor"
+                        aria-label="Border Color"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
-            <div className="aligntext">
-              <button>align</button>
+
+            <div className="align-text">
+              <select
+                name="text-alignment"
+                id="text-alignment"
+                aria-label="Text Alignment"
+              >
+                <option value="center">Center</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
             </div>
+
             <div className="size">
-              <label htmlFor="size">size</label>
-              <input type="range" name="size" id="shapesize" />
+              <label htmlFor="shapesize">Size</label>
+              <input
+                type="range"
+                name="size"
+                id="shapesize"
+                min="10"
+                max="500"
+              />
               <input
                 className="w-10"
                 type="number"
                 name="size"
                 id="shapemanualsize"
+                min="10"
+                max="500"
               />
             </div>
           </div>
