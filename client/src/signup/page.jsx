@@ -13,29 +13,40 @@ export default function Signup() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+  e.preventDefault();
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/register`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      }
+    );
 
-      if (response.ok) {
-        window.location.href = "/signup/details";
+    if (response.ok) {
+      // Successful registration, proceed to the next signup step
+      window.location.href = "/signup/details";
+    } else {
+      // Handle non-OK responses
+      const data = await response.json();
+
+      if (data.error === "Email already exists.") {
+        // Redirect to login page if email already exists
+        window.location.href = "/login";
       } else {
+        // Show a general error alert for other cases
         alert("Signup failed. Please try again.");
       }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred. Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    alert("An error occurred. Please try again.");
+  }
+};
+
 
   function googlesignin() {
     const backendUrl = `${
