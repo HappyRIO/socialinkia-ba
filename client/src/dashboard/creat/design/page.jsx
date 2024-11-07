@@ -1,46 +1,154 @@
 import { Shapes, SwatchBook, MonitorUp, CaseUpper, CopyX } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Stage, Layer, Rect, Circle, Image, Text } from "react-konva";
 
-//for fetching template from server
+//for fetching templates from the server
 function Showtemplates() {
   const [template, setTemplate] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/templates") // adjust API path as needed
+      .then((response) => response.json())
+      .then((data) => setTemplate(data))
+      .catch((error) => console.error("Error fetching templates:", error));
+  }, []);
+
   return (
     <div>
       <h1>Templates</h1>
+      <ul>
+        {template.map((item, index) => (
+          <li key={index}>{item.name}</li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-//for making shapes and prerendring them for users
-function Showshape() {
-  const [shapes, setshapes] = useState([]);
+//for making shapes and pre-rendering them for users
+function Showshape({ onShapeClick }) {
+  const [shapes, setShapes] = useState([
+    { type: "rect", width: 100, height: 100, color: "blue" },
+    { type: "circle", radius: 30, color: "green" },
+  ]);
+
   return (
     <div>
-      <h1>shapes</h1>
+      <h1>Shapes</h1>
+      {shapes.map((shape, index) => (
+        <div
+          key={index}
+          style={{
+            backgroundColor: shape.color,
+            padding: "10px",
+            margin: "5px",
+            cursor: "pointer",
+          }}
+          onClick={() => onShapeClick(shape)}
+        >
+          {shape.type}
+        </div>
+      ))}
     </div>
   );
 }
 
-//for showing fonts and text to add to canvas
+//for showing fonts and text options to add to the canvas
 function Showfonts() {
-  const [fontelements, setfontelements] = useState([]);
+  const [fonts, setFonts] = useState([
+    { name: "Arial", style: { fontFamily: "Arial" } },
+    { name: "Courier", style: { fontFamily: "Courier" } },
+  ]);
+
   return (
     <div>
-      <h1>fonts</h1>
+      <h1>Fonts</h1>
+      {fonts.map((font, index) => (
+        <p key={index} style={font.style}>
+          {font.name}
+        </p>
+      ))}
     </div>
   );
 }
 
-//for displaying files uploaded to database by the user
-function Showuploads() {
-  const [uploadelements, setuploadelements] = useState([]);
+//for displaying files uploaded to the database by the user
+// eslint-disable-next-line react/prop-types
+function Showuploads({ onClick }) {
+  const [uploads, setUploads] = useState([]);
+
+  useEffect(() => {
+    const fake = [
+      {
+        id: 1,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%201.png",
+      },
+      {
+        id: 2,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%202.png",
+      },
+      {
+        id: 3,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%203.png",
+      },
+      {
+        id: 4,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%204.png",
+      },
+      {
+        id: 5,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%205.png",
+      },
+      {
+        id: 6,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%206.png",
+      },
+      {
+        id: 7,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%207.png",
+      },
+      {
+        id: 8,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%208.png",
+      },
+      {
+        id: 9,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%209.png",
+      },
+      {
+        id: 10,
+        image: "https://placehold.co/600x400?text=Sample%20Editor%2010.png",
+      },
+    ];
+    setUploads(fake); // Set the "fake" data as uploads
+  }, []);
+
   return (
-    <div className="">
-      <h1>uploads</h1>
+    <div className="w-full flex flex-col justify-end items-center">
+      <div className="title">
+        <h1>Uploads</h1>
+      </div>
+      <div className="w-full grid grid-cols-3">
+        {uploads.map((file) => (
+          <img
+            className="rounded-lg overflow-hidden"
+            key={file.id}
+            onClick={() => onClick(file.image)} // Pass image URL to handleAddImage
+            src={file.image}
+            alt={`Upload ${file.id}`}
+            width="100"
+            height="100"
+          />
+        ))}
+      </div>
     </div>
   );
 }
+
+const Layermanager = () => {
+  const [layers, setLayers] = useState([]);
+  const [activeLayer, setActiveLayer] = useState(null);
+};
 
 export default function CreateDesign() {
   const [openUploads, setOpenuploads] = useState(false);
@@ -54,6 +162,8 @@ export default function CreateDesign() {
   // active elements
   const [activeShape, setActiveShape] = useState(null);
   const [activeText, setActiveText] = useState(null);
+  const layerRef = useRef(null); // Defining the Layer ref
+  const [imageUrl, setimageUrl] = useState("");
 
   function handleCloseSideBarMenu() {
     setOpenuploads(false);
@@ -85,10 +195,7 @@ export default function CreateDesign() {
     setopenshapeelement(false);
     setOpentextelement(!openTextelement);
   }
-  const handleShapeClick = (shape) => {
-    setActiveShape(shape);
-    console.log("Active shape:", shape);
-  };
+
   const handleDragStart = (e) => {
     e.target.setAttrs({
       shadowOffset: {
@@ -97,6 +204,7 @@ export default function CreateDesign() {
       },
       scaleX: 1.1,
       scaleY: 1.1,
+      stroke: "black",
     });
   };
   const handleDragEnd = (e) => {
@@ -109,6 +217,71 @@ export default function CreateDesign() {
       shadowOffsetY: 5,
     });
   };
+  const handleShapeClick = (e) => {
+    setActiveShape(e.target); // Set the clicked shape as the active element
+    console.log("Active element:", e.target);
+  };
+
+  const handleAddImage = (imageUrl) => {
+    const image = new window.Image();
+    image.src = imageUrl;
+
+    image.onload = () => {
+      const imageNode = new window.Konva.Image({
+        image: image,
+        x: 50, // Position of the image
+        y: 50,
+        width: 100, // Image width
+        height: 100, // Image height
+        draggable: true, // Make the image draggable
+      });
+
+      // Attach event handlers
+      imageNode.on("click", handleShapeClick);
+      imageNode.on("dragstart", handleDragStart);
+      imageNode.on("dragend", handleDragEnd);
+
+      // Add the image node to the layer
+      layerRef.current.add(imageNode);
+      layerRef.current.batchDraw();
+    };
+  };
+
+  function handleaddtext() {
+    // handle add taxt
+  }
+  function handleaddshape(shape) {
+    let shapeNode;
+
+    if (shape.type === "rect") {
+      shapeNode = new window.Konva.Rect({
+        x: 50,
+        y: 50,
+        width: shape.width,
+        height: shape.height,
+        fill: shape.color,
+        draggable: true,
+      });
+    } else if (shape.type === "circle") {
+      shapeNode = new window.Konva.Circle({
+        x: 50,
+        y: 50,
+        radius: shape.radius,
+        fill: shape.color,
+        draggable: true,
+      });
+    }
+
+    // Attach event handlers
+    shapeNode.on("click", handleShapeClick);
+    shapeNode.on("dragstart", handleDragStart);
+    shapeNode.on("dragend", handleDragEnd);
+
+    // Add shape to the layer
+    layerRef.current.add(shapeNode);
+    layerRef.current.batchDraw();
+  }
+
   return (
     <div className="w-full h-screen flex flex-row bg-green-200">
       <div className="elementsbar bg-green-500 w-[80px] py-3 flex flex-col justify-evenly items-center">
@@ -150,17 +323,17 @@ export default function CreateDesign() {
         </div>
       </div>
       {openUploads && (
-        <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
+        <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
               <CopyX />
             </button>
           </div>
-          <Showuploads />
+          <Showuploads onClick={handleAddImage} />
         </div>
       )}
       {openTextelement && (
-        <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
+        <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
               <CopyX />
@@ -170,17 +343,17 @@ export default function CreateDesign() {
         </div>
       )}
       {openshapelement && (
-        <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
+        <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
               <CopyX />
             </button>
           </div>
-          <Showshape />
+          <Showshape onShapeClick={handleaddshape} />
         </div>
       )}
       {opentemplate && (
-        <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
+        <div className="sidebarmenu z-[9999999] translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
               <CopyX />
@@ -405,9 +578,13 @@ export default function CreateDesign() {
             </div>
           </div>
         )}
-        <div className="canvas flex-grow rounded-lg bg-yellow-500">
-          <Stage width={400} height={600}>
-            <Layer>
+        <div className="canvas flex flex-col justify-center items-center rounded-lg bg-yellow-500">
+          <Stage
+            width={400}
+            height={600}
+            style={{ backgroundColor: "lightgray" }}
+          >
+            <Layer ref={layerRef}>
               <Rect
                 x={20}
                 y={50}
@@ -415,6 +592,8 @@ export default function CreateDesign() {
                 height={100}
                 fill="red"
                 shadowBlur={5}
+                draggable
+                onClick={handleShapeClick}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               />
