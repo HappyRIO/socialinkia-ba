@@ -38,7 +38,7 @@ export default function CompaniesDetails() {
 
     try {
       const response = await fetch(
-        `${import.meta.env.SERVER_BASE_URL}/api/auth/details`,
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/details`,
         {
           method: "PUT",
           body: data,

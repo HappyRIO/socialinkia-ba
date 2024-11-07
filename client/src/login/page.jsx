@@ -15,13 +15,16 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (response.ok) {
         alert("Signup successful!");
@@ -35,7 +38,9 @@ export default function Login() {
   };
 
   function googlelogin() {
-    const backendUrl = `${import.meta.env.SERVER_BASE_URL}/api/google/auth/google`; // Replace with your actual backend URL
+    const backendUrl = `${
+      import.meta.env.VITE_SERVER_BASE_URL
+    }/api/google/auth/google`; // Replace with your actual backend URL
     window.open(backendUrl, "_blank", "width=500,height=600");
   }
 

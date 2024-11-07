@@ -4,40 +4,49 @@ import PropTypes from "prop-types";
 
 export default function Privatepage({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const validateUser = async () => {
-      try {
-        const response = await fetch(
-          `${import.meta.env.SERVER_BASE_URL}/api/auth/check-user`,
-          {
-            method: "GET",
-            credentials: "include", // Important for cookies
+    if (isAuthenticated === null) {
+      const validateUser = async () => {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/check-user`,
+            {
+              method: "GET",
+              credentials: "include", // Important for cookies
+            }
+          );
+
+          if (response.ok) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+            setError("Authentication failed. Redirecting to login...");
+            navigate("/login");
           }
-        );
-
-        if (response.ok) {
-          setIsAuthenticated(true); // Set auth state to true if the user is validated
-        } else {
+        } catch (error) {
           setIsAuthenticated(false);
-          navigate("/login"); // Redirect to login if not authenticated
+          setError("Error authenticating. Redirecting to login...");
+          console.error("Error validating user:", error);
+          navigate("/login");
         }
-      } catch (error) {
-        console.error("Error validating user:", error);
-        setIsAuthenticated(false);
-        navigate("/login");
-      }
-    };
+      };
 
-    validateUser();
-  }, [navigate]);
+      validateUser();
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (error) {
+    return <div>{error}</div>; // Display error if any
+  }
 
   if (isAuthenticated === null) {
     return <div>Loading...</div>; // Show a loading state while validating
   }
 
-  return isAuthenticated ? <div>{children}</div> : null;
+  return isAuthenticated ? <div>{children}</div> : null; // Only render children if authenticated
 }
 
 // Define prop types for `children`

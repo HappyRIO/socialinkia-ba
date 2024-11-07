@@ -137,6 +137,7 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
 
 // Check if user is registered and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
+  consoel.log("validating user");
   res.json({
     message: "User is registered and session is valid",
     user: {
