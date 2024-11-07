@@ -4,6 +4,7 @@ const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../model/User");
+const connectDB = require("../../data/db")
 const router = express.Router();
 
 const isSessionValid = (req, res, next) => {
@@ -38,6 +39,7 @@ const isSessionValid = (req, res, next) => {
 
 // Register Route
 router.post("/register", async (req, res) => {
+  connectDB();
   const { email, password } = req.body;
 
   // Check if email already exists
@@ -64,6 +66,7 @@ router.post("/register", async (req, res) => {
 
 // Login Route
 router.post("/login", async (req, res) => {
+  connectDB();
   const { email, password } = req.body;
 
   // Find user by email
@@ -104,6 +107,7 @@ router.post("/login", async (req, res) => {
 
 // Refresh Session Route (Called whenever user interacts with the server)
 router.post("/refresh-session", isSessionValid, async (req, res) => {
+  connectDB();
   const { sessionToken } = req.cookies;
 
   // Create a new session with a new expiration time
@@ -138,6 +142,7 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
 // Check if user is registered and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
   consoel.log("validating user");
+  connectDB();
   res.json({
     message: "User is registered and session is valid",
     user: {
@@ -165,6 +170,7 @@ router.put(
   isSessionValid,
   upload.array("photos"),
   async (req, res) => {
+    connectDB();
     try {
       const {
         name,
