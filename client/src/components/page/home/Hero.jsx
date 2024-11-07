@@ -9,12 +9,24 @@ export default function HomePage() {
       <header className="flex justify-between items-center px-6 py-4 bg-accent shadow-md">
         <div className="text-2xl font-bold text-white">Socialinkia</div>
         <nav className="hidden md:flex space-x-6">
-          <a href="#" className="text-white hover:underline">Home</a>
-          <a href="#" className="text-white hover:underline">Features</a>
-          <a href="#" className="text-white hover:underline">Pricing</a>
-          <a href="#" className="text-white hover:underline">About</a>
-          <a href="#" className="text-white hover:underline">Contact</a>
-          <a href="#" className="text-white hover:underline">Login/Signup</a>
+          <a href="#" className="text-white hover:underline">
+            Home
+          </a>
+          <a href="#Features" className="text-white hover:underline">
+            Features
+          </a>
+          <a href="#Pricing" className="text-white hover:underline">
+            Pricing
+          </a>
+          <a href="#" className="text-white hover:underline">
+            About
+          </a>
+          <a href="#" className="text-white hover:underline">
+            Contact
+          </a>
+          <a href="/login" className="text-white hover:underline">
+            Login/Signup
+          </a>
         </nav>
       </header>
 
@@ -22,36 +34,70 @@ export default function HomePage() {
       <Hero />
 
       {/* Key Features Section */}
-      <section className="py-12 bg-gray-100">
+      <section id="Features" className="py-12 bg-gray-100">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Everything You Need to Automate Your Social Media</h2>
+          <h2 className="text-3xl font-bold mb-6">
+            Everything You Need to Automate Your Social Media
+          </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <FeatureCard title="Automatic Publishing" description="Schedule posts effortlessly for Facebook and Instagram." />
-            <FeatureCard title="Customizable Templates" description="Choose from various templates to match your brand." />
-            <FeatureCard title="Carousel Posts" description="Create engaging multi-image posts." />
-            <FeatureCard title="AI Creativity" description="Generate ideas with AI-driven content." />
-            <FeatureCard title="Multilingual Support" description="Supports English, Spanish, French, and German." />
-            <FeatureCard title="Flexible Subscription Plans" description="Try a 5-day free trial and explore plans." />
+            <FeatureCard
+              title="Automatic Publishing"
+              description="Schedule posts effortlessly for Facebook and Instagram."
+            />
+            <FeatureCard
+              title="Customizable Templates"
+              description="Choose from various templates to match your brand."
+            />
+            <FeatureCard
+              title="Carousel Posts"
+              description="Create engaging multi-image posts."
+            />
+            <FeatureCard
+              title="AI Creativity"
+              description="Generate ideas with AI-driven content."
+            />
+            <FeatureCard
+              title="Multilingual Support"
+              description="Supports English, Spanish, French, and German."
+            />
+            <FeatureCard
+              title="Flexible Subscription Plans"
+              description="Try a 5-day free trial and explore plans."
+            />
           </div>
         </div>
       </section>
 
       {/* How it Works Section */}
-      <section className="py-12 bg-white">
+      <section id="How-it-Works" className="py-12 bg-white">
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">How It Works</h2>
           <div className="flex flex-col lg:flex-row lg:justify-around">
-            <HowItWorksStep step="1" title="Sign Up & Customize" description="Enter company details and select templates." />
-            <HowItWorksStep step="2" title="Schedule & Preview" description="Plan your posts and view previews." />
-            <HowItWorksStep step="3" title="Let AI Do the Work" description="AI generates posts optimized for social." />
+            <HowItWorksStep
+              step="1"
+              title="Sign Up & Customize"
+              description="Enter company details and select templates."
+            />
+            <HowItWorksStep
+              step="2"
+              title="Schedule & Preview"
+              description="Plan your posts and view previews."
+            />
+            <HowItWorksStep
+              step="3"
+              title="Let AI Do the Work"
+              description="AI generates posts optimized for social."
+            />
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="py-12 bg-gray-100">
+      <section id="Pricing" className="py-12 bg-gray-100">
         <div className="container mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">Affordable Plans for Every Business</h2>
+          <h2 className="text-3xl font-bold mb-6">
+            Affordable Plans for Every Business
+          </h2>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <PricingCard plan="Starter" posts="10" price="$9.99" />
             <PricingCard plan="Professional" posts="30" price="$19.99" />

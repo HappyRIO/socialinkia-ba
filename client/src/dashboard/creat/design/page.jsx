@@ -1,6 +1,7 @@
 import { Shapes, SwatchBook, MonitorUp, CaseUpper, CopyX } from "lucide-react";
 import { useState } from "react";
 
+//for fetching template from server
 function Showtemplates() {
   const [template, setTemplate] = useState([]);
   return (
@@ -10,6 +11,7 @@ function Showtemplates() {
   );
 }
 
+//for making shapes and prerendring them for users
 function Showshape() {
   const [shapes, setshapes] = useState([]);
   return (
@@ -19,6 +21,7 @@ function Showshape() {
   );
 }
 
+//for showing fonts and text to add to canvas
 function Showfonts() {
   const [fontelements, setfontelements] = useState([]);
   return (
@@ -28,6 +31,7 @@ function Showfonts() {
   );
 }
 
+//for displaying files uploaded to database by the user
 function Showuploads() {
   const [uploadelements, setuploadelements] = useState([]);
   return (
@@ -42,7 +46,9 @@ export default function CreateDesign() {
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);
   const [opentemplate, setopentemplate] = useState(false);
+  //for switching tools for elements
   const [openelementtoolbar, setopenelementtoolbar] = useState(false);
+  //for switching tools for text
   const [opentexttoolbar, setopentexttoolbar] = useState(false);
 
   function handleCloseSideBarMenu() {
@@ -76,7 +82,7 @@ export default function CreateDesign() {
     setOpentextelement(!openTextelement);
   }
   return (
-    <div className="w-full flex flex-row h-full bg-green-200 min-h-[700px]">
+    <div className="w-full h-screen flex flex-row bg-green-200">
       <div className="elementsbar bg-green-500 w-[80px] py-3 flex flex-col justify-evenly items-center">
         <div id="design sidebar">
           <button
@@ -115,7 +121,7 @@ export default function CreateDesign() {
           </button>
         </div>
       </div>
-      {openUploads ? (
+      {openUploads && (
         <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
@@ -124,8 +130,8 @@ export default function CreateDesign() {
           </div>
           <Showuploads />
         </div>
-      ) : null}
-      {openTextelement ? (
+      )}
+      {openTextelement && (
         <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
@@ -134,8 +140,8 @@ export default function CreateDesign() {
           </div>
           <Showfonts />
         </div>
-      ) : null}
-      {openshapelement ? (
+      )}
+      {openshapelement && (
         <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
@@ -144,8 +150,8 @@ export default function CreateDesign() {
           </div>
           <Showshape />
         </div>
-      ) : null}
-      {opentemplate ? (
+      )}
+      {opentemplate && (
         <div className="sidebarmenu translate-x-[81px] translate-y-8 absolute h-[600px] overflow-x-hidden bg-background shadow-lg w-full rounded-lg max-h-[90%] max-w-[400px]">
           <div className="topinnerspace py-3 translate-x-28">
             <button onClick={handleCloseSideBarMenu}>
@@ -154,15 +160,15 @@ export default function CreateDesign() {
           </div>
           <Showtemplates />
         </div>
-      ) : null}
-      <div className="board gap-3 w-full bg-red-900 flex flex-col px-2 py-2">
-        {opentexttoolbar ? (
-          <div className="toolbar top-[17px] rounded-lg h-10 bg-red-400 flex flex-row justify-center items-center"></div>
-        ) : null}
-        {openelementtoolbar ? (
-          <div className="toolbar top-[17px] rounded-lg h-10 bg-red-400 flex flex-row justify-center items-center"></div>
-        ) : null}
-        <div className="canvas rounded-lg h-full bg-yellow-500"></div>
+      )}
+      <div className="board flex-grow bg-red-900 flex flex-col p-2 h-full">
+        {opentexttoolbar && (
+          <div className="toolbar rounded-lg h-10 bg-red-400 flex flex-row justify-center items-center"></div>
+        )}
+        {openelementtoolbar && (
+          <div className="toolbar rounded-lg h-10 bg-red-400 flex flex-row justify-center items-center"></div>
+        )}
+        <div className="canvas flex-grow rounded-lg bg-yellow-500"></div>
       </div>
     </div>
   );

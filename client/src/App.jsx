@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./page";
@@ -16,6 +16,8 @@ import Pending from "./dashboard/pending/page";
 import FacebookPending from "./dashboard/pending/facebook/page";
 import InstagramPending from "./dashboard/pending/instagram/page";
 import PrivateRoute from "./components/security/Privatepage";
+import CreateDesign from "./dashboard/creat/design/page";
+import Tester from "./components/page/backup.test";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -46,11 +48,12 @@ function App() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="bg-background text-text h-full">
+    <div className="bg-background text-text">
       <Routes>
         {/* Home and other public routes */}
         <Route index element={<Home />} />
         <Route path="/" element={<Home />} />
+        <Route path="/test" element={<Tester />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/contact" element={<Contact />} />
@@ -72,6 +75,15 @@ function App() {
             <PrivateRoute
               isAuthenticated={isAuthenticated}
               Component={Create}
+            />
+          }
+        />
+        <Route
+          path="/dashboard/create/design"
+          element={
+            <PrivateRoute
+              isAuthenticated={isAuthenticated}
+              Component={CreateDesign}
             />
           }
         />
