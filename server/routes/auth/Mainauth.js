@@ -4,7 +4,7 @@ const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../model/User");
-const connectDB = require("../../data/db")
+const connectDB = require("../../data/db");
 const router = express.Router();
 
 const isSessionValid = (req, res, next) => {
