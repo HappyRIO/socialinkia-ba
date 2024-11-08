@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./page";
@@ -20,33 +19,6 @@ import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const validateUser = async () => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/check-user`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-      setIsAuthenticated(response.ok);
-    } catch (err) {
-      setIsAuthenticated(false);
-      console.error("Error validating user:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    validateUser();
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
-
   return (
     <div className="bg-background text-text">
       <Routes>
@@ -62,84 +34,39 @@ function App() {
         {/* Private routes (wrapped with PrivateRoute) */}
         <Route
           path="/dashboard"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={Dashboard}
-            />
-          }
+          element={<PrivateRoute Component={Dashboard} />}
         />
         <Route
           path="/dashboard/create"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={Create}
-            />
-          }
+          element={<PrivateRoute Component={Create} />}
         />
         <Route
           path="/dashboard/create/design"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={CreateDesign}
-            />
-          }
+          element={<PrivateRoute Component={CreateDesign} />}
         />
         <Route
           path="/dashboard/create/facebook"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={CreateFacebook}
-            />
-          }
+          element={<PrivateRoute Component={CreateFacebook} />}
         />
         <Route
           path="/dashboard/create/instagram"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={CreateInstagram}
-            />
-          }
+          element={<PrivateRoute Component={CreateInstagram} />}
         />
         <Route
           path="/dashboard/templates"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={CreateTemplate}
-            />
-          }
+          element={<PrivateRoute Component={CreateTemplate} />}
         />
         <Route
           path="/dashboard/pending"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={Pending}
-            />
-          }
+          element={<PrivateRoute Component={Pending} />}
         />
         <Route
           path="/dashboard/pending/facebook"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={FacebookPending}
-            />
-          }
+          element={<PrivateRoute Component={FacebookPending} />}
         />
         <Route
           path="/dashboard/pending/instagram"
-          element={
-            <PrivateRoute
-              isAuthenticated={isAuthenticated}
-              Component={InstagramPending}
-            />
-          }
+          element={<PrivateRoute Component={InstagramPending} />}
         />
 
         {/* Catch-all error route */}

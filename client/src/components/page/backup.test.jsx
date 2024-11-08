@@ -6,9 +6,8 @@ import {
   CopyX,
   Layers3,
 } from "lucide-react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useState, useEffect, useRef } from "react";
-import { Stage, Layer, Rect, Circle, Image, Text } from "react-konva";
+import { Stage, Layer, Rect, Text } from "react-konva";
 
 //for fetching templates from the server
 function Showtemplates() {
@@ -61,8 +60,8 @@ function Showshape({ onShapeClick }) {
   );
 }
 
-//for showing fonts and text options to add to the canvas
-function Showfonts() {
+// Showfonts component to display font options for users to add to the canvas
+function Showfonts({ onFontClick }) {
   const [fonts, setFonts] = useState([
     { name: "Arial", style: { fontFamily: "Arial" } },
     { name: "Courier", style: { fontFamily: "Courier" } },
@@ -72,9 +71,18 @@ function Showfonts() {
     <div>
       <h1>Fonts</h1>
       {fonts.map((font, index) => (
-        <p key={index} style={font.style}>
+        <div
+          key={index}
+          style={{
+            ...font.style,
+            padding: "10px",
+            margin: "5px",
+            cursor: "pointer",
+          }}
+          onClick={() => onFontClick(font)}
+        >
           {font.name}
-        </p>
+        </div>
       ))}
     </div>
   );
@@ -84,6 +92,7 @@ function Showfonts() {
 // eslint-disable-next-line react/prop-types
 function Showuploads({ onClick }) {
   const [uploads, setUploads] = useState([]);
+  const [loadingUrl, setLoadingUrl] = useState("");
 
   useEffect(() => {
     const fake = [
@@ -131,10 +140,28 @@ function Showuploads({ onClick }) {
     setUploads(fake); // Set the "fake" data as uploads
   }, []);
 
+  // Function to handle loading image from URL on Enter key press
+  const handleUrlInput = (e) => {
+    if (e.key === "Enter" && loadingUrl) {
+      onClick(loadingUrl); // Trigger the image insertion function with URL
+      setLoadingUrl(""); // Reset the input field
+    }
+  };
+
   return (
     <div className="w-full flex flex-col justify-end items-center">
       <div className="title">
         <h1>Uploads</h1>
+      </div>
+      <div className="loadfromurl">
+        <input
+          id="loadfromurl"
+          type="text"
+          value={loadingUrl}
+          onChange={(e) => setLoadingUrl(e.target.value)}
+          onKeyDown={handleUrlInput}
+          placeholder="Enter image URL and press Enter"
+        />
       </div>
       <div className="w-full grid grid-cols-3">
         {uploads.map((file) => (
@@ -154,98 +181,26 @@ function Showuploads({ onClick }) {
 }
 
 // Layer Manager component to list and reorder layers
-const ShowLayermanager = ({ layerRef }) => {
-  const [layers, setLayers] = useState([]);
-
-  // Fetch the layers from Konva and set them in state
-  useEffect(() => {
-    if (layerRef.current) {
-      const layerArray = layerRef.current.getChildren().map((layer, index) => ({
-        id: layer._id,
-        type: layer.className,
-        index: index,
-      }));
-      setLayers(layerArray);
-    }
-  }, [layerRef]);
-
-  // Handle drag end to reorder layers
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-
-    const reorderedLayers = Array.from(layers);
-    const [movedLayer] = reorderedLayers.splice(result.source.index, 1);
-    reorderedLayers.splice(result.destination.index, 0, movedLayer);
-
-    setLayers(reorderedLayers);
-    updateLayerOrder(reorderedLayers);
-  };
-
-  // Function to update layer indices in Konva
-  const updateLayerOrder = (layerArray) => {
-    layerArray.forEach((layer, newIndex) => {
-      const konvaLayer = layerRef.current.findOne(`#${layer.id}`);
-      konvaLayer.zIndex(newIndex);
-    });
-    layerRef.current.batchDraw();
-  };
-
-  return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="w-full h-full flex flex-col justify-start items-center">
-        <div className="title">
-          <h1>Layer Manager</h1>
-        </div>
-        {/* Ensure the Droppable component has a unique ID */}
-        <Droppable droppableId="layerList">
-          {(provided) => (
-            <div
-              className="layerlist"
-              {...provided.droppableProps}
-              ref={provided.innerRef}
-            >
-              {layers.map((layer, index) => (
-                <Draggable
-                  key={layer.id}
-                  draggableId={String(layer.id)}
-                  index={index}
-                >
-                  {(provided) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                      className="layer-item"
-                    >
-                      {layer.type} - {index + 1}
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </div>
-    </DragDropContext>
-  );
+const ShowLayermanager = ({}) => {
+  return <></>;
 };
 
-export default function CreateDesign() {
+export default function Tester() {
   const [openUploads, setOpenuploads] = useState(false);
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);
   const [opentemplate, setopentemplate] = useState(false);
   const [openLayermanager, setopenLayermanager] = useState(false);
-  //for switching tools for elements
-  const [openelementtoolbar, setopenelementtoolbar] = useState(false);
-  //for switching tools for text
-  const [opentexttoolbar, setopentexttoolbar] = useState(false);
-  // active elements
+  // toolbar activities
   const [activeShape, setActiveShape] = useState(null);
-  const [activeText, setActiveText] = useState(null);
+  const [activeAttributes, setActiveAttributes] = useState(null);
+  const [opentexttoolbar, setOpentexttoolbar] = useState(false);
+  const [openelementtoolbar, setOpenelementtoolbar] = useState(false);
+  const [originalAttributes, setOriginalAttributes] = useState({});
+
+  // ref for the layer and stage
   const layerRef = useRef(null); // Defining the Layer ref
-  const [imageUrl, setimageUrl] = useState("");
+  const stageRef = useRef(null);
 
   function handleCloseSideBarMenu() {
     setOpenuploads(false);
@@ -290,60 +245,172 @@ export default function CreateDesign() {
     setopenLayermanager(!openLayermanager);
   }
 
+  // Function to handle drag start
   const handleDragStart = (e) => {
-    e.target.setAttrs({
-      shadowOffset: {
-        x: 15,
-        y: 15,
-      },
+    const target = e.target;
+
+    // Store the original attributes so they can be restored on drag end
+    setOriginalAttributes({
+      shadowOffset: target.shadowOffset(),
+      scaleX: target.scaleX(),
+      scaleY: target.scaleY(),
+      stroke: target.stroke(),
+      strokeWidth: target.strokeWidth(),
+      shadowEnabled: target.shadowEnabled(),
+      shadowBlur: target.shadowBlur(),
+    });
+
+    // Apply temporary attributes for drag start feedback
+    target.setAttrs({
+      shadowOffset: { x: 15, y: 15 },
       scaleX: 1.1,
       scaleY: 1.1,
-      stroke: "black",
+      stroke: "blue",
+      strokeWidth: 2,
+      shadowEnabled: true,
+      shadowBlur: 5,
     });
   };
+
+  // Function to handle drag end
   const handleDragEnd = (e) => {
-    e.target.to({
+    const target = e.target;
+
+    // Restore original attributes after drag ends
+    target.to({
       duration: 0.5,
       easing: Konva.Easings.ElasticEaseOut,
-      scaleX: 1,
-      scaleY: 1,
-      shadowOffsetX: 5,
-      shadowOffsetY: 5,
+      ...originalAttributes,
     });
   };
-  const handleShapeClick = (e) => {
-    setActiveShape(e.target); // Set the clicked shape as the active element
-    console.log("Active element:", e.target);
+
+  // Function to handle element click for selection and toolbar control
+  const handleObjectClick = (e) => {
+    const clickedElement = e.target;
+
+    // Reset the outline of the previously active element, if any
+    if (activeShape && activeShape !== clickedElement) {
+      activeShape.stroke(null); // Remove outline color
+      activeShape.strokeWidth(0); // Reset outline width
+      activeShape.shadowEnabled(false); // Remove shadow
+      activeShape.getLayer().batchDraw(); // Redraw layer for immediate effect
+    }
+
+    // Set the clicked element as the active shape
+    setActiveShape(clickedElement);
+
+    // Capture the current attributes of the clicked element
+    const attributes = {
+      fill: clickedElement.fill ? clickedElement.fill() : "#000000",
+      stroke: clickedElement.stroke ? clickedElement.stroke() : null,
+      strokeWidth: clickedElement.strokeWidth
+        ? clickedElement.strokeWidth()
+        : 0,
+      scaleX: clickedElement.scaleX ? clickedElement.scaleX() : 1,
+      scaleY: clickedElement.scaleY ? clickedElement.scaleY() : 1,
+      ...(clickedElement.className === "Text" && {
+        fontFamily: clickedElement.fontFamily
+          ? clickedElement.fontFamily()
+          : "Arial",
+        fontSize: clickedElement.fontSize ? clickedElement.fontSize() : 24,
+      }),
+    };
+
+    setActiveAttributes(attributes);
+
+    // Show outline and determine toolbar
+    clickedElement.stroke("blue");
+    clickedElement.strokeWidth(2);
+    clickedElement.shadowEnabled(true);
+    clickedElement.shadowBlur(5);
+
+    setOpentexttoolbar(clickedElement.className === "Text");
+    setOpenelementtoolbar(clickedElement.className !== "Text");
+
+    console.log("Active element:", clickedElement);
   };
 
-  const handleAddImage = (imageUrl) => {
-    const image = new window.Image();
-    image.src = imageUrl;
+  // Function to handle stage click to clear selection
+  const handleStageClick = () => {
+    if (activeShape.className === "Text") {
+      setOpenelementtoolbar(false);
+      setOpentexttoolbar(true); // Close toolbars
+    }
+    if (activeShape.className !== "Text") {
+      setOpenelementtoolbar(true);
+      setOpentexttoolbar(false); // Close toolbars
+    }
+    if (activeShape) {
+      activeShape.stroke(null); // Remove outline color
+      activeShape.strokeWidth(0); // Reset outline width
+      activeShape.shadowEnabled(false); // Remove shadow
+      activeShape.getLayer().batchDraw(); // Redraw layer for immediate effect
+      setActiveShape(null); // Clear active shape
+    }
+  };
 
-    image.onload = () => {
-      const imageNode = new window.Konva.Image({
-        image: image,
-        x: 50, // Position of the image
+  const handleAttributeChange = (attribute, value) => {
+    if (activeShape) {
+      // Dynamically set the attribute on the active shape
+      if (attribute in activeShape) {
+        activeShape[attribute](value);
+      }
+
+      // Redraw the layer to reflect changes
+      layerRef.current.batchDraw();
+
+      // Update the `activeAttributes` state to reflect the new attribute values
+      setActiveAttributes((prev) => ({
+        ...prev,
+        [attribute]: value,
+      }));
+    }
+  };
+
+  const handleAddImage = (url) => {
+    const img = new window.Image();
+    img.crossOrigin = "Anonymous"; // To avoid CORS issues for exporting
+    img.src = url;
+    img.onload = () => {
+      const imageNode = new Konva.Image({
+        x: 50,
         y: 50,
-        width: 100, // Image width
-        height: 100, // Image height
-        draggable: true, // Make the image draggable
+        image: img,
+        width: img.width / 2,
+        height: img.height / 2,
+        draggable: true,
       });
 
-      // Attach event handlers
-      imageNode.on("click", handleShapeClick);
+      imageNode.on("click", handleObjectClick);
       imageNode.on("dragstart", handleDragStart);
       imageNode.on("dragend", handleDragEnd);
 
-      // Add the image node to the layer
       layerRef.current.add(imageNode);
       layerRef.current.batchDraw();
     };
   };
 
-  function handleaddtext() {
-    // handle add taxt
+  function handleAddTextWithFont(font) {
+    const textNode = new window.Konva.Text({
+      text: "Sample Text",
+      x: 50,
+      y: 50,
+      fontSize: 24,
+      fontFamily: font.style.fontFamily, // Apply selected font family
+      fill: "black",
+      draggable: true,
+    });
+
+    // Attach event handlers if needed
+    textNode.on("click", handleObjectClick);
+    textNode.on("dragstart", handleDragStart);
+    textNode.on("dragend", handleDragEnd);
+
+    // Add the text node to the layer
+    layerRef.current.add(textNode);
+    layerRef.current.batchDraw();
   }
+
   function handleaddshape(shape) {
     let shapeNode;
 
@@ -367,7 +434,7 @@ export default function CreateDesign() {
     }
 
     // Attach event handlers
-    shapeNode.on("click", handleShapeClick);
+    shapeNode.on("click", handleObjectClick);
     shapeNode.on("dragstart", handleDragStart);
     shapeNode.on("dragend", handleDragEnd);
 
@@ -376,9 +443,35 @@ export default function CreateDesign() {
     layerRef.current.batchDraw();
   }
 
-  function handlelayerlist() {
-    // le\ist all layers
-  }
+  const deleteActiveShape = () => {
+    if (activeShape) {
+      activeShape.remove(); // Remove the shape from the layer
+      activeShape.getLayer().batchDraw(); // Redraw the layer to reflect changes
+      setActiveShape(null); // Clear active shape
+      setOpentexttoolbar(false); // Close toolbars if open
+      setOpenelementtoolbar(false);
+      console.log("Shape deleted.");
+    } else {
+      console.log("No active shape to delete.");
+    }
+  };
+
+  const exportCanvasAsImage = () => {
+    if (stageRef.current) {
+      const dataURL = stageRef.current.toDataURL(); // Export canvas as base64 image
+      console.log("Exported Image Data URL:", dataURL);
+
+      // Optional: Create a download link to save the image
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = "canvas-image.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      console.log("No canvas found to export.");
+    }
+  };
 
   return (
     <div className="w-full h-screen flex flex-row bg-green-200">
@@ -437,7 +530,7 @@ export default function CreateDesign() {
               <CopyX />
             </button>
           </div>
-          <ShowLayermanager layerRef={layerRef} />
+          <ShowLayermanager />
         </div>
       )}
       {openUploads && (
@@ -457,7 +550,7 @@ export default function CreateDesign() {
               <CopyX />
             </button>
           </div>
-          <Showfonts />
+          <Showfonts onFontClick={(font) => handleAddTextWithFont(font)} />
         </div>
       )}
       {openshapelement && (
@@ -480,18 +573,23 @@ export default function CreateDesign() {
           <Showtemplates />
         </div>
       )}
-      <div className="board flex-grow bg-red-900 flex flex-col p-2 h-full">
+      <div className="board w-full bg-red-900 flex flex-col gap-2 p-2 h-full">
         {opentexttoolbar && (
-          <div className="toolbar rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
+          <div className="toolbar w-full rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
             <div className="font">
+              <label htmlFor="font-family">Font Family</label>
               <select
                 name="font-family"
                 id="font-family"
                 aria-label="Font Family"
+                value={activeAttributes.fontFamily}
+                onChange={(e) =>
+                  handleAttributeChange("fontFamily", e.target.value)
+                }
               >
-                <option value="areal">Arial</option>
-                <option value="courial">Courier</option>
-                <option value="helvetical">Helvetica</option>
+                <option value="Arial">Arial</option>
+                <option value="Courier">Courier</option>
+                <option value="Helvetica">Helvetica</option>
               </select>
             </div>
 
@@ -512,17 +610,19 @@ export default function CreateDesign() {
                 type="color"
                 name="textcolor"
                 id="textcolor"
+                value={activeAttributes.fill}
+                onChange={(e) => handleAttributeChange("fill", e.target.value)}
                 aria-label="Text Color"
               />
             </div>
 
-            <div className="border-edit">
+            <div className="border-edit z-[999999]">
               <details className="open">
                 <summary className="block cursor-pointer">
                   <p>Border</p>
                 </summary>
 
-                <div className="bg-white rounded-2xl w-[50%] h-[40%] my-auto mx-auto absolute inset-0 text-gray-600 p-4 py-8">
+                <div className="bg-white z-[999999] rounded-2xl w-[50%] h-[40%] my-auto mx-auto absolute inset-0 text-gray-600 p-4 py-8">
                   <div className="border-menu w-fit flex flex-col gap-2 px-2 py-2">
                     <div className="border-style">
                       <select
@@ -578,49 +678,52 @@ export default function CreateDesign() {
                 type="range"
                 name="size"
                 id="textsize"
-                min="10"
-                max="500"
+                value={activeAttributes.fontSize}
+                onChange={(e) =>
+                  handleAttributeChange("fontSize", parseInt(e.target.value))
+                }
               />
               <input
                 className="w-10"
                 type="number"
                 name="size"
                 id="textmanualsize"
-                min="10"
-                max="500"
+                value={activeAttributes.fontSize}
+                onChange={(e) =>
+                  handleAttributeChange("fontSize", parseInt(e.target.value))
+                }
               />
+            </div>
+            <div className="deletezone">
+              <button className="text-red-500" onClick={deleteActiveShape}>
+                Delete
+              </button>
+            </div>
+            <div className="exportimage">
+              <button onClick={exportCanvasAsImage}>Export</button>
             </div>
           </div>
         )}
-        {!openelementtoolbar && (
-          <div className="toolbar rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
-            <div className="shange-shape">
-              <select
-                name="shapeselector"
-                id="changeshape"
-                aria-label="change shape"
-              >
-                <option value="areal">rectangle</option>
-                <option value="courial">square</option>
-                <option value="helvetical">circle</option>
-                <option value="helvetical">triangle</option>
-                <option value="helvetical">star</option>
-              </select>
-            </div>
-
+        {openelementtoolbar && (
+          <div className="toolbar w-full rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
             <div className="color-input">
               <label htmlFor="shapecolor" className="sr-only">
                 Shape Color
               </label>
-              <input
-                type="color"
-                name="shapecolor"
-                id="shapecolor"
-                aria-label="Shape Color"
-              />
+              <div className="color-input">
+                <label htmlFor="shape-color">Color</label>
+                <input
+                  type="color"
+                  id="shape-color"
+                  value={activeAttributes.fill}
+                  onChange={(e) =>
+                    handleAttributeChange("fill", e.target.value)
+                  }
+                />
+              </div>
             </div>
 
-            <div className="border-edit">
+            <div className="border-edit z-[999999]">
               <details className="open">
                 <summary className="block cursor-pointer">
                   <p>Border</p>
@@ -676,23 +779,39 @@ export default function CreateDesign() {
               </select>
             </div>
 
-            <div className="size">
-              <label htmlFor="shapesize">Size</label>
+            <div className="scale">
+              <label htmlFor="scale-x">Scale X</label>
               <input
                 type="range"
-                name="size"
-                id="shapesize"
-                min="10"
-                max="500"
+                id="scale-x"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={activeAttributes.scaleX}
+                onChange={(e) =>
+                  handleAttributeChange("scaleX", parseFloat(e.target.value))
+                }
               />
+              <label htmlFor="scale-y">Scale Y</label>
               <input
-                className="w-10"
-                type="number"
-                name="size"
-                id="shapemanualsize"
-                min="10"
-                max="500"
+                type="range"
+                id="scale-y"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={activeAttributes.scaleY}
+                onChange={(e) =>
+                  handleAttributeChange("scaleY", parseFloat(e.target.value))
+                }
               />
+            </div>
+            <div className="deletezone">
+              <button className="text-red-500" onClick={deleteActiveShape}>
+                Delete
+              </button>
+            </div>
+            <div className="exportimage">
+              <button onClick={exportCanvasAsImage}>Export</button>
             </div>
           </div>
         )}
@@ -700,6 +819,8 @@ export default function CreateDesign() {
           <Stage
             width={400}
             height={600}
+            ref={stageRef}
+            onMouseDown={handleStageClick}
             style={{ backgroundColor: "lightgray" }}
           >
             <Layer ref={layerRef}>
@@ -709,9 +830,9 @@ export default function CreateDesign() {
                 width={100}
                 height={100}
                 fill="red"
-                shadowBlur={5}
+                shadowEnabled={false}
                 draggable
-                onClick={handleShapeClick}
+                onClick={handleObjectClick}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               />
