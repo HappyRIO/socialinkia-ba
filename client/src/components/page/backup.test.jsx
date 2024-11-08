@@ -193,6 +193,7 @@ export default function Tester() {
   const [openLayermanager, setopenLayermanager] = useState(false);
   // toolbar activities
   const [activeShape, setActiveShape] = useState(null);
+  const [newText, setNewText] = useState("simple text here..."); // For the input field
   const [activeAttributes, setActiveAttributes] = useState(null);
   const [opentexttoolbar, setOpentexttoolbar] = useState(false);
   const [openelementtoolbar, setOpenelementtoolbar] = useState(false);
@@ -390,9 +391,23 @@ export default function Tester() {
     };
   };
 
+  // Function to update the text content of the active Text element
+  const updateTextContent = () => {
+    if (activeShape && activeShape.className === "Text") {
+      activeShape.text(newText); // Update the text of the active text element
+      layerRef.current.batchDraw(); // Redraw the layer to reflect changes
+    }
+  };
+
+  // Handle input field change and update text in real time
+  const handleTextInputChange = (e) => {
+    setNewText(e.target.value); // Update state with the new text input
+    updateTextContent(); // Update text immediately on input change
+  };
+
   function handleAddTextWithFont(font) {
     const textNode = new window.Konva.Text({
-      text: "Sample Text",
+      text: newText,
       x: 50,
       y: 50,
       fontSize: 24,
@@ -659,6 +674,12 @@ export default function Tester() {
                 </div>
               </details>
             </div>
+            <input
+              type="text"
+              value={newText} // Bind input to state
+              onChange={handleTextInputChange} // Update state on input change
+              placeholder="Edit text"
+            />
 
             <div className="align-text">
               <select
