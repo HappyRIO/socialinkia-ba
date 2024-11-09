@@ -1,5 +1,4 @@
-import { Routes, Route } from "react-router-dom";
-import "./App.css";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./page";
 import Error from "./error";
 import Dashboard from "./dashboard/page";
@@ -19,62 +18,51 @@ import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
 import CompaniesDetails from "./signup/details/Details";
 
+const router = createBrowserRouter([
+  { path: "/", element: <Home /> },
+  { path: "/test", element: <Tester /> },
+  { path: "/login", element: <Login /> },
+  { path: "/signup", element: <Signup /> },
+  { path: "/details", element: <CompaniesDetails /> },
+  { path: "/contact", element: <Contact /> },
+  { path: "/subscription", element: <Subscription /> },
+
+  // Direct routes with PrivateRoute applied to each protected route
+  { path: "/dashboard", element: <PrivateRoute Component={Dashboard} /> },
+  { path: "/dashboard/create", element: <PrivateRoute Component={Create} /> },
+  {
+    path: "/dashboard/create/design",
+    element: <PrivateRoute Component={CreateDesign} />,
+  },
+  {
+    path: "/dashboard/create/facebook",
+    element: <PrivateRoute Component={CreateFacebook} />,
+  },
+  {
+    path: "/dashboard/create/instagram",
+    element: <PrivateRoute Component={CreateInstagram} />,
+  },
+  {
+    path: "/dashboard/templates",
+    element: <PrivateRoute Component={CreateTemplate} />,
+  },
+  { path: "/dashboard/pending", element: <PrivateRoute Component={Pending} /> },
+  {
+    path: "/dashboard/pending/facebook",
+    element: <PrivateRoute Component={FacebookPending} />,
+  },
+  {
+    path: "/dashboard/pending/instagram",
+    element: <PrivateRoute Component={InstagramPending} />,
+  },
+
+  { path: "*", element: <Error /> },
+]);
+
 function App() {
   return (
     <div className="w-full flex flex-col justify-center items-center bg-background text-text">
-      <Routes>
-        {/* Home and other public routes */}
-        <Route index element={<Home />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/test" element={<Tester />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/details" component={<CompaniesDetails />} />
-
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/subscription" element={<Subscription />} />
-
-        {/* Private routes (wrapped with PrivateRoute) */}
-        <Route
-          path="/dashboard"
-          element={<PrivateRoute Component={Dashboard} />}
-        />
-        <Route
-          path="/dashboard/create"
-          element={<PrivateRoute Component={Create} />}
-        />
-        <Route
-          path="/dashboard/create/design"
-          element={<PrivateRoute Component={CreateDesign} />}
-        />
-        <Route
-          path="/dashboard/create/facebook"
-          element={<PrivateRoute Component={CreateFacebook} />}
-        />
-        <Route
-          path="/dashboard/create/instagram"
-          element={<PrivateRoute Component={CreateInstagram} />}
-        />
-        <Route
-          path="/dashboard/templates"
-          element={<PrivateRoute Component={CreateTemplate} />}
-        />
-        <Route
-          path="/dashboard/pending"
-          element={<PrivateRoute Component={Pending} />}
-        />
-        <Route
-          path="/dashboard/pending/facebook"
-          element={<PrivateRoute Component={FacebookPending} />}
-        />
-        <Route
-          path="/dashboard/pending/instagram"
-          element={<PrivateRoute Component={InstagramPending} />}
-        />
-
-        {/* Catch-all error route */}
-        <Route path="*" element={<Error />} />
-      </Routes>
+      <RouterProvider router={router} />
     </div>
   );
 }
