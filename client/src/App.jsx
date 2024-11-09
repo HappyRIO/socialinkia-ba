@@ -7,17 +7,13 @@ import Signup from "./signup/page";
 import Contact from "./contact/page";
 import Subscription from "./subscription/page";
 import Create from "./dashboard/creat/page";
-import CreateFacebook from "./dashboard/creat/draft/facebook/page";
-import CreateInstagram from "./dashboard/creat/draft/instagram/page";
-import CreateTemplate from "./dashboard/template/page";
+import TemplatePage from "./dashboard/template/page";
 import Pending from "./dashboard/pending/page";
 import FacebookPending from "./dashboard/pending/facebook/page";
-import InstagramPending from "./dashboard/pending/instagram/page";
 import PrivateRoute from "./components/security/Privatepage";
 import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
 import CompaniesDetails from "./signup/details/Details";
-import FacebookDraft from "./dashboard/draft/facebook/page";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -36,29 +32,13 @@ const router = createBrowserRouter([
     element: <PrivateRoute Component={CreateDesign} />,
   },
   {
-    path: "/dashboard/create/facebook",
-    element: <PrivateRoute Component={CreateFacebook} />,
-  },
-  {
-    path: "/dashboard/create/instagram",
-    element: <PrivateRoute Component={CreateInstagram} />,
-  },
-  {
     path: "/dashboard/templates",
-    element: <PrivateRoute Component={CreateTemplate} />,
+    element: <PrivateRoute Component={TemplatePage} />,
   },
   { path: "/dashboard/pending", element: <PrivateRoute Component={Pending} /> },
   {
     path: "/dashboard/pending/facebook",
     element: <PrivateRoute Component={FacebookPending} />,
-  },
-  {
-    path: "/dashboard/pending/instagram",
-    element: <PrivateRoute Component={InstagramPending} />,
-  },
-  {
-    path: "/dashboard/draft/facbook",
-    element: <PrivateRoute Component={FacebookDraft} />,
   },
 
   { path: "*", element: <Error /> },
