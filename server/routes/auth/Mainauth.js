@@ -7,6 +7,11 @@ const User = require("../../model/User");
 const connectDB = require("../../data/db");
 const router = express.Router();
 
+router.get("/test", (req, res) => {
+  connectDB();
+  console.log("connected t db");
+});
+
 // Check if session token is valid
 const isSessionValid = (req, res, next) => {
   connectDB();
@@ -180,6 +185,7 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
 
 // Check if user is logged in and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
+  connectDB();
   res.json({
     message: "User is registered and session is valid",
     user: {
