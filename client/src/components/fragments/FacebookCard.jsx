@@ -1,3 +1,4 @@
+import { Facebook } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -32,10 +33,15 @@ export default function FacebookCard({ data }) {
   }, [data.targetDate]); // Trigger effect when targetDate changes
 
   return (
-    <div className="w-full py-3 flex flex-col gap-2 text-[15px] sm:w-[300px] border-b-[2px] border-accent">
+    <div className="w-full py-3 flex flex-col gap-2 text-[15px] border-b-[2px] border-accent">
       <Link href={`/dashboard/edit/facebook/${data.id}`}>
         <div className="title w-full">
-          <p>{data.title} ( instagram )</p>
+          <p className="flex justify-center items-center">
+            {data.title}{" "}
+            <span>
+              <Facebook />
+            </span>
+          </p>
         </div>
         <div className="image rounded-md overflow-hidden w-full">
           <img

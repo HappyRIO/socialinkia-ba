@@ -17,6 +17,7 @@ import PrivateRoute from "./components/security/Privatepage";
 import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
 import CompaniesDetails from "./signup/details/Details";
+import FacebookDraft from "./dashboard/draft/facebook/page";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
   {
     path: "/dashboard/pending/instagram",
     element: <PrivateRoute Component={InstagramPending} />,
+  },
+  {
+    path: "/dashboard/draft/facbook",
+    element: <PrivateRoute Component={FacebookDraft} />,
   },
 
   { path: "*", element: <Error /> },

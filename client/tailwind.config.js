@@ -11,6 +11,7 @@ module.exports = {
       colors: {
         text: "var(--text)",
         background: "var(--background)",
+        background2: "var(--background2)",
         primary: "var(--primary)",
         secondary: "var(--secondary)",
         accent: "var(--accent)",

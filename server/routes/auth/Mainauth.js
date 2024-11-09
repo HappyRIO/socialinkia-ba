@@ -195,6 +195,28 @@ router.get("/check-user", isSessionValid, (req, res) => {
   });
 });
 
+// Get user information
+router.get("/user/details", isSessionValid, async (req, res) => {
+  connectDB();
+  try {
+    const user = await User.findById(req.user._id).select(
+      "-password -sessionToken"
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    res.json({
+      message: "User information retrieved successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error retrieving user information:", error);
+    res.status(500).json({ error: "Failed to retrieve user information." });
+  }
+});
+
 // File upload route for company details (uses multer)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

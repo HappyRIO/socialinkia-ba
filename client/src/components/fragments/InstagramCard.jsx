@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import { Instagram } from "lucide-react";
 
+// eslint-disable-next-line react/prop-types
 export default function InstagramCard({ data }) {
   const [timeRemaining, setTimeRemaining] = useState({
     months: 0,
@@ -32,10 +34,15 @@ export default function InstagramCard({ data }) {
   }, [data.targetDate]); // Trigger effect when targetDate changes
 
   return (
-    <div className="w-full py-3 flex flex-col gap-2 text-[15px] sm:w-[300px] border-b-[2px] border-accent">
+    <div className="w-full py-3 flex flex-col gap-2 text-[15px] border-b-[2px] border-accent">
       <Link href={`/dashboard/edit/instagram/${data.id}`}>
         <div className="title w-full">
-          <p>{data.title} ( instagram )</p>
+          <p className="flex justify-center items-center">
+            {data.title}{" "}
+            <span>
+              <Instagram />
+            </span>
+          </p>
         </div>
         <div className="image rounded-md overflow-hidden w-full">
           <img
