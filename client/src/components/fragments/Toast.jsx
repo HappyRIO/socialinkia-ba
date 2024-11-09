@@ -8,23 +8,23 @@ function Toaster({ type, message }) {
     if (type) {
       if (type === "success") {
         toast.success(message || "Success Notification!", {
-          position: "top-center",
+          position: "top-left",
         });
       } else if (type === "error") {
         toast.error(message || "Error Notification!", {
-          position: "top-center",
+          position: "top-left",
         });
       } else if (type === "warn") {
         toast.warn(message || "Warning Notification!", {
-          position: "top-center",
+          position: "top-left",
         });
       } else if (type === "info") {
         toast.info(message || "Info Notification!", {
-          position: "top-center",
+          position: "top-left",
         });
       } else {
         toast(message, {
-          position: "top-center",
+          position: "top-left",
           className: "notification-bar",
         });
       }
@@ -34,7 +34,7 @@ function Toaster({ type, message }) {
   return (
     <>
       <ToastContainer
-        position="top-center"
+        position="top-left"
         autoClose={5000} // Optional: auto close after 5 seconds
         hideProgressBar={false} // Optional: show progress bar
         closeOnClick

@@ -5,9 +5,11 @@ import {
   CaseUpper,
   CopyX,
   Layers3,
+  Logs,
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { Stage, Layer, Rect, Text } from "react-konva";
+import React, { useState, useEffect, useRef } from "react";
+import { Stage, Layer, Rect } from "react-konva";
+import NameInput from "../editor/NameEditor";
 
 //for fetching templates from the server
 function Showtemplates() {
@@ -181,9 +183,63 @@ function Showuploads({ onClick }) {
 }
 
 // Layer Manager component to list and reorder layers
-const ShowLayermanager = ({}) => {
-  return <></>;
-};
+function ShowLayerManager({ layerRef }) {
+  const layerChildren = layerRef.current.getChildren();
+
+  // Convert the layerChildren to a state to update UI on reordering
+  const [children, setChildren] = useState(layerChildren);
+
+  const handleDragStart = (e, index) => {
+    e.dataTransfer.setData("text/plain", index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetIndex) => {
+    e.preventDefault();
+    const draggedIndex = parseInt(e.dataTransfer.getData("text/plain"), 10);
+
+    if (draggedIndex === targetIndex) return;
+
+    // Rearrange children based on the drag-and-drop action
+    const reorderedChildren = [...children];
+    const [draggedChild] = reorderedChildren.splice(draggedIndex, 1);
+    reorderedChildren.splice(targetIndex, 0, draggedChild);
+
+    // Update the state to trigger UI re-render
+    setChildren(reorderedChildren);
+
+    // Update the layer with the new order
+    reorderedChildren.forEach((child, index) => {
+      child.zIndex(index); // Update z-index on Konva layer
+    });
+    layerRef.current.batchDraw();
+  };
+
+  return (
+    <ul className="flex flex-col gap-2 px-2">
+      {children.map((child, index) => (
+        <div
+          key={child._id} // Ensure each Konva object has a unique ID
+          className="px-2 py-2 bg-gray-300 flex flex-row gap-2 cursor-pointer"
+          draggable
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, index)}
+        >
+          <div className="w-fit cursor-pointer">
+            <Logs />
+          </div>
+          <li>
+            {child.className} - {child.attrs.name || `Object ${index + 1}`}
+          </li>
+        </div>
+      ))}
+    </ul>
+  );
+}
 
 export default function Tester() {
   const [openUploads, setOpenuploads] = useState(false);
@@ -286,6 +342,51 @@ export default function Tester() {
   };
 
   // Function to handle element click for selection and toolbar control
+  // const handleObjectClick = (e) => {
+  //   const clickedElement = e.target;
+
+  //   // Reset the outline of the previously active element, if any
+  //   if (activeShape && activeShape !== clickedElement) {
+  //     activeShape.stroke(null); // Remove outline color
+  //     activeShape.strokeWidth(0); // Reset outline width
+  //     activeShape.shadowEnabled(false); // Remove shadow
+  //     activeShape.getLayer().batchDraw(); // Redraw layer for immediate effect
+  //   }
+
+  //   // Set the clicked element as the active shape
+  //   setActiveShape(clickedElement);
+
+  //   // Capture the current attributes of the clicked element
+  //   const attributes = {
+  //     fill: clickedElement.fill ? clickedElement.fill() : "#000000",
+  //     stroke: clickedElement.stroke ? clickedElement.stroke() : null,
+  //     strokeWidth: clickedElement.strokeWidth
+  //       ? clickedElement.strokeWidth()
+  //       : 0,
+  //     scaleX: clickedElement.scaleX ? clickedElement.scaleX() : 1,
+  //     scaleY: clickedElement.scaleY ? clickedElement.scaleY() : 1,
+  //     ...(clickedElement.className === "Text" && {
+  //       fontFamily: clickedElement.fontFamily
+  //         ? clickedElement.fontFamily()
+  //         : "Arial",
+  //       fontSize: clickedElement.fontSize ? clickedElement.fontSize() : 24,
+  //     }),
+  //   };
+
+  //   setActiveAttributes(attributes);
+
+  //   // Show outline and determine toolbar
+  //   clickedElement.stroke("blue");
+  //   clickedElement.strokeWidth(2);
+  //   clickedElement.shadowEnabled(true);
+  //   clickedElement.shadowBlur(5);
+
+  //   setOpentexttoolbar(clickedElement.className === "Text");
+  //   setOpenelementtoolbar(clickedElement.className !== "Text");
+
+  //   console.log("Active element:", clickedElement);
+  // };
+
   const handleObjectClick = (e) => {
     const clickedElement = e.target;
 
@@ -300,23 +401,33 @@ export default function Tester() {
     // Set the clicked element as the active shape
     setActiveShape(clickedElement);
 
-    // Capture the current attributes of the clicked element
-    const attributes = {
-      fill: clickedElement.fill ? clickedElement.fill() : "#000000",
-      stroke: clickedElement.stroke ? clickedElement.stroke() : null,
-      strokeWidth: clickedElement.strokeWidth
-        ? clickedElement.strokeWidth()
-        : 0,
-      scaleX: clickedElement.scaleX ? clickedElement.scaleX() : 1,
-      scaleY: clickedElement.scaleY ? clickedElement.scaleY() : 1,
-      ...(clickedElement.className === "Text" && {
-        fontFamily: clickedElement.fontFamily
-          ? clickedElement.fontFamily()
-          : "Arial",
-        fontSize: clickedElement.fontSize ? clickedElement.fontSize() : 24,
-      }),
-    };
+    // Capture all attributes dynamically
+    const attributes = {};
 
+    // Loop through all the attributes of the clicked Konva object
+    const attrs = clickedElement.attrs;
+    for (let key in attrs) {
+      if (attrs.hasOwnProperty(key)) {
+        // Some attributes may be functions, we need to check and call them
+        attributes[key] =
+          typeof attrs[key] === "function" ? attrs[key]() : attrs[key];
+      }
+    }
+
+    // Optionally, handle specific shape properties
+    if (clickedElement.className === "Text") {
+      attributes.fontFamily = clickedElement.fontFamily
+        ? clickedElement.fontFamily()
+        : "Arial";
+      attributes.fontSize = clickedElement.fontSize
+        ? clickedElement.fontSize()
+        : 24;
+    }
+
+    // Capture the name separately if needed
+    attributes.name = clickedElement.attrs.name || "";
+
+    // Update state with the captured attributes
     setActiveAttributes(attributes);
 
     // Show outline and determine toolbar
@@ -329,6 +440,7 @@ export default function Tester() {
     setOpenelementtoolbar(clickedElement.className !== "Text");
 
     console.log("Active element:", clickedElement);
+    console.log("Captured attributes:", attributes);
   };
 
   // Function to handle stage click to clear selection
@@ -364,6 +476,17 @@ export default function Tester() {
       setActiveAttributes((prev) => ({
         ...prev,
         [attribute]: value,
+      }));
+    }
+  };
+
+  const handleNameChange = (newName) => {
+    if (activeShape) {
+      activeShape.name(newName); // Update Konva shape's name
+      activeShape.getLayer().batchDraw(); // Redraw the layer
+      setActiveAttributes((prevAttributes) => ({
+        ...prevAttributes,
+        name: newName, // Update the name in the attributes as well
       }));
     }
   };
@@ -545,7 +668,7 @@ export default function Tester() {
               <CopyX />
             </button>
           </div>
-          <ShowLayermanager />
+          <ShowLayerManager stageRef={stageRef} layerRef={layerRef} />
         </div>
       )}
       {openUploads && (
@@ -591,6 +714,14 @@ export default function Tester() {
       <div className="board w-full bg-red-900 flex flex-col gap-2 p-2 h-full">
         {opentexttoolbar && (
           <div className="toolbar w-full rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
+            {activeShape && (
+              <div className="nameeditor">
+                <NameInput
+                  shape={activeShape}
+                  onNameChange={handleNameChange}
+                />
+              </div>
+            )}
             <div className="font">
               <label htmlFor="font-family">Font Family</label>
               <select
@@ -727,6 +858,14 @@ export default function Tester() {
         )}
         {openelementtoolbar && (
           <div className="toolbar w-full rounded-lg h-10 bg-red-400 gap-2 flex flex-row justify-center items-center">
+            {activeShape && (
+              <div className="nameeditor">
+                <NameInput
+                  shape={activeShape}
+                  onNameChange={handleNameChange}
+                />
+              </div>
+            )}
             <div className="color-input">
               <label htmlFor="shapecolor" className="sr-only">
                 Shape Color
