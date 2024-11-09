@@ -223,7 +223,7 @@ function ShowLayerManager({ layerRef }) {
       {children.map((child, index) => (
         <div
           key={child._id} // Ensure each Konva object has a unique ID
-          className="px-2 py-2 bg-gray-300 flex flex-row gap-2 cursor-pointer"
+          className="px-2 py-2 bg-gray-300 flex flex-row gap-2 cursor-pointer rounded-lg shadow-md"
           draggable
           onDragStart={(e) => handleDragStart(e, index)}
           onDragOver={handleDragOver}
@@ -342,51 +342,6 @@ export default function Tester() {
   };
 
   // Function to handle element click for selection and toolbar control
-  // const handleObjectClick = (e) => {
-  //   const clickedElement = e.target;
-
-  //   // Reset the outline of the previously active element, if any
-  //   if (activeShape && activeShape !== clickedElement) {
-  //     activeShape.stroke(null); // Remove outline color
-  //     activeShape.strokeWidth(0); // Reset outline width
-  //     activeShape.shadowEnabled(false); // Remove shadow
-  //     activeShape.getLayer().batchDraw(); // Redraw layer for immediate effect
-  //   }
-
-  //   // Set the clicked element as the active shape
-  //   setActiveShape(clickedElement);
-
-  //   // Capture the current attributes of the clicked element
-  //   const attributes = {
-  //     fill: clickedElement.fill ? clickedElement.fill() : "#000000",
-  //     stroke: clickedElement.stroke ? clickedElement.stroke() : null,
-  //     strokeWidth: clickedElement.strokeWidth
-  //       ? clickedElement.strokeWidth()
-  //       : 0,
-  //     scaleX: clickedElement.scaleX ? clickedElement.scaleX() : 1,
-  //     scaleY: clickedElement.scaleY ? clickedElement.scaleY() : 1,
-  //     ...(clickedElement.className === "Text" && {
-  //       fontFamily: clickedElement.fontFamily
-  //         ? clickedElement.fontFamily()
-  //         : "Arial",
-  //       fontSize: clickedElement.fontSize ? clickedElement.fontSize() : 24,
-  //     }),
-  //   };
-
-  //   setActiveAttributes(attributes);
-
-  //   // Show outline and determine toolbar
-  //   clickedElement.stroke("blue");
-  //   clickedElement.strokeWidth(2);
-  //   clickedElement.shadowEnabled(true);
-  //   clickedElement.shadowBlur(5);
-
-  //   setOpentexttoolbar(clickedElement.className === "Text");
-  //   setOpenelementtoolbar(clickedElement.className !== "Text");
-
-  //   console.log("Active element:", clickedElement);
-  // };
-
   const handleObjectClick = (e) => {
     const clickedElement = e.target;
 
@@ -723,7 +678,7 @@ export default function Tester() {
               </div>
             )}
             <div className="font">
-              <label htmlFor="font-family">Font Family</label>
+              {/* <label htmlFor="font-family">Font Family</label> */}
               <select
                 name="font-family"
                 id="font-family"

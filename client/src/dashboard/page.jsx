@@ -1,8 +1,4 @@
-// pending posts in the dashboard
-import FacebookCard from "../components/fragments/FacebookCard";
-import InstagramCard from "../components/fragments/InstagramCard";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, CircleX } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Dashboard() {
@@ -183,76 +179,17 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard flex flex-col w-full justify-center items-center">
-      <div className="social w-full">
-        <div className="social-bar py-3 flex w-full px-2 justify-between items-center flex-row">
-          <div className="grid-swaper-button w-fit">
-            <select
-              className="rounded-lg p-2 bg-text text-background"
-              name="dropdown"
-              id="dropdown"
-              onChange={handleDropdownChange}
-            >
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="all"
-              >
-                All
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="instagram"
-              >
-                Instagram
-              </option>
-              <option
-                className="text-text bg-background border-b-[2px] border-accent"
-                value="facebook"
-              >
-                Facebook
-              </option>
-            </select>
-          </div>
-          <div className="sm:hidden w-fit">
-            <p className="w-fit" onClick={handleMenu} id="menu-btn">
-              <Menu />
-            </p>
-          </div>
-          <div className="navigation w-fit">
-            {openmenu ? (
-              <div className="mobile-navigation py-3 sm:hidden absolute left-0 top-0 flex gap-2 bg-accent text-text w-full flex-col justify-center items-center">
-                <p onClick={handleMenu}>
-                  <CircleX />
-                </p>
-                <Link to="/dashboard/draft/instagram">Instagram</Link>
-                <Link to="/dashboard/draft/facebook">Facebook</Link>
-                <Link to="/dashboard/design">Design</Link>
-              </div>
-            ) : (
-              <div className="desktop-navigation hidden sm:flex w-full gap-3 flex-row justify-center items-center">
-                <Link to="/dashboard/draft/instagram">Instagram</Link>
-                <Link to="/dashboard/draft/facebook">Facebook</Link>
-                <Link to="/dashboard/design">Design</Link>
-              </div>
-            )}
-          </div>
+      <div className="profilesection w-full">
+        <div className="pimage">
+          <img className="rounded-full w-[150px] bg-primary" src="" alt="" />
         </div>
-        <div className="section-title w-full text-md text-center py-4">
-          <h1 className="text-3xl">Pending</h1>
-          <p>Pending posts</p>
+        <div className="fewdetails">
+          <div className="client_company_name"></div>
+          <div className="subscription_status"></div>
         </div>
-        <div className="social-grid-zone w-full flex justify-center items-center px-2">
-          <div
-            id="social-grid"
-            className="w-full grid gap-2 xsm:grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {insta.map((data, index) => (
-              <InstagramCard key={index} data={data} />
-            ))}
-            {faceb.map((data, index) => (
-              <FacebookCard key={index} data={data} />
-            ))}
-          </div>
-        </div>
+      </div>
+      <div className="pendingtop">
+        <h1>currently updating</h1>
       </div>
     </div>
   );

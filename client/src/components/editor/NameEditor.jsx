@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Toaster from "../fragments/Toast";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // eslint-disable-next-line react/prop-types
 function NameInput({ shape, onNameChange }) {
@@ -11,13 +12,31 @@ function NameInput({ shape, onNameChange }) {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      <Toaster type={"success"} message={"name updated successfully"} />;
+      toast(`name changed to ${name}`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "dark",
+      });
       onNameChange(name); // Call the onNameChange callback when Enter is pressed
     }
   };
 
   return (
     <div className="name-input">
+      <ToastContainer
+        position="top-left"
+        autoClose={3000} // Optional: auto close after 5 seconds
+        hideProgressBar={false} // Optional: show progress bar
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
       <label htmlFor="name">Shape Name</label>
       <input
         type="text"
