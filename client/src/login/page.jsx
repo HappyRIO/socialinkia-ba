@@ -50,9 +50,14 @@ export default function Login() {
   const googlelogin = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
-    }/api/google/auth/google`;
-    window.open(backendUrl, "_blank", "width=500,height=600");
+    }/api/google/auth/google?redirectToDashboard=true`;
+    const authWindow = window.open(
+      backendUrl,
+      "_blank",
+      "width=500,height=600"
+    );
   };
+
 
   return (
     <div className="w-full flex flex-col justify-center items-center">

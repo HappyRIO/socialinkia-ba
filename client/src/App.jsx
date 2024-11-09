@@ -17,6 +17,7 @@ import InstagramPending from "./dashboard/pending/instagram/page";
 import PrivateRoute from "./components/security/Privatepage";
 import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
+import CompaniesDetails from "./signup/details/Details";
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
         <Route path="/test" element={<Tester />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/details" component={<CompaniesDetails />} />
+
         <Route path="/contact" element={<Contact />} />
         <Route path="/subscription" element={<Subscription />} />
 

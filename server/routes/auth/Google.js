@@ -1,5 +1,6 @@
 const express = require("express");
 const querystring = require("querystring");
+const bcrypt = require("bcryptjs");
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const connectDB = require("../../data/db");
@@ -107,6 +108,8 @@ router.get("/auth/google/callback", async (req, res) => {
       { expiresIn: "2h" } // Token expires in 2 hours
     );
 
+    console.log("still runing auth");
+
     const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // Session expires in 2 hours
 
     // Store session token and expiration in the database
@@ -120,11 +123,22 @@ router.get("/auth/google/callback", async (req, res) => {
       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
       maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
     });
-
-    res.status(200).json({
-      message: "User authenticated successfully!",
-      user: { name, email, picture },
-    });
+    console.log("redirecting and shorting down............");
+    // Respond with a script to handle redirection and closing in the popup
+    res.status(201).send(`
+  <script>
+      // Otherwise, check for an opener and handle as before
+      if (window.opener) {
+        // Redirect the opener (original tab) to /dashboard
+        window.opener.location.href = '${process.env.CLIENT_BASE_URL}/dashboard';
+        // Close this popup window
+        window.close();
+      } else {
+        // If no opener, just close this window without redirect
+        window.close();
+      }
+  </script>
+`);
   } catch (error) {
     console.error(
       "Error during Google OAuth callback:",

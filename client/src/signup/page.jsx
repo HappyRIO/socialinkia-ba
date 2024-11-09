@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Header from "../components/navigation/Header";
+import Footer from "../components/navigation/Footer";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -50,58 +52,82 @@ export default function Signup() {
     }
   };
 
-  const googlesignin = () => {
+  useEffect(() => {
+    window.addEventListener("message", (event) => {
+      if (event.data === "redirect") {
+        console.log(event.data)
+        window.location.href = "/details";
+      }
+    });
+    console.log("waiting for message from popup ...............");
+  });
+
+  const googlesignup = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
-    }/api/google/auth/google`; // Replace with your actual backend URL
-    console.log(backendUrl);
-    window.open(backendUrl, "_blank", "width=500,height=600");
+    }/api/google/auth/google?redirectToDashboard=true`;
+    const authWindow = window.open(
+      backendUrl,
+      "_blank",
+      "width=500,height=600"
+    );
   };
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      <form onSubmit={handleSubmit} className="form space-y-4 p-4">
-        <input
-          className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
-          type="email"
-          id="email"
-          autoComplete="off"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          className="px-2 py-2 w-full rounded-lg border-red-500 focus:border-blue-500"
-          type="password"
-          id="password"
-          autoComplete="off"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg w-full hover:bg-blue-600"
-        >
-          Sign Up
-        </button>
-      </form>
-      <div className="social">
-        <button
-          onClick={googlesignin}
-          className="rounded-lg px-3 py-2 bg-red-500 text-white"
-        >
-          Sign up with Google
-        </button>
+      <div className="nav w-full">
+        <Header />
       </div>
-      <div className="dont-have-account">
-        <Link to={"/login"}>
-          <p>Already have an account? Sign in</p>
-        </Link>
+      <div className="icon">
+        <img src="/Login-bro.svg" alt="login svg" />
+      </div>
+      <div className="w-full py-32 flex flex-col justify-center items-center">
+        <form onSubmit={handleSubmit} className="form space-y-4 p-4">
+          <input
+            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
+            type="email"
+            id="email"
+            autoComplete="off"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+
+          <input
+            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
+            type="password"
+            id="password"
+            autoComplete="off"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+
+          <button
+            type="submit"
+            className="px-4 py-2 bg-accent text-white rounded-lg w-full hover:bg-secondary"
+          >
+            Sign Up
+          </button>
+        </form>
+        <div className="social">
+          <button
+            onClick={googlesignup}
+            className="rounded-lg px-3 py-2 bg-red-500 text-white hover:bg-red-800"
+          >
+            Sign up with Google
+          </button>
+        </div>
+        <div className="dont-have-account hover:underline hover:bg-primary">
+          <Link to={"/login"}>
+            <p>Already have an account? Sign in</p>
+          </Link>
+        </div>
+      </div>
+      <div className="foot w-full">
+        <Footer />
       </div>
     </div>
   );
