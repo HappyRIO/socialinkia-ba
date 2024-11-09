@@ -20,7 +20,7 @@ import Tester from "./components/page/backup.test";
 
 function App() {
   return (
-    <div className="bg-background text-text">
+    <div className="w-full flex flex-col justify-center items-center bg-background text-text">
       <Routes>
         {/* Home and other public routes */}
         <Route index element={<Home />} />

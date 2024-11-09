@@ -34,6 +34,7 @@ const mainauth = require("./routes/auth/Mainauth");
 const facebook = require("./routes/apps/Facebook");
 const instagram = require("./routes/apps/Instagram");
 const templateRoutes = require("./routes/apps/template");
+const contactRoutes = require("./routes/forms/contact");
 
 // Test route
 app.get("/", (req, res) => {
@@ -47,6 +48,7 @@ app.use("/api/auth", mainauth);
 app.use("/api/facebook", facebook);
 app.use("/api/instagram", instagram);
 app.use("/api/templates", templateRoutes);
+app.use("/api/contact", contactRoutes)
 
 // Start server
 app.listen(4000, () => {

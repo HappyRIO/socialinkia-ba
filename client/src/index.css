@@ -13,6 +13,7 @@
     --primary: #563b34;
     --secondary: #bdb893;
     --accent: #d8603b;
+    --card: #ffffff;
   }
   .dark {
     --text: #f6f0ef;
@@ -20,6 +21,7 @@
     --primary: #cbb0a9;
     --secondary: #6c6742;
     --accent: #d8603b;
+    --card: #362521;
   }
 }
 
