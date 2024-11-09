@@ -10,6 +10,9 @@ export default function Footer() {
           <a href="#">Terms of Service</a>
           <a href="#">Contact</a>
         </div>
+        <a href="https://storyset.com/online">
+          Online illustrations by Storyset
+        </a>
       </div>
     </footer>
   );
