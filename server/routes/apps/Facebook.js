@@ -5,9 +5,30 @@ const router = express.Router();
 // ----------------- Facebook Authentication ------------------
 // Step 1: Redirect to Facebook for authorization
 router.get("/auth/facebook", (req, res) => {
-  const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${process.env.FACEBOOK_REDIRECT_URI}&state={random-string}&scope=pages_manage_posts,pages_read_engagement,pages_show_list`;
+  // Facebook App ID and Redirect URI (from your environment variables)
+  const facebookAppId = process.env.FACEBOOK_APP_ID;
+  const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
+
+  // Generate a random string for state (improve security)
+  const randomString = generateRandomString(); // Replace with a function to generate a random string
+
+  // Construct the Facebook login URL with scope for login only
+  const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile`; // Scope includes email and public profile
+
+  // Redirect user to the Facebook login page
   res.redirect(facebookAuthUrl);
 });
+
+// Function to generate a random string (example)
+function generateRandomString(length = 32) {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
 
 // Step 2: Handle Facebook OAuth callback
 router.get("/auth/facebook/callback", async (req, res) => {

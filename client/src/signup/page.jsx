@@ -120,7 +120,7 @@ export default function Signup() {
             Sign up with Google
           </button>
         </div>
-        <div className="dont-have-account hover:underline hover:bg-primary">
+        <div className="dont-have-account hover:underline">
           <Link to={"/login"}>
             <p>Already have an account? Sign in</p>
           </Link>

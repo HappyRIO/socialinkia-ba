@@ -1,3 +1,4 @@
+import { PanelTopClose, PanelTopOpen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -14,7 +15,9 @@ export default function Header() {
         <Link to={"/"}>Socialinkia</Link>
       </div>
       <div className="menutbn sm:hidden text-white">
-        <button onClick={handleopenmenu}>menu</button>
+        <button onClick={handleopenmenu}>
+          {menuOpen ? <PanelTopClose /> : <PanelTopOpen />}
+        </button>
       </div>
       <div id="desktop-nave" className="desk hidden sm:block">
         <nav className="md:flex space-x-6">
