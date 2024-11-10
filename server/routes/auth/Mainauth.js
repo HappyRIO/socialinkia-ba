@@ -217,7 +217,6 @@ router.get("/user/details", isSessionValid, async (req, res) => {
   }
 });
 
-// File upload route for company details (uses multer)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/photos/");
@@ -230,12 +229,18 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.put(
-  "/details",
+  "/user/details",
   isSessionValid,
   upload.array("photos"),
   async (req, res) => {
     try {
       const {
+        email,
+        deleted,
+        // subscription,
+        createdAt,
+        sessionToken,
+        sessionExpiresAt,
         name,
         companyCreationDate,
         slogan,
@@ -247,28 +252,40 @@ router.put(
 
       const photos = req.files.map((file) => file.path);
 
-      // Update user's company details
-      await User.findByIdAndUpdate(
-        req.user._id,
-        {
-          companyDetails: {
-            name,
-            companyCreationDate,
-            slogan,
-            numEmployees: parseInt(numEmployees),
-            contactInfo,
-            businessPurpose,
-            photos,
-            preferredLanguage,
-          },
+      // Prepare an update object with all fields
+      const updateData = {
+        email,
+        deleted: deleted === "true", // Convert to Boolean if passed as string
+        // subscription: subscription === "true",
+        createdAt,
+        sessionToken,
+        sessionExpiresAt,
+        companyDetails: {
+          name,
+          companyCreationDate,
+          slogan,
+          numEmployees: parseInt(numEmployees, 10), // Ensure this is an integer
+          contactInfo,
+          businessPurpose,
+          preferredLanguage,
+          photos,
         },
+      };
+
+      // Update user details with validation
+      const updatedUser = await User.findByIdAndUpdate(
+        req.user._id,
+        updateData,
         { new: true, runValidators: true }
       );
 
-      res.status(200).json({ message: "Company details updated successfully" });
+      res.status(200).json({
+        message: "User details updated successfully",
+        updatedUser,
+      });
     } catch (error) {
-      console.error("Error updating company details:", error);
-      res.status(500).json({ error: "Failed to update company details" });
+      console.error("Error updating user details:", error);
+      res.status(500).json({ error: "Failed to update user details" });
     }
   }
 );

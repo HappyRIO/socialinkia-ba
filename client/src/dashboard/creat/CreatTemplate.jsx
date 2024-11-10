@@ -1,9 +1,12 @@
+import { Link } from "react-router-dom";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
-export default function TemplatePage() {
-  const [searchtemplate, setsearchtemplate] = useState("");
+export default function CreateTemplate() {
+  const [customSize, setCustomSize] = useState({
+    height: 0,
+    width: 0,
+  });
   const [imageData, setImageDate] = useState([]);
 
   const fakeImageData = [
@@ -301,16 +304,20 @@ export default function TemplatePage() {
     setImageDate(fakeImageData);
   }, []);
 
-  // Filter imageData based on search term
-  const filteredImageData = imageData.filter((data) => {
-    return (
-      data.platform.toLowerCase().includes(searchtemplate.toLowerCase()) ||
-      data.description.toLowerCase().includes(searchtemplate.toLowerCase())
-    );
-  });
+  function handleCustomSize(event) {
+    const { name, value } = event.target;
+    setCustomSize((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  }
 
-  function handleSearchTerm(event) {
-    setsearchtemplate(event.target.value);
+  function handleCustomSizeRedirect() {
+    if (customSize.height === 0 || customSize.width === 0) {
+      alert("Please add both dimensions.");
+    } else {
+      window.location.href = `/dashboard/create/design/${customSize.height}/${customSize.width}`;
+    }
   }
 
   return (
@@ -326,22 +333,40 @@ export default function TemplatePage() {
           <div className="cutomeCanvasCreator flex flex-col gap-2">
             <div className="inputZone flex flex-col sm:flex-row gap-2">
               <div className="flex flex-col text-center">
-                <label htmlFor="height">search template</label>
+                <label htmlFor="height">height</label>
                 <input
                   className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
-                  onChange={handleSearchTerm}
-                  type="text"
+                  onChange={handleCustomSize}
+                  type="number"
                   name="height"
                   id="height"
-                  value={searchtemplate}
-                  placeholder="search template ...."
+                  value={customSize.height}
+                  placeholder="Height"
+                />
+              </div>
+              <div className="flex flex-col text-center">
+                <label htmlFor="width">width</label>
+                <input
+                  className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
+                  onChange={handleCustomSize}
+                  type="number"
+                  name="width"
+                  id="width"
+                  value={customSize.width}
+                  placeholder="Width"
                 />
               </div>
             </div>
+            <button
+              className="px-4 bg-accent hover:bg-primary rounded-lg"
+              onClick={handleCustomSizeRedirect}
+            >
+              <p>Create</p>
+            </button>
           </div>
         </div>
         <div className="samplecardsZone w-full columns-2 md:columns-4 gap-4">
-          {filteredImageData.map((data, index) => (
+          {imageData.map((data, index) => (
             <Link
               key={index}
               to={`/dashboard/create/design/${data.height}/${data.width}`} // Use the height and width from the data

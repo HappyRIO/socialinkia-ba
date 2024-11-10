@@ -190,7 +190,7 @@ export default function Dashboard() {
   return (
     <div className="w-full gap-3 flex flex-row justify-center items-center">
       <div className="sidebar w-fit">
-        <ResponsiveSidebar user={userInfo} />
+        <ResponsiveSidebar pagename={"Dashboard"} user={userInfo} />
       </div>
       <div className="main m-0 sm:ml-60 w-full">
         <div className="dashboard gap-3 pt-3 flex flex-col w-full justify-center items-center px-2">
