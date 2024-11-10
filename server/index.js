@@ -12,19 +12,26 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser()); // Parse cookies
 
-console.log(process.env.CLIENT_BASE_URL);
-// CORS configuration (for local development)
+// List of allowed origins (add any trusted origins as needed)
+const allowedOrigins = [
+  process.env.CLIENT_BASE_URL,
+  "https://auto-social-mfr7.onrender.com",
+];
+
+console.log(allowedOrigins);
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // If no origin is provided (e.g., for same-origin requests), allow it
-      if (!origin || origin === process.env.CLIENT_BASE_URL) {
-        return callback(null, true); // Allow the specified origin
+      // Allow requests from allowed origins or no origin (same-origin requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
       }
       // Block any other origin
       return callback(new Error("Not allowed by CORS"), false);
     },
     credentials: true, // Allow cookies to be sent
+    optionsSuccessStatus: 200, // For handling preflight requests
   })
 );
 
