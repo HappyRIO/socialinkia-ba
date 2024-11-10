@@ -35,9 +35,9 @@ export default function InstagramCard({ data }) {
 
   return (
     <div className="w-full py-3 flex flex-col gap-2 text-[15px] border-b-[2px] border-accent">
-      <Link href={`/dashboard/edit/instagram/${data.id}`}>
+      <Link to={`/dashboard/pending/edit/${data._id}`}>
         <div className="title w-full">
-          <p className="flex justify-center items-center">
+          <p className="flex justify-center items-center gap-2">
             {data.title}{" "}
             <span>
               <Instagram />

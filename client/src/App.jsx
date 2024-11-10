@@ -8,16 +8,15 @@ import Contact from "./contact/page";
 import Subscription from "./subscription/page";
 import TemplatePage from "./dashboard/template/page";
 import Pending from "./dashboard/pending/page";
-import FacebookPending from "./dashboard/pending/facebook/page";
 import PrivateRoute from "./components/security/Privatepage";
 import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
 import CompaniesDetails from "./signup/details/Details";
-import InstagramPending from "./dashboard/pending/instagram/page";
 import Submanagement from "./dashboard/subscriptionmanagment/Submanagement";
 import Profile from "./dashboard/profile/Profile";
 import CreatTemplate from "./dashboard/creat/CreatTemplate";
 import PostCreation from "./dashboard/creat/post/PostCreation";
+import Editpost from "./dashboard/edit/Editpost";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -53,12 +52,8 @@ const router = createBrowserRouter([
   },
   { path: "/dashboard/pending", element: <PrivateRoute Component={Pending} /> },
   {
-    path: "/dashboard/pending/facebook",
-    element: <PrivateRoute Component={FacebookPending} />,
-  },
-  {
-    path: "/dashboard/pending/instagram",
-    element: <PrivateRoute Component={InstagramPending} />,
+    path: "/dashboard/pending/edit/:id",
+    element: <PrivateRoute Component={Editpost} />,
   },
 
   { path: "*", element: <Error /> },
@@ -66,7 +61,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <div className="w-full overflow-hidden flex flex-col justify-center items-center bg-background text-text">
+    <div className="w-full bg-background text-text overflow-hidden flex flex-col justify-center items-center">
       <RouterProvider router={router} />
     </div>
   );

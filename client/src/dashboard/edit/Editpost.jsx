@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ResponsiveSidebar from "../../../components/navigation/ResponsiveSidebar";
+import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 
-export default function PostCreation() {
+export default function Editpost() {
   const [postdata, setPostdata] = useState([]);
   const [postText, setPostText] = useState("");
   const [aitext, setAitext] = useState("");

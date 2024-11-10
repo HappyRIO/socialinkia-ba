@@ -316,23 +316,23 @@ export default function TemplatePage() {
   return (
     <div className="w-full flex flex-row justify-center items-center">
       <div className="navbarzone w-fit">
-        <ResponsiveSidebar pagename={"Subscription"} />
+        <ResponsiveSidebar pagename={"Template"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full flex flex-col gap-3 justify-center items-center">
         <div
           id="createCustomCanvas"
-          className="w-full py-3 shadow-lg bg-background2 rounded-lg px-2 flex gap-2 flex-row justify-center items-center overflow-x-visible"
+          className="w-full py-10 shadow-lg bg-background2 rounded-lg px-2 flex gap-2 flex-row justify-center items-center overflow-x-visible"
         >
           <div className="cutomeCanvasCreator flex flex-col gap-2">
             <div className="inputZone flex flex-col sm:flex-row gap-2">
               <div className="flex flex-col text-center">
-                <label htmlFor="height">search template</label>
+                <label htmlFor="searchterm" className="text-xl">search template</label>
                 <input
                   className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
                   onChange={handleSearchTerm}
                   type="text"
-                  name="height"
-                  id="height"
+                  name="searchterm"
+                  id="searchterm"
                   value={searchtemplate}
                   placeholder="search template ...."
                 />
