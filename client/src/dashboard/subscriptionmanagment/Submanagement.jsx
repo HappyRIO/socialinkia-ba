@@ -58,7 +58,7 @@ export default function Submanagement() {
       <div className="navbarzone w-fit">
         <ResponsiveSidebar pagename={"Subscription"} />
       </div>
-      <div className="contentzone ml-0 sm:ml-64 w-full">
+      <div className="contentzone mt-3 ml-0 sm:ml-64 w-full">
         <div className="subscription-info p-4 bg-background2 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Your Subscription</h2>
           <div className="subscription-details mb-4">
@@ -97,7 +97,7 @@ export default function Submanagement() {
           </div>
         </div>
 
-        <div className="subscription-history mt-8 p-4 bg-background2 rounded-lg shadow-md">
+        <div className="subscription-history mt-8 p-2 bg-background2 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Subscription History</h2>
           <table className="min-w-full table-auto">
             <thead>
