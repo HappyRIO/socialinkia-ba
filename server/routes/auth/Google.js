@@ -33,7 +33,6 @@ router.get("/auth/google", (req, res) => {
   res.redirect(authUrl);
 });
 
-// Google OAuth callback
 // Google OAuth callback route
 router.get("/auth/google/callback", async (req, res) => {
   console.log("callback activated");
@@ -117,7 +116,7 @@ router.get("/auth/google/callback", async (req, res) => {
     user.sessionExpiresAt = sessionExpiresAt;
     await user.save();
 
-    console.log("added to users session tokken");
+    console.log("added to users session tokken", sessionToken, sessionExpiresAt);
 
     // Set session token as an HTTP-only cookie
     res.cookie("sessionToken", sessionToken, {
