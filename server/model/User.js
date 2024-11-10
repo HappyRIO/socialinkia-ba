@@ -2,67 +2,48 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const CompanyDetailsSchema = new Schema({
-  name: {
+  name: { type: String, required: true },
+  companyCreationDate: { type: Date },
+  slogan: { type: String },
+  numEmployees: { type: Number },
+  contactInfo: { type: String },
+  businessPurpose: { type: String },
+  photos: [{ type: String }], // URL or file path to uploaded photos
+  preferredLanguage: { type: String, default: "en" },
+});
+
+const PaymentHistorySchema = new Schema({
+  amount: { type: Number, required: true },
+  currency: { type: String, default: "usd" },
+  date: { type: Date, default: Date.now },
+  status: {
     type: String,
-    required: true,
+    enum: ["succeeded", "failed", "pending"],
+    default: "succeeded",
   },
-  companyCreationDate: {
-    type: Date,
-  },
-  slogan: {
-    type: String,
-  },
-  numEmployees: {
-    type: Number,
-  },
-  contactInfo: {
-    type: String,
-  },
-  businessPurpose: {
-    type: String,
-  },
-  photos: [
-    {
-      type: String, // URL or file path to uploaded photos
-    },
-  ],
-  preferredLanguage: {
-    type: String,
-    default: "en",
-  },
+});
+
+const SubscriptionSchema = new Schema({
+  id: { type: String }, // Stripe subscription ID
+  active: { type: Boolean, default: false }, // Subscription status
+  plan: { type: String }, // Plan type (e.g., 'basic', 'standard', 'premium')
+  trialEnd: { type: Date }, // End date of trial period if any
+  amount: { type: Number }, // Amount per billing period
+  currency: { type: String, default: "usd" },
+  renewalDate: { type: Date }, // Next billing date
+  paymentHistory: [PaymentHistorySchema], // Array of past payments
 });
 
 const UserSchema = new Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  deleted: {
-    type: Boolean,
-    default: false,
-  },
-  subscription: {
-    type: Schema.Types.ObjectId,
-    ref: "subscription",
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-  sessionToken: {
-    type: String,
-  },
-  sessionExpiresAt: {
-    type: Date,
-  },
-  companyDetails: CompanyDetailsSchema, // Add nested company details schema
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  deleted: { type: Boolean, default: false },
+  subscription: SubscriptionSchema,
+  createdAt: { type: Date, default: Date.now },
+  sessionToken: { type: String },
+  sessionExpiresAt: { type: Date },
+  companyDetails: CompanyDetailsSchema,
 });
 
 const User = mongoose.model("User", UserSchema);
-
 module.exports = User;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 import { toast, ToastContainer } from "react-toastify";
+import { Facebook, Instagram } from "lucide-react";
 
 export default function Profile() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ export default function Profile() {
   });
   const [photoPreviews, setPhotoPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [connectfb, setconnectfb] = useState(false);
+  const [connectig, setconnectig] = useState(false);
 
   useEffect(() => {
     async function fetchUserInfo() {
@@ -113,6 +116,63 @@ export default function Profile() {
     }
   };
 
+  function openAuthPopup(url, onSuccess) {
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    const authWindow = window.open(
+      url,
+      "AuthPopup",
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+
+    const timer = setInterval(() => {
+      if (authWindow.closed) {
+        clearInterval(timer);
+        onSuccess();
+      }
+    }, 500);
+  }
+
+  function handleconnectFacebook() {
+    openAuthPopup(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/facebook/auth/facebook`,
+      () => {
+        setconnectfb(true);
+        toast(`Facebook connected`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+      }
+    );
+  }
+
+  function handleconnectInstagram() {
+    openAuthPopup(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/instagram/auth/instagram`,
+      () => {
+        setconnectfb(true);
+        toast(`Instagram connected`, {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+      }
+    );
+  }
+
   return (
     <div className="w-full flex flex-row justify-center items-center">
       <ToastContainer
@@ -127,11 +187,31 @@ export default function Profile() {
       <div className="navsystembar w-fit">
         <ResponsiveSidebar pagename={"Profile"} />
       </div>
-      <div className="w-full ml-0 sm:ml-64 px-2 flex flex-col justify-center items-center">
+      <div className="w-full ml-0 sm:ml-64 pt-3 px-2 flex flex-col justify-center items-center">
+        <div className="topsection w-full gap-2 flex flex-col sm:flex-row">
+          <div className="facebookConnect w-full sm:w-1/2 p-2 flex justify-center items-center">
+            <button
+              onClick={handleconnectFacebook}
+              className="p-4 rounded-lg shadow-lg bg-blue-500 text-white flex flex-col gap2 justify-center items-center border-accent hover:bg-secondary"
+            >
+              <span>connect facebook</span>
+              <Facebook />
+            </button>
+          </div>
+          <div className="facebookConnect w-full sm:w-1/2 p-2 flex justify-center items-center">
+            <button
+              onClick={handleconnectInstagram}
+              className="p-4 rounded-lg shadow-lg bg-red-400 text-white flex flex-col gap2 justify-center items-center border-accent hover:bg-secondary"
+            >
+              <span>connect instagram</span>
+              <Instagram />
+            </button>
+          </div>
+        </div>
         {loading && <div className="spinner">Loading...</div>}
         <form onSubmit={handleSubmit} className="form space-y-4 p-4">
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="text"
             id="name"
             placeholder="Company Name"
@@ -140,7 +220,7 @@ export default function Profile() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="date"
             id="companyCreationDate"
             placeholder="Company Creation Date"
@@ -149,7 +229,7 @@ export default function Profile() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="text"
             id="slogan"
             placeholder="Company Slogan"
@@ -158,7 +238,7 @@ export default function Profile() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="number"
             id="numEmployees"
             placeholder="Number of Employees"
@@ -167,7 +247,7 @@ export default function Profile() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="text"
             id="contactInfo"
             placeholder="Contact Information (Phone or Email)"
@@ -176,7 +256,7 @@ export default function Profile() {
           />
 
           <textarea
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full min-h-32 rounded-lg focus:border-accent shadow-lg"
             id="businessPurpose"
             placeholder="Business Purpose"
             value={formData.businessPurpose}
@@ -184,7 +264,7 @@ export default function Profile() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             type="file"
             id="photos"
             multiple
@@ -192,20 +272,20 @@ export default function Profile() {
           />
 
           {photoPreviews.length > 0 && (
-            <div className="photo-previews">
+            <div className="photo-previews w-full flex flex-wrap">
               {photoPreviews.map((preview, index) => (
                 <img
                   key={index}
                   src={preview}
                   alt={`Preview ${index + 1}`}
-                  className="w-24 h-24 object-cover my-2"
+                  className="w-24 h-24 object-cover my-2 rounded-lg"
                 />
               ))}
             </div>
           )}
 
           <select
-            className="px-2 py-2 w-full rounded-lg focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg focus:border-accent shadow-lg"
             id="preferredLanguage"
             value={formData.preferredLanguage}
             onChange={handleChange}

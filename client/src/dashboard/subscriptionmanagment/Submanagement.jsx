@@ -1,32 +1,42 @@
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 
 export default function Submanagement() {
-  // Fake subscription data
-  const [subscriptionData, setSubscriptionData] = useState({
-    plan: "Premium",
-    startDate: "2024-01-01",
-    nextBilling: "2024-02-01",
-    status: "Active",
-    amount: "$20",
+  const [subscriptionData, setSubscriptionData] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState("basic");
+  const [cardDetails, setCardDetails] = useState({
+    cardNumber: "",
+    expiryMonth: "",
+    expiryYear: "",
+    cvc: "",
   });
 
-  const [subscriptionHistory, setSubscriptionHistory] = useState([
-    { date: "2024-01-01", amount: "$20", status: "Paid" },
-    { date: "2024-02-01", amount: "$20", status: "Paid" },
-    { date: "2024-03-01", amount: "$20", status: "Paid" },
-    { date: "2024-04-01", amount: "$20", status: "Paid" },
-    { date: "2024-05-01", amount: "$20", status: "Paid" },
-    { date: "2024-06-01", amount: "$20", status: "Paid" },
-    { date: "2024-07-01", amount: "$20", status: "Paid" },
-    { date: "2024-08-01", amount: "$20", status: "Paid" },
-    { date: "2024-09-01", amount: "$20", status: "Paid" },
-    { date: "2024-10-01", amount: "$20", status: "Paid" },
-    { date: "2024-11-01", amount: "$20", status: "Paid" },
-    { date: "2024-12-01", amount: "$20", status: "Paid" },
-  ]);
+  // Fetch user details on mount
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_BASE_URL}/api/subscription/details`,
+          {
+            credentials: "include",
+            method: "GET",
+          }
+        );
 
+        if (!response.ok) {
+          throw new Error("Failed to fetch user details");
+        }
+
+        const data = await response.json();
+        setSubscriptionData(data);
+      } catch (error) {
+        console.error("Error fetching user details:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
 
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
@@ -34,24 +44,73 @@ export default function Submanagement() {
     doc.text("Plan: " + subscriptionData.plan, 10, 20);
     doc.text("Amount: " + subscriptionData.amount, 10, 30);
     doc.text("Status: " + subscriptionData.status, 10, 40);
-
-    doc.text("History:", 10, 50);
-    subscriptionHistory.forEach((history, index) => {
-      doc.text(
-        `${history.date} - ${history.amount} - ${history.status}`,
-        10,
-        60 + index * 10
-      );
-    });
-
     doc.save("subscription-history.pdf");
   };
 
-  const handleCancelSubscription = () => {
-    // You can call your API here to cancel the subscription
-    alert("Subscription canceled!");
-    setSubscriptionData({ ...subscriptionData, status: "Cancelled" });
+  const handleCancelSubscription = async () => {
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_SERVER_BASE_URL
+        }/api/subscription/cancel-subscription`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            subscriptionId: subscriptionData.subscriptionId,
+          }),
+        }
+      );
+      if (response.ok) {
+        alert("Subscription canceled successfully!");
+        setSubscriptionData({ ...subscriptionData, status: "Cancelled" });
+      } else {
+        alert("Failed to cancel subscription.");
+      }
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+    }
   };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCardDetails((prevDetails) => ({ ...prevDetails, [name]: value }));
+  };
+
+  const handleSubscriptionSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_SERVER_BASE_URL
+        }/api/subscription/create-subscription`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            plan: selectedPlan,
+            cardDetails,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Subscription successful!");
+        setSubscriptionData(data.subscriptionDetails);
+      } else {
+        console.error("Subscription failed:", data.error);
+      }
+    } catch (error) {
+      console.error("Error during subscription:", error);
+    }
+  };
+
+  if (!subscriptionData) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
@@ -66,19 +125,20 @@ export default function Submanagement() {
               <strong>Plan:</strong> {subscriptionData.plan}
             </p>
             <p>
-              <strong>Start Date:</strong> {subscriptionData.startDate}
-            </p>
-            <p>
-              <strong>Next Billing:</strong> {subscriptionData.nextBilling}
-            </p>
-            <p>
               <strong>Status:</strong> {subscriptionData.status}
             </p>
             <p>
               <strong>Amount:</strong> {subscriptionData.amount}
             </p>
+            {subscriptionData.trialEnd && (
+              <p>
+                <strong>Trial End:</strong>{" "}
+                {new Date(
+                  subscriptionData.trialEnd * 1000
+                ).toLocaleDateString()}
+              </p>
+            )}
           </div>
-
           <div className="actions flex gap-4 mt-4">
             <button
               className="bg-primary text-white py-2 px-4 rounded-md"
@@ -95,28 +155,63 @@ export default function Submanagement() {
               </button>
             )}
           </div>
-        </div>
-
-        <div className="subscription-history mt-8 p-2 bg-background2 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Subscription History</h2>
-          <table className="min-w-full table-auto">
-            <thead>
-              <tr>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Amount</th>
-                <th className="px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subscriptionHistory.map((history, index) => (
-                <tr key={index}>
-                  <td className="px-4 py-2">{history.date}</td>
-                  <td className="px-4 py-2">{history.amount}</td>
-                  <td className="px-4 py-2">{history.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="plan-upgrade mt-4">
+            <label className="block mb-2 font-semibold">Upgrade Plan:</label>
+            <select
+              className="px-4 py-2 border rounded"
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+            >
+              <option value="basic">Basic</option>
+              <option value="standard">Standard</option>
+              <option value="premium">Premium</option>
+            </select>
+            <form onSubmit={handleSubscriptionSubmit} className="mt-4">
+              <h3 className="text-lg font-semibold">Payment Details</h3>
+              <input
+                type="text"
+                name="cardNumber"
+                placeholder="Card Number"
+                value={cardDetails.cardNumber}
+                onChange={handleInputChange}
+                className="w-full mt-2 p-2 border rounded"
+                required
+              />
+              <input
+                type="text"
+                name="expiryMonth"
+                placeholder="Expiry Month (MM)"
+                value={cardDetails.expiryMonth}
+                onChange={handleInputChange}
+                className="w-full mt-2 p-2 border rounded"
+                required
+              />
+              <input
+                type="text"
+                name="expiryYear"
+                placeholder="Expiry Year (YY)"
+                value={cardDetails.expiryYear}
+                onChange={handleInputChange}
+                className="w-full mt-2 p-2 border rounded"
+                required
+              />
+              <input
+                type="text"
+                name="cvc"
+                placeholder="CVC"
+                value={cardDetails.cvc}
+                onChange={handleInputChange}
+                className="w-full mt-2 p-2 border rounded"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-primary text-white py-2 px-4 rounded-md mt-4"
+              >
+                Upgrade Subscription
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

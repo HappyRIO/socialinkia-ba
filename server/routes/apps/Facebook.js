@@ -5,6 +5,7 @@ const router = express.Router();
 // ----------------- Facebook Authentication ------------------
 // Step 1: Redirect to Facebook for authorization
 router.get("/auth/facebook", (req, res) => {
+  console.log("firing facebook auth");
   // Facebook App ID and Redirect URI (from your environment variables)
   const facebookAppId = process.env.FACEBOOK_APP_ID;
   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
@@ -32,8 +33,9 @@ function generateRandomString(length = 32) {
 
 // Step 2: Handle Facebook OAuth callback
 router.get("/auth/facebook/callback", async (req, res) => {
+  console.log("back to call back");
   const { code } = req.query;
-
+  console.log(code);
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }

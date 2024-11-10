@@ -6,6 +6,7 @@ require("dotenv").config();
 // ----------------- Instagram Authentication ------------------
 // Step 1: Redirect to Instagram for authorization
 router.get("/auth/instagram", (req, res) => {
+  console.log("firing inst auth");
   const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_basic,instagram_business_basic`;
   res.redirect(instagramAuthUrl);
 });
@@ -13,7 +14,9 @@ router.get("/auth/instagram", (req, res) => {
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
+  console.log("ig call back");
   const { code } = req.query;
+  console.log(code);
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });

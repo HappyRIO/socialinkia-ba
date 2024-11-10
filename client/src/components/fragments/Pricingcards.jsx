@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Pricingcard() {
   return (
     <div className="flex items-center justify-center bg-background">
@@ -19,9 +21,12 @@ export default function Pricingcard() {
             <p className="font-light text-gray-600 sm:text-sm">
               Best option for personal use & for your next project.
             </p>
-            <a className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1">
+            <Link
+              to={"/signup?subscription=basic"}
+              className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1"
+            >
               Get started
-            </a>
+            </Link>
             {/* List */}
             <ul
               role="list"
@@ -115,9 +120,12 @@ export default function Pricingcard() {
             <p className="font-light text-gray-200 sm:text-sm">
               Best option for personal use & for your next project.
             </p>
-            <a className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1">
+            <Link
+              to={"/signup?subscription=standard"}
+              className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1"
+            >
               Get started
-            </a>
+            </Link>
             {/* List */}
             <ul
               role="list"
@@ -211,9 +219,12 @@ export default function Pricingcard() {
             <p className="font-light text-gray-600 sm:text-sm">
               Best option for personal use & for your next project.
             </p>
-            <a className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1">
+            <Link
+              to={"/signup?subscription=premium"}
+              className="cursor-pointer bg-gray-900 w-full rounded-md p-3 text-center text-sm font-semibold text-white shadow-sm hover:-translate-y-1"
+            >
               Get started
-            </a>
+            </Link>
             {/* List */}
             <ul
               role="list"

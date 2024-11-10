@@ -12,13 +12,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser()); // Parse cookies
 
-console.log(process.env.ACCEPTED_ORIGIN);
+console.log(process.env.CLIENT_BASE_URL);
 // CORS configuration (for local development)
 app.use(
   cors({
     origin: (origin, callback) => {
       // If no origin is provided (e.g., for same-origin requests), allow it
-      if (!origin || origin === process.env.ACCEPTED_ORIGIN) {
+      if (!origin || origin === process.env.CLIENT_BASE_URL) {
         return callback(null, true); // Allow the specified origin
       }
       // Block any other origin
@@ -35,6 +35,7 @@ const facebook = require("./routes/apps/Facebook");
 const instagram = require("./routes/apps/Instagram");
 const templateRoutes = require("./routes/apps/template");
 const contactRoutes = require("./routes/forms/contact");
+const paymentRoutes = require("./routes/apps/Stripe");
 
 // Test route
 app.get("/", (req, res) => {
@@ -48,7 +49,8 @@ app.use("/api/auth", mainauth);
 app.use("/api/facebook", facebook);
 app.use("/api/instagram", instagram);
 app.use("/api/templates", templateRoutes);
-app.use("/api/contact", contactRoutes)
+app.use("/api/contact", contactRoutes);
+app.use("/api/subscription", paymentRoutes);
 
 // Start server
 app.listen(4000, () => {
