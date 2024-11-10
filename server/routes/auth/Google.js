@@ -116,7 +116,11 @@ router.get("/auth/google/callback", async (req, res) => {
     user.sessionExpiresAt = sessionExpiresAt;
     await user.save();
 
-    console.log("added to users session tokken", sessionToken, sessionExpiresAt);
+    console.log(
+      "added to users session tokken",
+      sessionToken,
+      sessionExpiresAt
+    );
 
     // Set session token as an HTTP-only cookie
     res.cookie("sessionToken", sessionToken, {

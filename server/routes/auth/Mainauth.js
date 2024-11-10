@@ -186,7 +186,7 @@ router.post("/refresh-session", isSessionValid, async (req, res) => {
 // Check if user is logged in and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
   connectDB();
-  res.json({
+  res.status(201).json({
     message: "User is registered and session is valid",
     user: {
       email: req.user.email,
