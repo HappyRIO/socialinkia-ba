@@ -166,6 +166,7 @@ router.get("/subscription-status", isSessionValid, async (req, res) => {
 });
 
 // Route to retrieve user subscription details
+// Route to retrieve user subscription details
 router.get("/details", isSessionValid, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -173,17 +174,18 @@ router.get("/details", isSessionValid, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Format the user's subscription details to return
-    const { subscription } = user;
+    // Ensure subscription object exists, or set defaults if it's missing
+    const { subscription = {} } = user;
+
     const subscriptionDetails = {
       plan: subscription.plan || "No plan",
       status: subscription.active ? "Active" : "Inactive",
       amount: subscription.amount
         ? `$${(subscription.amount / 100).toFixed(2)}`
         : "0.00",
-      trialEnd: subscription.trialEnd,
-      renewalDate: subscription.renewalDate,
-      subscriptionId: subscription.id,
+      trialEnd: subscription.trialEnd || null,
+      renewalDate: subscription.renewalDate || null,
+      subscriptionId: subscription.id || null,
     };
 
     res.status(200).json(subscriptionDetails);

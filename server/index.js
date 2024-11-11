@@ -50,6 +50,10 @@ app.get("/", (req, res) => {
   res.json({ message: "hello world" });
 });
 
+app.get("/dashboard", (req, res) => {
+  res.redirect(`${process.env.CLIENT_BASE_URL}/dashboard`);
+});
+
 // Main routes
 app.use("/api/google", google);
 app.use("/api/auth", mainauth);
