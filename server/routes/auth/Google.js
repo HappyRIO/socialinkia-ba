@@ -133,18 +133,33 @@ router.get("/auth/google/callback", async (req, res) => {
     console.log("redirecting and shorting down............");
     // Respond with a script to handle redirection and closing in the popup
     res.status(201).send(`
-  <script>
-      // Otherwise, check for an opener and handle as before
-      if (window.opener) {
-        // Redirect the opener (original tab) to /dashboard
-        window.opener.location.href = '/dashboard';
-        // Close this popup window
-        window.close();
-      } else {
-        // If no opener, just close this window without redirect
-        window.close();
-      }
-  </script>
+      <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <p>redirecting to dashboard</p>
+
+    <script>
+        // Otherwise, check for an opener and handle as before
+        if (window.opener) {
+            // Redirect the opener (original tab) to /dashboard
+            window.opener.location.href = "${process.env.CLIENT_BASE_URL}/dashboard";
+            // Close this popup window
+            window.close();
+        } else {
+            // If no opener, just close this window without redirect
+            window.close();
+        }
+    </script>
+</body>
+
+</html>
 `);
   } catch (error) {
     console.error(
