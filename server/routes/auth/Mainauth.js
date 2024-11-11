@@ -16,25 +16,24 @@ router.get("/test", (req, res) => {
 const isSessionValid = (req, res, next) => {
   connectDB();
   console.log("Validating session");
+  console.log("Cookies:", req.cookies); // Check all cookies received
   const { sessionToken } = req.cookies;
-  console.log(sessionToken);
+
   if (!sessionToken) {
-    console.log("no session token");
+    console.log("No session token provided");
     return res.status(401).json({ error: "No session token provided." });
   }
 
   User.findOne({ sessionToken })
     .then((user) => {
       if (!user) {
-        console.log({ error: "Invalid session token." });
+        console.log("Invalid session token.");
         return res.status(401).json({ error: "Invalid session token." });
       }
 
       const expirationTime = new Date(user.sessionExpiresAt);
       const currentTime = new Date();
-      const timeDifference = expirationTime - currentTime;
-
-      if (timeDifference <= 0) {
+      if (expirationTime <= currentTime) {
         return res.status(401).json({ error: "Session expired." });
       }
 
@@ -136,6 +135,8 @@ router.post("/login", async (req, res) => {
     res.cookie("sessionToken", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Secure in production
+      sameSite: "none", // Allows cross-site cookie sharing
+      // secure: false, // Test by setting this to false temporarily to verify if it's an HTTPS issue
       maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
     });
 
