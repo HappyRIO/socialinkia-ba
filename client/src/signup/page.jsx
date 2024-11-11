@@ -54,6 +54,7 @@ export default function Signup() {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
+      console.log(event.data.redirectUrl);
       window.location.href = event.data.redirectUrl;
     });
   }, []);
