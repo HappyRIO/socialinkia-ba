@@ -52,6 +52,14 @@ const uploadImagesToCloudinary = async (images) => {
   return urls;
 };
 
+//helper function for deleting images
+const deleteImagesFromCloudinary = async (imageUrls) => {
+  for (const url of imageUrls) {
+    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+    await cloudinary.uploader.destroy(`automedia/${publicId}`);
+  }
+};
+
 // Create a new post
 router.post(
   "/create",
@@ -145,56 +153,87 @@ router.get("/:postId", isSessionValid, async (req, res) => {
   }
 });
 
-
-// Update a post
+// PUT request to update post by ID
 router.put("/:postId", isSessionValid, async (req, res) => {
   connectDB();
-  console.log("updating image...");
+  console.log("updating post...");
+
   try {
-    if (req.user.post._id != req.params.postId) {
+    // Find the post with the matching ID in the user's posts array
+    const post = req.user.post.find(
+      (p) => p._id.toString() === req.params.postId
+    );
+
+    if (!post) {
       return res.status(404).json({ message: "Post not found." });
     }
 
     const { text, uploaddate, images } = req.body;
+    const existingImages = post.images || [];
+    const newImages = images || [];
 
-    // Process and upload images if provided
-    const uploadedImageUrls = images
-      ? await uploadImagesToCloudinary(images)
-      : req.user.post.images;
+    // Find removed images by comparing the existing URLs with the new ones
+    const removedImages = existingImages.filter(
+      (img) => !newImages.includes(img)
+    );
+    const addedImages = newImages.filter(
+      (img) => !existingImages.includes(img)
+    );
+
+    // Delete removed images from Cloudinary
+    if (removedImages.length > 0) {
+      await deleteImagesFromCloudinary(removedImages);
+    }
+
+    // Upload new images to Cloudinary and retrieve their URLs
+    const uploadedImageUrls =
+      addedImages.length > 0 ? await uploadImagesToCloudinary(addedImages) : [];
+
+    // Combine existing (unchanged) images with new uploaded URLs
+    const updatedImages = [
+      ...existingImages.filter((img) => newImages.includes(img)),
+      ...uploadedImageUrls,
+    ];
 
     // Update post fields
-    req.user.post = {
-      ...req.user.post.toObject(),
-      text,
-      uploaddate,
-      images: uploadedImageUrls,
-    };
+    post.text = text;
+    post.uploaddate = uploaddate;
+    post.images = updatedImages;
     await req.user.save();
 
-    res.json({ message: "Post updated successfully", post: req.user.post });
+    res.json({ message: "Post updated successfully", post });
   } catch (error) {
     console.error("Error updating post:", error);
     res.status(500).json({ error: "Failed to update post." });
   }
 });
 
-// Delete a post
+// Delete a post by ID
 router.delete("/delete/:postId", isSessionValid, async (req, res) => {
   connectDB();
 
   try {
-    if (req.user.post._id != req.params.postId) {
+    // Find the post with the matching ID in the user's posts array
+    const post = req.user.post.find(
+      (p) => p._id.toString() === req.params.postId
+    );
+
+    if (!post) {
       return res.status(404).json({ message: "Post not found." });
     }
 
-    // Delete images from Cloudinary in the 'automedia' folder
-    for (const imageUrl of req.user.post.images) {
-      const publicId = imageUrl.split("/").pop().split(".")[0];
-      await cloudinary.uploader.destroy(`automedia/${publicId}`);
+    // Delete images from Cloudinary
+    if (post.images && post.images.length > 0) {
+      for (const imageUrl of post.images) {
+        const publicId = imageUrl.split("/").pop().split(".")[0];
+        await cloudinary.uploader.destroy(`automedia/${publicId}`);
+      }
     }
 
-    // Remove post from user
-    req.user.post = null;
+    // Remove the post from the user's posts array
+    req.user.post = req.user.post.filter(
+      (p) => p._id.toString() !== req.params.postId
+    );
     await req.user.save();
 
     res.json({ message: "Post deleted successfully" });
