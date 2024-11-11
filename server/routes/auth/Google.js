@@ -135,30 +135,32 @@ router.get("/auth/google/callback", async (req, res) => {
     res.status(201).send(`
       <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Redirecting</title>
 </head>
-
 <body>
-    <p>redirecting to dashboard</p>
+    <p>Redirecting to dashboard...</p>
 
     <script>
-        // Otherwise, check for an opener and handle as before
+        // Check if there is an opener window
         if (window.opener) {
-            // Redirect the opener (original tab) to /dashboard
-            window.opener.location.href = "/dashboard";
-            // Close this popup window
-            window.close();
+            // Redirect the original window (opener) to the dashboard
+            window.opener.location.href = "${process.env.CLIENT_BASE_URL}/dashboard";
+            
+            // Add a short delay before closing the popup window
+            setTimeout(() => {
+                window.close();
+            }, 200); // Delay of 200 milliseconds
         } else {
-            // If no opener, just close this window without redirect
-            window.close();
+            // If no opener exists, close this popup without redirecting
+            setTimeout(() => {
+                window.close();
+            }, 100);
         }
     </script>
 </body>
-
 </html>
 `);
   } catch (error) {
