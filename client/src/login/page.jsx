@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Loader from "../components/fragments/Loader";
 import Header from "../components/navigation/Header";
@@ -47,6 +47,12 @@ export default function Login() {
     }
   };
 
+  useEffect(() => {
+    window.addEventListener("message", (event) => {
+      window.location.href = event.data.redirectUrl;
+    });
+  }, []);
+
   const googlelogin = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
@@ -57,7 +63,6 @@ export default function Login() {
       "width=500,height=600"
     );
   };
-
 
   return (
     <div className="w-full flex flex-col justify-center items-center">

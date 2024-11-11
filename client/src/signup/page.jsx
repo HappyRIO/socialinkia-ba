@@ -54,13 +54,9 @@ export default function Signup() {
 
   useEffect(() => {
     window.addEventListener("message", (event) => {
-      if (event.data === "redirect") {
-        console.log(event.data)
-        window.location.href = "/details";
-      }
+      window.location.href = event.data.redirectUrl;
     });
-    console.log("waiting for message from popup ...............");
-  });
+  }, []);
 
   const googlesignup = () => {
     const backendUrl = `${
