@@ -52,7 +52,7 @@ const router = createBrowserRouter([
   },
   { path: "/dashboard/pending", element: <PrivateRoute Component={Pending} /> },
   {
-    path: "/dashboard/pending/edit/:id",
+    path: "/dashboard/pending/edit/:postId",
     element: <PrivateRoute Component={Editpost} />,
   },
 

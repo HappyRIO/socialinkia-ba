@@ -3,9 +3,7 @@ const router = express.Router();
 const connectDB = require("../../data/db");
 const Template = require("../../model/Template");
 
-// Test route
-router.get("/test", (req, res) => res.send("Hello World!"));
-
+//get all template
 router.get("/all", async (req, res) => {
   connectDB();
   try {

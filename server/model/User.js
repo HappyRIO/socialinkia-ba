@@ -34,9 +34,21 @@ const SubscriptionSchema = new Schema({
   paymentHistory: [PaymentHistorySchema], // Array of past payments
 });
 
+const postSchema = new Schema({
+  text: { type: String },
+  platform: {
+    both: { type: Boolean, default: false },
+    insta: { type: Boolean, default: false },
+    fbook: { type: Boolean, default: false },
+  },
+  uploaddate: { type: String },
+  images: [],
+});
+
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  post: [postSchema],
   deleted: { type: Boolean, default: false },
   subscription: SubscriptionSchema,
   createdAt: { type: Date, default: Date.now },

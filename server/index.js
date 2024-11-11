@@ -43,6 +43,7 @@ const instagram = require("./routes/apps/Instagram");
 const templateRoutes = require("./routes/apps/template");
 const contactRoutes = require("./routes/forms/contact");
 const paymentRoutes = require("./routes/apps/Stripe");
+const PostRoutes = require("./routes/apps/PostManager");
 
 // Test route
 app.get("/", (req, res) => {
@@ -62,6 +63,7 @@ app.use("/api/instagram", instagram);
 app.use("/api/templates", templateRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/subscription", paymentRoutes);
+app.use("/api/posts", PostRoutes);
 
 // Start server
 app.listen(4000, () => {
