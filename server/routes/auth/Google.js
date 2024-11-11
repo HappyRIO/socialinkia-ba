@@ -149,7 +149,7 @@ router.get("/auth/google/callback", async (req, res) => {
         // Otherwise, check for an opener and handle as before
         if (window.opener) {
             // Redirect the opener (original tab) to /dashboard
-            window.opener.location.href = "${process.env.CLIENT_BASE_URL}/dashboard";
+            window.opener.location.href = "/dashboard";
             // Close this popup window
             window.close();
         } else {

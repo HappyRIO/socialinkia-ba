@@ -100,4 +100,47 @@ const validateAndRefreshToken = async (req, res, next) => {
 router.get("/all", validateAndRefreshToken, async (req, res) => {
   res.json({ message: "res confirmed" });
 });
+
+// Route to publish content on Instagram
+router.post("/post", validateAndRefreshToken, async (req, res) => {
+  const { caption, imageUrl } = req.body; // Accept caption and image URL as input
+
+  if (!caption || !imageUrl) {
+    return res
+      .status(400)
+      .json({ error: "Caption and image URL are required." });
+  }
+
+  try {
+    // Step 1: Create media container
+    const mediaContainerResponse = await axios.post(
+      `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media`,
+      {
+        image_url: imageUrl,
+        caption: caption,
+        access_token: req.session.accessToken,
+      }
+    );
+
+    const { id: mediaContainerId } = mediaContainerResponse.data;
+
+    // Step 2: Publish media
+    const publishResponse = await axios.post(
+      `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media_publish`,
+      {
+        creation_id: mediaContainerId,
+        access_token: req.session.accessToken,
+      }
+    );
+
+    res.status(200).json({
+      message: "Content posted successfully!",
+      postId: publishResponse.data.id,
+    });
+  } catch (error) {
+    console.error("Error posting content on Instagram:", error.message);
+    res.status(500).json({ error: "Failed to post content on Instagram." });
+  }
+});
+
 module.exports = router;

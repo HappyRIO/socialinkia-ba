@@ -106,31 +106,50 @@ const validateAndRefreshToken = async (req, res, next) => {
 
 //<------------- next section ----------->
 
-// Route to create a Facebook post
-router.post("/facebook/posts", validateAndRefreshToken, async (req, res) => {
+// Add a route for posting to Facebook
+router.post("/post/", validateAndRefreshToken, async (req, res) => {
+  const { message, images } = req.body; // 'images' is expected to be an array of URLs
+
+  if (!message && (!images || images.length === 0)) {
+    return res.status(400).json({
+      error: "Message or at least one image URL required for posting.",
+    });
+  }
+
   try {
-    const { message, link } = req.body;
-
-    if (!message) {
-      return res.status(400).json({ error: "Message is required." });
-    }
-
-    const response = await axios.post(
+    // Step 1: Create an initial post with the message
+    const postResponse = await axios.post(
       `https://graph.facebook.com/v17.0/me/feed`,
       {
-        message: message,
-        link: link, // Optional: include if you want to post a link
         access_token: req.session.accessToken,
+        message,
       }
     );
 
-    res.status(201).json({
-      message: "Facebook post created successfully",
-      postId: response.data.id,
+    const postId = postResponse.data.id;
+
+    // Step 2: Attach each image to the post
+    if (images && images.length > 0) {
+      const imageUploadPromises = images.map((imageUrl) => {
+        return axios.post(`https://graph.facebook.com/v17.0/${postId}/photos`, {
+          access_token: req.session.accessToken,
+          url: imageUrl,
+          published: false, // Set to false to link it as part of the same post
+        });
+      });
+
+      // Wait for all image uploads to complete
+      await Promise.all(imageUploadPromises);
+    }
+
+    console.log("Content with multiple images posted to Facebook");
+    res.json({
+      message: "Content with multiple images posted successfully on Facebook",
+      postId,
     });
   } catch (error) {
-    console.error("Error creating Facebook post:", error);
-    res.status(500).json({ error: "Failed to create Facebook post" });
+    console.error("Error posting content to Facebook:", error.message);
+    res.status(500).json({ error: "Failed to post content on Facebook" });
   }
 });
 
