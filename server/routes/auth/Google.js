@@ -126,6 +126,7 @@ router.get("/auth/google/callback", async (req, res) => {
     res.cookie("sessionToken", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "none",
       maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
     });
     console.log("redirecting and shorting down............");

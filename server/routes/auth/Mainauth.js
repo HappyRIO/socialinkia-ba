@@ -135,6 +135,7 @@ router.post("/login", async (req, res) => {
     res.cookie("sessionToken", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Secure in production
+      sameSite: "none",
       maxAge: 2 * 60 * 60 * 1000, // Cookie expiration (2 hours)
     });
 
