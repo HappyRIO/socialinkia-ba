@@ -17,7 +17,7 @@ const isSessionValid = (req, res, next) => {
   connectDB();
   console.log("Validating session");
   const { sessionToken } = req.cookies;
-
+  console.log(sessionToken);
   if (!sessionToken) {
     console.log("no session token");
     return res.status(401).json({ error: "No session token provided." });
