@@ -158,7 +158,7 @@ export default function Profile() {
     openAuthPopup(
       `${import.meta.env.VITE_SERVER_BASE_URL}/api/instagram/auth/instagram`,
       () => {
-        setconnectfb(true);
+        setconnectig(true);
         toast(`Instagram connected`, {
           position: "top-right",
           autoClose: 3000,
@@ -194,7 +194,9 @@ export default function Profile() {
               onClick={handleconnectFacebook}
               className="p-4 rounded-lg shadow-lg bg-blue-500 text-white flex flex-col gap2 justify-center items-center border-accent hover:bg-secondary"
             >
-              <span>connect facebook</span>
+              <span>
+                {connectfb ? "facebook connected" : "connect facebook"}
+              </span>
               <Facebook />
             </button>
           </div>
@@ -203,7 +205,9 @@ export default function Profile() {
               onClick={handleconnectInstagram}
               className="p-4 rounded-lg shadow-lg bg-red-400 text-white flex flex-col gap2 justify-center items-center border-accent hover:bg-secondary"
             >
-              <span>connect instagram</span>
+              <span>
+                {connectig ? "instagram connected" : "connect instagram"}
+              </span>
               <Instagram />
             </button>
           </div>
