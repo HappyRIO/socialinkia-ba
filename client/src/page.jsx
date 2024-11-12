@@ -56,7 +56,7 @@ export default function Home() {
         </div>
         <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-fit px-3">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <MessageSquareHeart />
             </div>
             <div className="content-zone">
@@ -65,7 +65,7 @@ export default function Home() {
             </div>
           </div>
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <Fullscreen />
             </div>
             <div className="content-zone">
@@ -74,7 +74,7 @@ export default function Home() {
             </div>
           </div>
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <Bot />
             </div>
             <div className="content-zone">
@@ -83,7 +83,7 @@ export default function Home() {
             </div>
           </div>
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <ScrollText />
             </div>
             <div className="content-zone">
@@ -92,7 +92,7 @@ export default function Home() {
             </div>
           </div>
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <Languages />
             </div>
             <div className="content-zone">
@@ -101,7 +101,7 @@ export default function Home() {
             </div>
           </div>
           <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone">
+            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
               <Banknote />
             </div>
             <div className="content-zone">

@@ -34,9 +34,11 @@ export default function FacebookCard({ data }) {
 
   return (
     <div className="w-full shadow-md sm:rounded-lg sm:px-2 py-3 flex flex-col gap-2 text-[15px] border-b-[2px] border-accent">
-      <Link to={`/dashboard/pending/edit/${data._id}`}>
+      <Link to={`/dashboard/pending/edit/${data?._id}`}>
         <div className="title w-full flex items-center gap-2 ">
-          <p className="text-left truncate w-full">{data.text}</p>
+          <p className="text-left truncate w-full">
+            {data?.text || "No text available"}
+          </p>
           <span>
             <Facebook />
           </span>
@@ -45,22 +47,26 @@ export default function FacebookCard({ data }) {
           <img
             className="w-full object-center aspect-video object-cover"
             src={
-              data.images[0] ||
-              "https://placehold.co/600x400/d8603b/white?text=Hello\nWorld"
+              data?.images?.[0] ||
+              "https://placehold.co/600x400/d8603b/white?text=no\nmedia"
             }
             alt=""
           />
         </div>
         <div className="reaction w-full px-2 flex flex-row justify-between items-center">
           <div className="like">
-            <p className="flex flex-row gap-2">{timeRemaining.months} months</p>
+            <p className="flex flex-row gap-2">
+              {timeRemaining?.months || 0} months
+            </p>
           </div>
           <div className="comment">
-            <p className="flex flex-row gap-2">{timeRemaining.hours} hours</p>
+            <p className="flex flex-row gap-2">
+              {timeRemaining?.hours || 0} hours
+            </p>
           </div>
           <div className="share">
             <p className="flex flex-row gap-2">
-              {timeRemaining.minutes} minutes
+              {timeRemaining?.minutes || 0} minutes
             </p>
           </div>
         </div>

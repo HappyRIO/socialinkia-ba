@@ -46,8 +46,8 @@ export default function InstagramCard({ data }) {
           <img
             className="w-full object-center aspect-video object-cover"
             src={
-              data.images[0] ||
-              "https://placehold.co/600x400/d8603b/white?text=Hello\nWorld"
+              data?.images?.[0] ||
+              "https://placehold.co/600x400/d8603b/white?text=no\nmedia"
             }
             alt=""
           />
