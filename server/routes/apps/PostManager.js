@@ -2,53 +2,60 @@ const express = require("express");
 const connectDB = require("../../data/db");
 const User = require("../../model/User");
 const { cloudinary, connectCloudinary } = require("../../data/file");
+const { Readable } = require("stream");
 const router = express.Router();
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" }); // Temporary storage for uploaded files
+
+// Multer configuration for in-memory file storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Middleware to validate user session
 const isSessionValid = (req, res, next) => {
   connectDB();
-  console.log("Validating session");
-  console.log("Cookies:", req.cookies); // Check all cookies received
   const { sessionToken } = req.cookies;
 
   if (!sessionToken) {
-    console.log("No session token provided");
     return res.status(401).json({ error: "No session token provided." });
   }
 
   User.findOne({ sessionToken })
     .then((user) => {
       if (!user) {
-        console.log("Invalid session token.");
         return res.status(401).json({ error: "Invalid session token." });
       }
-
       const expirationTime = new Date(user.sessionExpiresAt);
-      const currentTime = new Date();
-      if (expirationTime <= currentTime) {
+      if (expirationTime <= new Date()) {
         return res.status(401).json({ error: "Session expired." });
       }
-
       req.user = user;
       next();
     })
-    .catch((error) => {
-      console.error("Error checking session validity:", error);
-      res.status(500).json({ error: "Server error" });
-    });
+    .catch((error) => res.status(500).json({ error: "Server error" }));
 };
 
 // Helper function to upload images to Cloudinary
-const uploadImagesToCloudinary = async (images) => {
+const uploadImagesToCloudinary = async (files) => {
+  console.log("uploading images to Cloudinary...");
   const urls = [];
-  for (const image of images) {
-    const result = await cloudinary.uploader.upload(image.path, {
-      folder: "automedia",
+
+  for (const file of files) {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "automedia" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        }
+      );
+
+      // Convert buffer to readable stream and pipe to Cloudinary
+      Readable.from(file.buffer).pipe(stream);
     });
-    urls.push(result.secure_url);
+    urls.push(result);
   }
+
+  console.log("Uploaded image URLs:", urls);
   return urls;
 };
 
@@ -64,16 +71,17 @@ const deleteImagesFromCloudinary = async (imageUrls) => {
 router.post(
   "/create",
   isSessionValid,
-  upload.array("images"),
+  upload.array("images"), // Ensure the "images" name matches the file input name from the frontend
   async (req, res) => {
     connectDB();
     connectCloudinary();
 
     try {
       const { text, uploadDate, platform } = req.body;
-      const images = req.files; // Assuming Multer stores files in req.files
+      const images = req.files;
 
       console.log({ text, uploadDate, platform });
+      console.log("Received images:", images);
 
       // Check if files are received properly
       if (!images || images.length === 0) {
@@ -86,26 +94,27 @@ router.post(
         parsedPlatform = JSON.parse(platform);
       }
 
-      console.log("processing image........");
+      console.log("Processing images...");
       // Process and upload images to Cloudinary
       const uploadedImageUrls = await uploadImagesToCloudinary(images);
 
-      console.log("creating post........");
+      console.log("Creating post...");
       // Add the new post to the user's posts
       const newPost = {
         text,
         uploaddate: uploadDate,
         images: uploadedImageUrls,
-        platform: parsedPlatform, // Use parsed platform here
+        platform: parsedPlatform,
       };
 
-      req.user.post.push(newPost); // Add new post to user's posts array
+      req.user.post.push(newPost);
       await req.user.save();
+
       res
         .status(201)
         .json({ message: "Post created successfully", post: newPost });
     } catch (error) {
-      console.error(error);
+      console.error("Error creating post:", error);
       res.status(500).json({
         message: "Server error, unable to upload images",
       });
@@ -153,64 +162,71 @@ router.get("/:postId", isSessionValid, async (req, res) => {
   }
 });
 
-// PUT request to update post by ID
-router.put("/:postId", isSessionValid, async (req, res) => {
-  connectDB();
-  console.log("updating post...");
+// PUT route to update post by ID
+router.put(
+  "/:postId",
+  isSessionValid,
+  upload.array("images"),
+  async (req, res) => {
+    connectDB();
+    connectCloudinary();
+    console.log(req.body.images);
 
-  try {
-    // Find the post with the matching ID in the user's posts array
-    const post = req.user.post.find(
-      (p) => p._id.toString() === req.params.postId
-    );
+    try {
+      // Find the post
+      const post = req.user.post.find(
+        (p) => p._id.toString() === req.params.postId
+      );
 
-    if (!post) {
-      return res.status(404).json({ message: "Post not found." });
+      if (!post) {
+        return res.status(404).json({ message: "Post not found." });
+      }
+
+      const { text, uploadDate, images: incomingImages } = req.body;
+
+      // Ensure images is an array
+      const images = Array.isArray(incomingImages) ? incomingImages : [];
+
+      const existingImages = post.images || [];
+
+      // Define newImages
+      const newImages = req.files;
+
+      // Find images to be removed
+      const removedImages = existingImages.filter(
+        (img) => !images.includes(img)
+      );
+
+      // Upload new images to Cloudinary
+      const uploadedImageUrls =
+        newImages.length > 0 ? await uploadImagesToCloudinary(newImages) : [];
+
+      // Delete removed images from Cloudinary
+      if (removedImages.length > 0) {
+        await deleteImagesFromCloudinary(removedImages);
+      }
+
+      // Update post fields
+      post.text = text || post.text;
+      post.uploadDate = uploadDate || post.uploadDate;
+      post.images = [
+        ...existingImages.filter((img) => images.includes(img)),
+        ...uploadedImageUrls,
+      ];
+
+      await req.user.save();
+      res.json({ message: "Post updated successfully", post });
+    } catch (error) {
+      console.error("Update error:", error);
+      res.status(500).json({ error: "Failed to update post." });
     }
-
-    const { text, uploaddate, images } = req.body;
-    const existingImages = post.images || [];
-    const newImages = images || [];
-
-    // Find removed images by comparing the existing URLs with the new ones
-    const removedImages = existingImages.filter(
-      (img) => !newImages.includes(img)
-    );
-    const addedImages = newImages.filter(
-      (img) => !existingImages.includes(img)
-    );
-
-    // Delete removed images from Cloudinary
-    if (removedImages.length > 0) {
-      await deleteImagesFromCloudinary(removedImages);
-    }
-
-    // Upload new images to Cloudinary and retrieve their URLs
-    const uploadedImageUrls =
-      addedImages.length > 0 ? await uploadImagesToCloudinary(addedImages) : [];
-
-    // Combine existing (unchanged) images with new uploaded URLs
-    const updatedImages = [
-      ...existingImages.filter((img) => newImages.includes(img)),
-      ...uploadedImageUrls,
-    ];
-
-    // Update post fields
-    post.text = text;
-    post.uploaddate = uploaddate;
-    post.images = updatedImages;
-    await req.user.save();
-
-    res.json({ message: "Post updated successfully", post });
-  } catch (error) {
-    console.error("Error updating post:", error);
-    res.status(500).json({ error: "Failed to update post." });
   }
-});
+);
 
 // Delete a post by ID
 router.delete("/delete/:postId", isSessionValid, async (req, res) => {
   connectDB();
+  connectCloudinary();
 
   try {
     // Find the post with the matching ID in the user's posts array
@@ -225,8 +241,11 @@ router.delete("/delete/:postId", isSessionValid, async (req, res) => {
     // Delete images from Cloudinary
     if (post.images && post.images.length > 0) {
       for (const imageUrl of post.images) {
-        const publicId = imageUrl.split("/").pop().split(".")[0];
-        await cloudinary.uploader.destroy(`automedia/${publicId}`);
+        if (imageUrl) {
+          // Check if imageUrl is not null or undefined
+          const publicId = imageUrl.split("/").pop().split(".")[0];
+          await cloudinary.uploader.destroy(`automedia/${publicId}`);
+        }
       }
     }
 

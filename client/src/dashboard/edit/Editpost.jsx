@@ -1,27 +1,25 @@
-// Editpost
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 
 export default function Editpost() {
-  const { postId } = useParams(); // Assuming postId is in the URL parameters
+  const { postId } = useParams();
   const [postText, setPostText] = useState("");
   const [aitext, setAitext] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [filePreviews, setFilePreviews] = useState([]);
   const [platform, setplatform] = useState({
-    both: false,
+    both: true,
     insta: false,
     fbook: false,
   });
   const [uploaddata, setUploaddata] = useState({
-    date: "", // initial state for the upload date
+    date: "",
   });
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch post details for editing
     fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/${postId}`, {
       method: "GET",
       credentials: "include",
@@ -33,8 +31,6 @@ export default function Editpost() {
           setPostText(text);
           setplatform(platform);
           setUploaddata({ date: uploaddate });
-
-          // Set file previews if there are images
           setFilePreviews(images || []);
         } else {
           toast.error("Failed to load post details");
@@ -48,10 +44,8 @@ export default function Editpost() {
 
   const handleChange = (event) => {
     const selectedValue = event.target.value;
-
     setplatform((prevState) => {
       const updatedState = { ...prevState };
-
       if (selectedValue === "fbook") {
         updatedState.fbook = true;
         updatedState.insta = false;
@@ -65,13 +59,12 @@ export default function Editpost() {
         updatedState.insta = false;
         updatedState.both = true;
       }
-
       return updatedState;
     });
   };
 
   const handleBackClick = () => {
-    navigate(-1); // Navigate back to the previous page
+    navigate(-1);
   };
 
   const handleTextChange = (e) => {
@@ -82,36 +75,51 @@ export default function Editpost() {
     setAitext(e.target.value);
   };
 
-  const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    setSelectedFiles([...selectedFiles, ...files]);
-
-    // Generate file preview URLs
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setFilePreviews([...filePreviews, ...previews]);
-  };
-
   const handleDateChange = (e) => {
     setUploaddata({ ...uploaddata, date: e.target.value });
   };
 
   const handleImageRemove = (index) => {
+    const removedImage = filePreviews[index];
     const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
     const newFilePreviews = filePreviews.filter((_, i) => i !== index);
+
+    console.log("Removed image:", removedImage);
+    console.log("Remaining images:", newFilePreviews);
+
     setSelectedFiles(newSelectedFiles);
     setFilePreviews(newFilePreviews);
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const previews = files.map((file) => URL.createObjectURL(file));
+
+    console.log("Newly selected files:", files);
+    console.log("Total images to upload:", [...filePreviews, ...previews]);
+
+    setSelectedFiles([...selectedFiles, ...files]);
+    setFilePreviews([...filePreviews, ...previews]);
   };
 
   const handleSubmit = () => {
     const formData = new FormData();
     formData.append("text", postText);
-    formData.append("platform", JSON.stringify(platform)); // Stringify platform object
-    formData.append("uploadDate", uploaddata.date); // Add the upload date to the form data
-    selectedFiles.forEach((file) => {
-      formData.append("images", file); // Append images as an array of files
+    formData.append("platform", JSON.stringify(platform));
+    formData.append("uploadDate", uploaddata.date);
+
+    // Append existing image URLs (previews) to the form data
+    filePreviews.forEach((url) => {
+      formData.append("images", url); // Assuming your backend can handle URLs for existing images
+      console.log("Existing image URL added to formData:", url);
     });
 
-    // Example API call to update the post
+    // Append new image files (selectedFiles) to the form data
+    selectedFiles.forEach((file) => {
+      formData.append("images", file);
+      console.log("New image file added to formData:", file.name);
+    });
+
     fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/${postId}`, {
       method: "PUT",
       body: formData,
@@ -131,6 +139,27 @@ export default function Editpost() {
         toast.error("Error updating post");
       });
   };
+
+  function handledeletepost() {
+    fetch(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/delete/${postId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "Post deleted successfully") {
+          toast.success("Post deleted successfully!");
+          navigate("/dashboard/pending");
+        } else {
+          toast.error("Failed to delete post", {
+            theme: "dark",
+          });
+        }
+      });
+  }
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
@@ -270,12 +299,20 @@ export default function Editpost() {
               </label>
             </div>
           </div>
-          <button
-            onClick={handleSubmit}
-            className="bg-accent text-white px-6 py-2 rounded-md w-full sm:w-1/3 mt-4"
-          >
-            Save Post
-          </button>
+          <div className="button-space w-full flex flex-col sm:flex-row gap-10 justify-center items-center">
+            <button
+              onClick={handleSubmit}
+              className="bg-accent text-white px-6 py-2 rounded-md w-full sm:w-1/3 mt-4"
+            >
+              Save Post
+            </button>
+            <button
+              onClick={handledeletepost}
+              className="animate-pulse w-fit text-accent text-center bg-red-500 p-1 px-3 rounded-lg"
+            >
+              delete
+            </button>
+          </div>
         </div>
       </div>
     </div>

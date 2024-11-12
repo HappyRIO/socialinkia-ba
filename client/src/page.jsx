@@ -54,9 +54,11 @@ export default function Home() {
         <div className="section-title text-3xl sm:text-5xl md:text-7xl text-center">
           <h1>Everything you need to automate your social networks</h1>
         </div>
-        <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+      </div>
+      <div className="w-full flex flex-col gap-6 py-10 justify-center items-center max-w-[1200px]">
+        <div className="w-full grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <MessageSquareHeart />
             </div>
             <div className="content-zone">
@@ -64,8 +66,8 @@ export default function Home() {
               <p>Schedule effortless posts for Facebook and Instagram.</p>
             </div>
           </div>
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <Fullscreen />
             </div>
             <div className="content-zone">
@@ -73,8 +75,8 @@ export default function Home() {
               <p>Choose from several templates to match your brand.</p>
             </div>
           </div>
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <Bot />
             </div>
             <div className="content-zone">
@@ -82,8 +84,10 @@ export default function Home() {
               <p>Generate ideas with AI-driven content.</p>
             </div>
           </div>
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+        </div>
+        <div className="w-full grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <ScrollText />
             </div>
             <div className="content-zone">
@@ -91,8 +95,8 @@ export default function Home() {
               <p>It creates attractive posts with multiple images.</p>
             </div>
           </div>
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <Languages />
             </div>
             <div className="content-zone">
@@ -100,8 +104,8 @@ export default function Home() {
               <p>It supports English, Spanish, French and German.</p>
             </div>
           </div>
-          <div className="every-card w-full flex flex-row gap-2">
-            <div className="icon-zone bg-white rounded-full w-[80px] h-[80px] px-3 flex justify-center items-center">
+          <div className="every-card py-10 w-full flex flex-row gap-2">
+            <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
               <Banknote />
             </div>
             <div className="content-zone">

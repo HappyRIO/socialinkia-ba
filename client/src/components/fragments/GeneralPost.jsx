@@ -1,5 +1,5 @@
-import { Facebook } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { Link2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function GeneralPost({ data }) {
@@ -38,7 +38,7 @@ export default function GeneralPost({ data }) {
         <div className="title w-full flex items-center gap-2 ">
           <p className="text-left truncate w-full">{data.text}</p>
           <span>
-            <Facebook />
+            <Link2 />
           </span>
         </div>
         <div className="image rounded-md overflow-hidden w-full">

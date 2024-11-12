@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import InstagramCard from "../components/fragments/InstagramCard";
 import FacebookCard from "../components/fragments/FacebookCard";
 import ResponsiveSidebar from "../components/navigation/ResponsiveSidebar";
+import GeneralPost from "../components/fragments/GeneralPost";
 
 export default function Dashboard() {
   const [insta, setInsta] = useState([]);
   const [faceb, setFaceb] = useState([]);
   const [userInfo, setUserInfo] = useState([]);
+  const [posts, setPosts] = useState([]);
 
   const fake = [
     {
@@ -178,12 +180,37 @@ export default function Dashboard() {
       }
     }
 
+    const fetchPosts = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/all`,
+          {
+            credentials: "include",
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data.posts);
+          const posts = Array.isArray(data.posts) ? data.posts : [data.posts];
+          setPosts(posts);
+        } else {
+          console.error("Failed to fetch posts");
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
     fetchUserInfo();
-    setInsta(fake);
-    setFaceb(fake);
+    fetchPosts();
   }, []);
 
-  if (!userInfo) {
+  if (!userInfo || !posts) {
     return <p>Loading...</p>;
   }
 
@@ -251,13 +278,10 @@ export default function Dashboard() {
             <div className="social-grid-zone w-full px-2">
               <div
                 id="social-grid"
-                className="w-full grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                className="w-full grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
               >
-                {insta.map((data, index) => (
-                  <InstagramCard key={index} data={data} />
-                ))}
-                {faceb.map((data, index) => (
-                  <FacebookCard data={data} key={index} />
+                {posts.map((data, index) => (
+                  <GeneralPost key={index} data={data} />
                 ))}
               </div>
             </div>
