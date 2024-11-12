@@ -13,7 +13,7 @@
     --background2: #e7e2e1;
     --primary: #563b34;
     --secondary: #bdb893;
-    --accent: #d8603b;
+    --accent: #f88400;
     --card: #ffffff;
   }
   .dark {
@@ -22,7 +22,7 @@
     --background2: #291c19;
     --primary: #cbb0a9;
     --secondary: #6c6742;
-    --accent: #d8603b;
+    --accent: #f88400;
     --card: #362521;
   }
 }

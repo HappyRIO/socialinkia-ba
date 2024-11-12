@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { Bot, Facebook, Instagram, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 // import Whatsicon from "@/components/fragments/Whatsicon";
 import Header from "../components/navigation/Header";
@@ -60,112 +60,144 @@ export default function Contact() {
       <div className="nav w-full">
         <Header />
       </div>
-      <div className="maincontact py-2 gap-2 w-full flex flex-col justify-center items-center">
-        <div className="banner text-center py-3 sm:py-6 w-full border-b-[2px] border-accent justify-center items-center">
-          <h1 className="text-3xl sm:text-6xl font-bold">Contact Us</h1>
-          <p>
-            Get in touch to discover how we can elevate your Airbnb experience
-            and make your events unforgettable.
-          </p>
+      <div className="maincontact px-2 py-8 gap-2 w-full max-w-[1300px] flex flex-col md:flex-row justify-center items-center">
+        <div className="first-content text-center sm:text-left flex flex-col gap-6 w-full lg:w-1/2">
+          <div className="">
+            <h1 className="text-3lx sm:text-7xl font-bold">
+              Get in touch with us directly
+            </h1>
+            <br />
+            <p>
+              We're here to help you. Tell us how we can help & well be in touch
+              with an expert within the next 24 hours.{" "}
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <strong>send use email</strong>
+            <p>info.example.com</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <strong>Give us a call</strong>
+            <p>(123)456-7890</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <strong>Follow us:</strong>
+            <div className="social-links flex flex-row gap-2">
+              <Link
+                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
+                to={"#"}
+              >
+                <Facebook />
+              </Link>
+              <Link
+                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
+                to={"#"}
+              >
+                <Instagram />
+              </Link>
+              <Link
+                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
+                to={"#"}
+              >
+                <Youtube />
+              </Link>
+              <Link
+                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
+                to={"#"}
+              >
+                <Bot />
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="contactform px-2 gap-2 w-full flex flex-col md:flex-row justify-center items-center">
-          <div className="mainform w-full md:w-1/2">
-            <form
-              className="w-full gap-2 grid grid-cols-1"
-              onSubmit={handleSubmit}
-            >
-              <input
-                required
-                type="text"
-                name="name"
-                placeholder="Name"
-                onChange={handleChange}
-                className="w-full bg-background focus:border-secondary border-[1px] border-accent rounded-lg p-2 outline-none"
-              />
-              <input
-                required
-                type="text"
-                name="socialLink"
-                placeholder="WhatsApp number or any social link (e.g. Instagram)"
-                onChange={handleChange}
-                className="w-full bg-background focus:border-secondary border-[1px] border-accent rounded-lg p-2 outline-none"
-              />
-              <input
-                required
+        <div className="form-content px-2 flex flex-col gap-6 w-full lg:w-1/2">
+          <form className="rounded-lg flex flex-col gap-6 shadow-md bg-background w-full p-2">
+            <div className="w-full flex flex-col lg:flex-row gap-3">
+              <div className="w-full flex flex-col gap-3 text-left justify-center">
+                <label htmlFor="name" className="text-accent font-bold">
+                  Enter your name
+                </label>
+                <input
+                  className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
+                  placeholder=" Enter your name "
+                  type="text"
+                  name="name"
+                  id="name"
+                />
+              </div>
+              <div className="w-full flex flex-col gap-3 text-left justify-center">
+                <label htmlFor="email" className="text-accent font-bold">
+                  Email address
+                </label>
+                <input
+                  className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
+                  placeholder="example@mail.com"
+                  type="email"
+                  name="email"
+                  id="email"
+                />
+              </div>
+            </div>
+            <div className="w-full flex flex-col lg:flex-row gap-3">
+              <div className="w-full flex flex-col gap-3 text-left justify-center">
+                <label htmlFor="phone" className="text-accent font-bold">
+                  Phone number
+                </label>
+                <input
+                  className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
+                  placeholder="Enter your email"
+                  type="number"
+                  name="phone"
+                  id="phone"
+                />
+              </div>
+              <div className="w-full flex flex-col gap-3 text-left justify-center">
+                <label htmlFor="company" className="text-accent font-bold">
+                  Company
+                </label>
+                <input
+                  className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
+                  placeholder="Enter your email"
+                  type="text"
+                  name="company"
+                  id="company"
+                />
+              </div>
+            </div>
+            <div className="w-full text-left flex gap-3 flex-col justify-center">
+              <label
+                htmlFor="email"
+                className="text-accent text-left font-bold"
+              >
+                Message
+              </label>
+              <textarea
+                rows={6}
+                className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700 w-full"
+                placeholder="Write your message here ..........."
                 type="email"
                 name="email"
-                placeholder="Email"
-                onChange={handleChange}
-                className="w-full bg-background focus:border-secondary border-[1px] border-accent rounded-lg p-2 outline-none"
+                id="email"
               />
-              <textarea
-                required
-                name="message"
-                placeholder="Message"
-                rows={5}
-                onChange={handleChange}
-                className="w-full bg-background focus:border-secondary border-[1px] border-accent rounded-lg p-2 outline-none"
-              />
+            </div>
+            <div className="w-full">
               <button
+                className="p-4 bg-black rounded-full text-white hover:bg-accent"
                 type="submit"
-                className="w-full border-[1px] border-accent hover:border-secondary rounded-lg p-2 outline-none"
               >
-                {working ? <>Submiting</> : <>Submit</>}
+                Send your message
               </button>
-
-              {error && <p className="text-red-500">{error}</p>}
-              {success && <p className="text-green-500">{success}</p>}
-            </form>
-          </div>
-          <div className="extracontent flex flex-col justify-center w-full md:w-1/2">
-            <div className="minitext">
-              <p>
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit. Culpa
-                quam explicabo quos quibusdam officiis eos assumenda numquam
-                praesentium repudiandae saepe! Perspiciatis voluptatibus maiores
-                autem quam rerum illo molestiae vitae laborum.
-              </p>
             </div>
-            <div className="iconswork grid gap-2 grid-cols-2">
-              <div className="teliphone flex flex-col justify-center items-center">
-                <Link href="tel:+2349012157888">
-                  <Phone />
-                </Link>
-                <p className="font-bold">Phone Number</p>
-                <p className="text-sm">45678921e32</p>
-              </div>
-              <div className="teliphone flex flex-col justify-center items-center">
-                <Link href="mailto:iamperfect0518@gmail.com">
-                  <Mail />
-                </Link>
-                <p className="font-bold">Email Address</p>
-                <p className="text-sm">youremail@provider.com</p>
-              </div>
-              <div className="whatsapp flex flex-col justify-center items-center">
-                <Link
-                  href="https://wa.me/234567887654"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {Whatsicon}
-                </Link>
-                <p className="font-bold">WhatsApp Number</p>
-                <p className="text-sm">2546789392</p>
-              </div>
-              <div className="teliphone flex flex-col justify-center items-center">
-                <MapPin />
-                <p className="font-bold">Our Office</p>
-                <p className="text-sm">I don't know</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="simpletxt text-center py-4 text-2xl font-bold md:text-4xl">
-          <h1>We are always ready to help</h1>
+          </form>
         </div>
       </div>
-      <div className="faq w-full">
-        <FAQSection />
+      <div className="slide-holder w-full bg-black py-5 my-24">
+        <div className="w-full text-3xl font-bold sm:text-8xl text-accent flex flex-row gap-9">
+          <p>Socialinkia</p>
+          <p>automatic</p>
+          <p>community</p>
+          <p>Socialinkia</p>
+        </div>
       </div>
       <div className="footer w-full">
         <Footer />

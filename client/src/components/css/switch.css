@@ -1,0 +1,28 @@
+.container {
+  position: relative;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  margin: auto;
+  width: 250px;
+  height: 60px;
+  border-radius: 100px;
+  cursor: pointer;
+  border: 3px solid black;
+}
+.toggle {
+  width: 60%;
+  height: 100%;
+  background-color: black;
+  color: var(--accent);
+  border-radius: 100px;
+  position: absolute;
+  transition: all 0.4s ease-in;
+}
+.on .toggle {
+  right: 0;
+}
+.off .toggle {
+  right: 40%;
+}

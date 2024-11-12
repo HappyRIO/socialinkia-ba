@@ -17,6 +17,7 @@ import Profile from "./dashboard/profile/Profile";
 import CreatTemplate from "./dashboard/creat/CreatTemplate";
 import PostCreation from "./dashboard/creat/post/PostCreation";
 import Editpost from "./dashboard/edit/Editpost";
+import Aboutus from "./components/page/about/Aboutus";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
   { path: "/signup", element: <Signup /> },
   { path: "/signup/details", element: <CompaniesDetails /> },
   { path: "/contact", element: <Contact /> },
+  { path: "/about", element: <Aboutus /> },
   { path: "/subscription", element: <Subscription /> },
 
   // Direct routes with PrivateRoute applied to each protected route
@@ -61,7 +63,7 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <div className="w-full bg-background text-text overflow-hidden flex flex-col justify-center items-center">
+    <div className="w-full bg-background text-text text-md sm:text-xl overflow-hidden flex flex-col justify-center items-center">
       <RouterProvider router={router} />
     </div>
   );
