@@ -5,52 +5,58 @@ import {
   ArrowRight,
   Banknote,
   Bot,
+  CircleDot,
   Fullscreen,
   Languages,
   MessageSquareHeart,
   ScrollText,
 } from "lucide-react";
+import "./assets/css/scrollingcss.css";
+import FAQSection from "./components/fragments/Faqsection";
+import Newsletter from "./components/fragments/Newletter";
 
 export default function Home() {
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      <div className="w-full bg-[url('/images/hero-bg-2.png')] flex flex-col justify-center items-center">
-        <Header />
-        <div className="hero-section w-full max-w-[1300px] flex flex-col justify-center items-center md:flex-row md:px-2">
-          <div className="text-content text-white w-full md:1/2">
-            <div className="txt-zone py-7 max-w-[600px]">
-              <h1 className="text-4xl sm:text-6xl md:text-8xl">
-                Automating your social networks effortlessly
-              </h1>
-              <br />
-              <p>
-                Plan, program and publish engaging publications effortlessly
-                with our AI-driven platform.
-              </p>
+      <div className="w-full bg-[url('/images/hero-bg-2.png')] bg-cover bg-no-repeat flex flex-col justify-center items-center">
+        <div className="w-full max-w-[1200px] flex flex-col justify-center items-center">
+          <Header />
+          <div className="hero-section w-full max-w-[1300px] flex flex-col justify-center items-center md:flex-row md:px-2">
+            <div className="text-content text-white w-full md:1/2">
+              <div className="txt-zone py-7 max-w-[600px]">
+                <h1 className="text-4xl sm:text-6xl md:text-8xl">
+                  Automating your social networks effortlessly
+                </h1>
+                <br />
+                <p>
+                  Plan, program and publish engaging publications effortlessly
+                  with our AI-driven platform.
+                </p>
+              </div>
+              <div className="btn-zone gap-4 flex justify-between items-center">
+                <Link to={"/signup"}>
+                  <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+                    Free trial <ArrowRight />
+                  </button>
+                </Link>
+                <Link to={"/signup"}>
+                  <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+                    See how it works <ArrowRight />
+                  </button>
+                </Link>
+              </div>
             </div>
-            <div className="btn-zone gap-4 flex justify-between items-center">
-              <Link to={"/signup"}>
-                <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
-                  Free trial <ArrowRight />
-                </button>
-              </Link>
-              <Link to={"/signup"}>
-                <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
-                  See how it works <ArrowRight />
-                </button>
-              </Link>
+            <div className="hero-image py-2 w-full md:1/2">
+              <img
+                className="w-full max-w-[500px]"
+                src="/images/hero.png"
+                alt=""
+              />
             </div>
-          </div>
-          <div className="hero-image py-2 w-full md:1/2">
-            <img
-              className="w-full max-w-[500px]"
-              src="/images/hero.png"
-              alt=""
-            />
           </div>
         </div>
       </div>
-      <div className="w-full max-w-[1000px] px-2 py-5 flex flex-col justify-center items-center">
+      <div className="w-full max-w-[800px] px-2 py-5 flex flex-col justify-center items-center">
         <div className="section-title text-3xl sm:text-5xl md:text-7xl text-center">
           <h1>Everything you need to automate your social networks</h1>
         </div>
@@ -115,7 +121,266 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <Footer />
+      <div className="w-full flex flex-col md:flex-row gap-6 py-10 justify-center items-center max-w-[1200px]">
+        <div className="image-zone w-full md:1/2">
+          <img src="/images/mobile.png" alt="" />
+        </div>
+        <div className="text-zone-content flex flex-col gap-4 w-full md:1/2 px-3">
+          <div>
+            <h1 className="text-4xl sm:text-7xl text-center">
+              How does it work?
+            </h1>
+            <br />
+            <p>
+              Our AI system stands out for understanding natural language and
+              generating similar responses to human ones. Adapting your
+              conversational style to our chatbot can improve the quality of
+              your interactions.
+            </p>
+          </div>
+          <div className="w-full">
+            <ul className="text-2xl text-text font-medium">
+              <li className="flex flex-row gap-2 items-center">
+                <span className="text-accent">
+                  <CircleDot />
+                </span>
+                {""}
+                Register and customize
+              </li>
+              <li className="flex flex-row gap-2 items-center">
+                <span className="text-accent">
+                  <CircleDot />
+                </span>
+                {""} Plan your publications
+              </li>
+              <li className="flex flex-row gap-2 items-center">
+                <span className="text-accent">
+                  <CircleDot />
+                </span>
+                {""} Let AI do the job
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div className="w-full bg-[url('/images/hero-bg-2.png')] bg-cover bg-no-repeat py-10 text-white flex justify-center items-center">
+        <div className="w-full flex flex-col-reverse md:flex-row gap-6 py-10 justify-center items-center max-w-[1200px]">
+          <div className="text-zone-content flex flex-col gap-4 w-full md:1/2 px-3">
+            <div>
+              <h1 className="text-4xl sm:text-7xl text-center">
+                Integrate your social networks
+              </h1>
+              <br />
+              <p>
+                You can now have automatic content for your social networks.
+              </p>
+            </div>
+            <div className="w-full">
+              <ul className="text-2xl font-medium">
+                <li className="flex flex-row gap-2 items-center">
+                  <span className="text-accent">
+                    <CircleDot />
+                  </span>
+                  {""}
+                  Manage your Facebook and Instagram
+                </li>
+                <li className="flex flex-row gap-2 items-center">
+                  <span className="text-accent">
+                    <CircleDot />
+                  </span>
+                  {""} AI will publish content for you
+                </li>
+                <li className="flex flex-row gap-2 items-center">
+                  <span className="text-accent">
+                    <CircleDot />
+                  </span>
+                  {""} Optimize your social networks and increase your goals
+                </li>
+              </ul>
+            </div>
+            <div className="btn-zone py-4">
+              <Link to={"/signup"}>
+                <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+                  Free trial <ArrowRight />
+                </button>
+              </Link>
+            </div>
+          </div>
+          <div className="image-zone w-full md:w-1/2 rounded-lg px-2">
+            <div className="w-full py-36 bg-[#18181b] rounded-lg gap-8 flex flex-col overflow-hidden">
+              {/* First Row (Scroll Left) */}
+              <div
+                className="svgs-zone flex gap-20 animate-scroll-left"
+                style={{ animation: "scroll-left 20s linear infinite" }}
+              >
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/whatsapp.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/slack.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/facebook.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/skype.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px] bg-yellow-400"
+                  src="/svgs/mailchip.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/snapchat.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/discord2.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/whatsapp.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/slack.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/facebook.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/skype.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px] bg-yellow-400"
+                  src="/svgs/mailchip.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/snapchat.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/discord2.svg"
+                  alt=""
+                />
+              </div>
+
+              {/* Second Row (Scroll Right) */}
+              <div
+                className="svgs-zone flex gap-20 animate-scroll-right"
+                style={{ animation: "scroll-right 20s linear infinite" }}
+              >
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/facebook.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/slack.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/whatsapp.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/snapchat.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px] bg-yellow-400"
+                  src="/svgs/mailchip.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/discord2.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/skype.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/facebook.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/slack.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/whatsapp.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/snapchat.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px] bg-yellow-400"
+                  src="/svgs/mailchip.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/discord2.svg"
+                  alt=""
+                />
+                <img
+                  className="aspect-square scale-[0.6] sm:scale-[0.8] md:scale-[1] rounded-lg w-[100px] h-[100px]"
+                  src="/svgs/skype.svg"
+                  alt=""
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="faq-zone">
+        <FAQSection />
+      </div>
+      <footer className="text-white pt-32 bg-[url('/images/footer.png')] bg-cover bg-no-repeat w-full flex flex-col justify-center items-center px-2">
+        <div className="top-foot-zone flex flex-col justify-center items-center gap-10 max-w-[1000px]">
+          <p className="text-3xl sm:text-6xl">
+            Let's start and enjoy the power of AI
+          </p>
+          <br />
+          <Newsletter />
+        </div>
+        <div className="foot-foot flex flex-col py-10 md:flex-row justify-between items-center max-w-[1000px]">
+          <img className="max-w-[300px]" src="/images/nav.png" alt="" />
+          <p>Copyright 2024, All Rights Reserved by Socialinkia.com</p>
+        </div>
+      </footer>
     </div>
   );
 }

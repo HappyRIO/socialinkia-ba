@@ -1,94 +1,64 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { CirclePower } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const FAQSection = () => {
-  const [openIndex, setOpenIndex] = useState(null);
+  const [faq, setFaqs] = useState([]);
 
-  const questions = [
+  const faqQuestions = [
     {
-      question: "How can I get started?",
-      answer:
-        "Getting started is easy! Sign up for an account, and you'll have access to our platform's features. No credit card required for the initial signup.",
+      summary: "How can I get started?",
+      content:
+        "Starting is easy. Sign up to get an account and you'll have access to the functions of our platform. No credit card is required for the initial registration.",
     },
     {
-      question: "What is the pricing structure?",
-      answer:
-        "Our pricing structure is flexible. We offer both free and paid plans. You can choose the one that suits your needs and budget.",
+      summary: "What is the price structure?",
+      content:
+        "Our pricing structure is flexible. We offer free plans and payments. You can choose the one that best suits your needs and budget.",
     },
     {
-      question: "What kind of support do you provide?",
-      answer:
-        "We offer comprehensive customer support. You can reach out to our support team through various channels, including email, chat, and a knowledge base.",
+      summary: "What kind of support do you provide?",
+      content:
+        "We offer a comprehensive customer service. You can communicate with our support team through various channels, including email, chat and knowledge base.",
     },
     {
-      question: "Can I cancel my subscription anytime?",
-      answer:
-        "Yes, you can cancel your subscription at any time without any hidden fees. We believe in providing a hassle-free experience for our users.",
+      summary: "Can I cancel my subscription any minute?",
+      content:
+        "Yes, you can cancel your subscription at any time without hidden charges. We believe in providing a smooth experience for our users.",
     },
   ];
 
-  const toggleAnswer = (index) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  useEffect(() => {
+    setFaqs(faqQuestions);
+  }, []);
 
   return (
-    <section className="w-full py-10 sm:py-16 lg:py-24">
-      <div className="px-4 mx-auto sm:px-6 lg:px-8 max-w-7xl">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold leading-tight text-black sm:text-4xl lg:text-5xl">
-            Explore Common Questions
-          </h2>
-        </div>
-        <div className="max-w-3xl mx-auto mt-8 space-y-4 md:mt-16">
-          {questions.map((item, index) => (
-            <div
-              key={index}
-              className="transition-all duration-1000 rounded-lg bg-white border border-gray-200 shadow-lg cursor-pointer hover:bg-gray-50"
-            >
-              <button
-                type="button"
-                onClick={() => toggleAnswer(index)}
-                className="flex items-center justify-between w-full px-4 py-5 sm:p-6"
-              >
-                <span className="flex text-lg font-semibold text-black">
-                  {item.question}
-                </span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className={`w-6 h-6 text-gray-400 transform ${
-                    openIndex === index ? "rotate-180" : ""
-                  }`}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  ></path>
-                </svg>
-              </button>
-              {openIndex === index && (
-                <div className="px-4 pb-5 sm:px-6 sm:pb-6">
-                  <p>{item.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <Link to={"#"}>
-          <p className="text-center text-gray-600 text-base mt-9">
-            Still have questions?
-            <span className="cursor-pointer font-medium text-tertiary transition-all duration-200 hover:text-tertiary focus:text-tertiary hover-underline">
-              {" "}
-              Contact our support
-            </span>
+    <div className="relative isolate overflow-hidden bg-custom">
+      <div className="py-24 px-8 max-w-5xl mx-auto flex flex-col md:flex-row gap-12">
+        <div className="flex flex-col text-left basis-1/2">
+          <p className="inline-block font-semibold text-primary mb-4">F.A.Q</p>
+          <p className="sm:text-4xl text-3xl font-extrabold text-base-content">
+            Frequently Asked Questions
           </p>
-        </Link>
+        </div>
+        <ul className="basis-1/2">
+          {faq.map((data, index) => (
+            <li className="group" key={index}>
+              <details className="border-t border-base-content/10 overflow-hidden transition-all duration-300 ease-in-out">
+                <summary className="flex gap-2 items-center w-full py-5 text-base font-semibold text-left cursor-pointer md:text-lg">
+                  <span className="flex-1 text-base-content">
+                    {data.summary}
+                  </span>
+                  <CirclePower />
+                </summary>
+                <div className="pb-5 leading-relaxed">
+                  <p className="space-y-2 leading-relaxed">{data.content}</p>
+                </div>
+              </details>
+            </li>
+          ))}
+        </ul>
       </div>
-    </section>
+    </div>
   );
 };
 
