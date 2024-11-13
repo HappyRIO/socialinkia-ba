@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ResponsiveSidebar from "../../../components/navigation/ResponsiveSidebar";
 import { toast, ToastContainer } from "react-toastify";
@@ -73,8 +73,13 @@ export default function PostCreation() {
 
   // Handle change for the upload date
   const handleDateChange = (e) => {
-    setUploaddata({ ...uploaddata, date: e.target.value });
+    const newDate = e.target.value; // Get the new date value from the event
+    setUploaddata({ date: newDate });
   };
+
+  useEffect(() => {
+    console.log({ date: uploaddata.date });
+  }, [uploaddata.date]); // This will run whenever uploaddata.date changes
 
   // Handle image removal
   const handleImageRemove = (index) => {
@@ -149,11 +154,11 @@ export default function PostCreation() {
         <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2 justify-center items-center">
           <div className="w-full flex flex-col gap-2 sm:flex-row">
             <div className="w-full flex justify-center items-center">
-              <div className="releasedate max-w-[150px] flex flex-col justify-center items-center">
+              <div className="releasedate max-w-[250px] flex flex-col justify-center items-center">
                 <label htmlFor="date">Upload date</label>
                 <input
                   className="bg-background p-2 rounded-lg w-full text-text"
-                  type="date"
+                  type="datetime-local"
                   name="date"
                   id="date"
                   required

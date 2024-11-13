@@ -124,7 +124,7 @@ export default function Pending() {
             filteredPosts.map((post) => (
               <div key={post._id} className="mb-4">
                 {/* Render GeneralPost if post is available */}
-                <GeneralPost data={post} />
+                {post.platform.both && <GeneralPost data={post} />}
                 {/* Or render specific InstagramCard and FacebookCard if needed */}
                 {post.platform.insta && <InstagramCard data={post} />}
                 {post.platform.fbook && <FacebookCard data={post} />}

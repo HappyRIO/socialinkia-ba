@@ -7,7 +7,7 @@ import {
   Layers3,
   Logs,
 } from "lucide-react";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Stage, Layer, Rect } from "react-konva";
 import NameInput from "../../../components/editor/NameEditor";
 
@@ -223,7 +223,7 @@ function ShowLayerManager({ layerRef }) {
       {children.map((child, index) => (
         <div
           key={child._id} // Ensure each Konva object has a unique ID
-          className="px-2 py-2 bg-gray-300 flex flex-row gap-2 cursor-pointer"
+          className="px-2 py-2 bg-gray-300 flex flex-row gap-2 cursor-pointer rounded-lg shadow-md"
           draggable
           onDragStart={(e) => handleDragStart(e, index)}
           onDragOver={handleDragOver}
@@ -241,7 +241,7 @@ function ShowLayerManager({ layerRef }) {
   );
 }
 
-export default function CreateDesign() {
+export default function Tester() {
   const [openUploads, setOpenuploads] = useState(false);
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);
@@ -341,7 +341,7 @@ export default function CreateDesign() {
     });
   };
 
-  //function to handle clicked objects
+  // Function to handle element click for selection and toolbar control
   const handleObjectClick = (e) => {
     const clickedElement = e.target;
 
@@ -678,7 +678,7 @@ export default function CreateDesign() {
               </div>
             )}
             <div className="font">
-              <label htmlFor="font-family">Font Family</label>
+              {/* <label htmlFor="font-family">Font Family</label> */}
               <select
                 name="font-family"
                 id="font-family"
