@@ -4,8 +4,6 @@ export default function EditingPanel({ activeAttributes, onUpdateAttributes }) {
   const [isSettingsVisible, setIsSettingsVisible] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
 
-  console.log(activeAttributes);
-
   const toggleSettingsVisibility = () => {
     setIsSettingsVisible((prevState) => !prevState);
   };
@@ -95,30 +93,8 @@ export default function EditingPanel({ activeAttributes, onUpdateAttributes }) {
               type="range"
               name="rotate"
               id="rotate"
-            />
-            <input
-              type="number"
-              name="rotateZ"
-              id="rotate-z"
-              placeholder="Rotate"
-              value={activeAttributes.rotateZ || ""}
-              onChange={handleAttributeChange}
-            />
-            <input
-              type="number"
-              name="rotateY"
-              id="rotate-y"
-              placeholder="Rotate Y"
-              value={activeAttributes.rotateY || ""}
-              onChange={handleAttributeChange}
-            />
-            <input
-              type="number"
-              name="rotateX"
-              id="rotate-x"
-              placeholder="Rotate X"
-              value={activeAttributes.rotateX || ""}
-              onChange={handleAttributeChange}
+              min="0"
+              max="360"
             />
           </div>
 
