@@ -70,6 +70,7 @@ const UserSchema = new Schema({
   password: { type: String },
   post: [postSchema],
   deleted: { type: Boolean, default: false },
+  instagramAccountId: { type: String },
   subscription: SubscriptionSchema,
   createdAt: { type: Date, default: Date.now },
   sessionToken: { type: String },

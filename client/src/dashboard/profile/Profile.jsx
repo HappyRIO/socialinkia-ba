@@ -137,7 +137,7 @@ export default function Profile() {
 
   function handleconnectFacebook() {
     openAuthPopup(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/facebook/auth/facebook`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/meta/auth/facebook`,
       () => {
         setconnectfb(true);
         toast("Facebook connected", { theme: "dark" });
@@ -147,7 +147,7 @@ export default function Profile() {
 
   function handleconnectInstagram() {
     openAuthPopup(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/instagram/auth/instagram`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/meta/auth/instagram`,
       () => {
         setconnectig(true);
         toast("Instagram connected", { theme: "dark" });

@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 require("dotenv").config();
 
 // Initialize express
@@ -11,6 +12,14 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser()); // Parse cookies
+app.use(
+  session({
+    secret: "your-secret-key", // Replace with a secure random string
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Set `true` if using HTTPS
+  })
+);
 
 // List of allowed origins (add any trusted origins as needed)
 const allowedOrigins = [
@@ -44,6 +53,7 @@ const templateRoutes = require("./routes/apps/template");
 const contactRoutes = require("./routes/forms/contact");
 const paymentRoutes = require("./routes/apps/Stripe");
 const PostRoutes = require("./routes/apps/PostManager");
+const MetaRoutes = require("./routes/apps/Meta");
 
 // Test route
 app.get("/", (req, res) => {
@@ -64,6 +74,7 @@ app.use("/api/templates", templateRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/subscription", paymentRoutes);
 app.use("/api/posts", PostRoutes);
+app.use("/api/meta", MetaRoutes);
 
 // Start server
 app.listen(4000, () => {
