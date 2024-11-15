@@ -2,14 +2,33 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const CompanyDetailsSchema = new Schema({
-  name: { type: String, required: true },
-  companyCreationDate: { type: Date },
-  slogan: { type: String },
-  numEmployees: { type: Number },
-  contactInfo: { type: String },
-  businessPurpose: { type: String },
-  photos: [{ type: String }], // URL or file path to uploaded photos
-  preferredLanguage: { type: String, default: "en" },
+  UserName: { type: String, default: "" },
+  category: { type: String, default: "" },
+  CompanyTradeName: { type: String, default: "" },
+  addressVisible: { type: String, enum: ["YES", "NO"], default: "NO" },
+  country: { type: String, default: "" },
+  province: { type: String, default: "" },
+  locality: { type: String, default: "" },
+  postalCode: { type: String, default: "" },
+  address: { type: String, default: "" },
+  website: { type: String, default: "" },
+  contactMethod: { type: String, default: "" },
+  phone: { type: String, default: "" },
+  schedule: { type: String, default: "" },
+  salesChannel: { type: String, default: "" },
+  motto: { type: String, default: "" },
+  businessDefinition: [{ type: String }], // Array for multiple definitions
+  highlight: { type: String, default: "" },
+  productService: { type: String, default: "" },
+  featuresBenefits: { type: String, default: "" },
+  additionalProducts: [{ type: String }], // Array for additional products
+  publicationObjective: { type: String, default: "" },
+  photos: [{ type: String }], // Array for photo URLs or file paths
+  serviceArea: { type: String, default: "" },
+  customerType: [{ type: String }], // Array for customer types
+  ageRange: [{ type: String }], // Array for age ranges
+  valuableContent: [{ type: String }], // Array for valuable content types
+  communicationStyle: { type: String, default: "" },
 });
 
 const PaymentHistorySchema = new Schema({
@@ -47,7 +66,7 @@ const postSchema = new Schema({
 
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String },
   post: [postSchema],
   deleted: { type: Boolean, default: false },
   subscription: SubscriptionSchema,

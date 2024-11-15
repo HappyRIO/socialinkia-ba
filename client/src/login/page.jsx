@@ -57,7 +57,7 @@ export default function Login() {
   const googlelogin = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
-    }/api/google/auth/google?redirectToDashboard=true`;
+    }/api/google/auth/google/login`;
     const authWindow = window.open(
       backendUrl,
       "_blank",
@@ -114,7 +114,7 @@ export default function Login() {
           </button>
         </div>
         <div className="dont-have-account hover:underline hover:text-primary">
-          <Link to={"/signup"}>
+          <Link to={"/subscription/signup"}>
             <p>Dont have an account? Sign up</p>
           </Link>
         </div>

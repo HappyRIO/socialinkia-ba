@@ -1,16 +1,46 @@
 const express = require("express");
-const multer = require("multer");
 const path = require("path");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../../model/User");
 const connectDB = require("../../data/db");
 const router = express.Router();
+const { cloudinary, connectCloudinary } = require("../../data/file");
+const { Readable } = require("stream");
+const multer = require("multer");
+
+// Multer configuration for in-memory file storage
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 router.get("/test", (req, res) => {
   connectDB();
   console.log("connected t db");
 });
+
+const uploadImagesToCloudinary = async (files) => {
+  console.log("uploading images to Cloudinary...");
+  const urls = [];
+
+  for (const file of files) {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "automedia" },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result.secure_url);
+        }
+      );
+
+      // Convert buffer to readable stream and pipe to Cloudinary
+      Readable.from(file.buffer).pipe(stream);
+    });
+    urls.push(result);
+  }
+
+  console.log("Uploaded image URLs:", urls);
+  return urls;
+};
 
 // Check if session token is valid
 const isSessionValid = (req, res, next) => {
@@ -51,6 +81,10 @@ router.post("/register", async (req, res) => {
   connectDB();
   console.log("Registering new user");
   const { email, password, subscription } = req.body;
+
+  if (!password) {
+    return res.status(401).json({ error: "No passward provided" });
+  }
 
   // Check if email exists
   const existingUser = await User.findOne({ email });
@@ -153,41 +187,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Session refresh route (validates session and refreshes token)
-router.post("/refresh-session", isSessionValid, async (req, res) => {
-  console.log("Refreshing session...");
-  const { sessionToken } = req.cookies;
-
-  // Create a new session with a new expiration time
-  const sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours from now
-  req.user.sessionExpiresAt = sessionExpiresAt;
-
-  try {
-    await req.user.save();
-
-    // Regenerate session token
-    const newSessionToken = jwt.sign(
-      { userId: req.user._id },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "2h", // Token expires in 2 hours
-      }
-    );
-
-    res.cookie("sessionToken", newSessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Secure in production
-    });
-
-    res.json({
-      message: "Session refreshed",
-      sessionToken: newSessionToken,
-    });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to refresh session." });
-  }
-});
-
 // Check if user is logged in and session is valid
 router.get("/check-user", isSessionValid, (req, res) => {
   connectDB();
@@ -222,17 +221,7 @@ router.get("/user/details", isSessionValid, async (req, res) => {
   }
 });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/photos/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-
-const upload = multer({ storage });
-
+//update user information
 router.put(
   "/user/details",
   isSessionValid,
@@ -240,44 +229,99 @@ router.put(
   async (req, res) => {
     try {
       const {
-        email,
-        deleted,
-        // subscription,
-        createdAt,
-        sessionToken,
-        sessionExpiresAt,
-        name,
-        companyCreationDate,
-        slogan,
-        numEmployees,
-        contactInfo,
-        businessPurpose,
-        preferredLanguage,
+        UserName,
+        category,
+        CompanyTradeName,
+        addressVisible,
+        country,
+        province,
+        locality,
+        postalCode,
+        address,
+        website,
+        contactMethod,
+        phone,
+        schedule,
+        salesChannel,
+        motto,
+        businessDefinition,
+        highlight,
+        productService,
+        featuresBenefits,
+        additionalProducts,
+        publicationObjective,
+        serviceArea,
+        customerType,
+        ageRange,
+        valuableContent,
+        communicationStyle,
       } = req.body;
 
-      const photos = req.files.map((file) => file.path);
+      connectCloudinary();
 
-      // Prepare an update object with all fields
+      console.log("Request body:", req.body);
+      console.log("Uploaded files:", req.files);
+
+      const newPhotos = req.files; // New photos from the request
+      const existingPhotos =
+        (req.user.companyDetails && req.user.companyDetails.photos) || [];
+      const retainedPhotos = req.body.photos || [];
+
+      // Upload new photos to Cloudinary
+      const newPhotoUrls =
+        newPhotos.length > 0 ? await uploadImagesToCloudinary(newPhotos) : [];
+
+      // Identify removed images and delete from Cloudinary
+      const removedPhotos = existingPhotos.filter(
+        (img) => !retainedPhotos.includes(img)
+      );
+      if (removedPhotos.length > 0) {
+        await deleteImagesFromCloudinary(removedPhotos);
+      }
+
+      // Update data with new and retained photos
       const updateData = {
-        email,
-        deleted: deleted === "true", // Convert to Boolean if passed as string
-        // subscription: subscription === "true",
-        createdAt,
-        sessionToken,
-        sessionExpiresAt,
         companyDetails: {
-          name,
-          companyCreationDate,
-          slogan,
-          numEmployees: parseInt(numEmployees, 10), // Ensure this is an integer
-          contactInfo,
-          businessPurpose,
-          preferredLanguage,
-          photos,
+          UserName,
+          category,
+          CompanyTradeName,
+          addressVisible,
+          country,
+          province,
+          locality,
+          postalCode,
+          address,
+          website,
+          contactMethod,
+          phone,
+          schedule,
+          salesChannel,
+          motto,
+          businessDefinition: parseJSON(businessDefinition),
+          highlight,
+          productService,
+          featuresBenefits,
+          additionalProducts: parseJSON(additionalProducts),
+          publicationObjective,
+          photos: [...retainedPhotos, ...newPhotoUrls], // Only retained and new photos
+          serviceArea,
+          customerType: parseJSON(customerType),
+          ageRange: parseJSON(ageRange),
+          valuableContent: parseJSON(valuableContent),
+          communicationStyle,
         },
       };
 
-      // Update user details with validation
+      // Helper function to validate and parse JSON strings
+      function parseJSON(str) {
+        try {
+          return JSON.parse(str);
+        } catch (e) {
+          return []; // Default to an empty array if JSON is invalid
+        }
+      }
+
+      // Update user document
       const updatedUser = await User.findByIdAndUpdate(
         req.user._id,
         updateData,

@@ -58,16 +58,30 @@ export default function SignupMain() {
   };
 
   useEffect(() => {
+    console.log({eventmanager: "loaded"})
+    // In the parent window (opener window)
     window.addEventListener("message", (event) => {
-      // console.log(event.data.redirectUrl);
-      window.location.href = event.data.redirectUrl;
+      // Make sure the message is coming from a trusted source
+      if (event.origin !== import.meta.env.VITE_SERVER_BASE_URL) {
+        console.warn("Message received from untrusted origin:", event.origin);
+        return;
+      }
+
+      // Check for the expected data in the message
+      if (event.data && event.data.redirectUrl) {
+        const redirectUrl = event.data.redirectUrl;
+        console.log("Redirect URL received:", redirectUrl);
+
+        // Redirect the parent window to the received URL
+        window.location.href = redirectUrl;
+      }
     });
   }, []);
 
   const googlesignup = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
-    }/api/google/auth/google?redirectToDashboard=true`;
+    }/api/google/auth/google/signup?plan=${plan}`;
     const authWindow = window.open(
       backendUrl,
       "_blank",
