@@ -30,7 +30,7 @@ export default function Tester() {
     scaleY: 1,
     scaleX: 1,
     rotate: 0,
-    starPoints: 5,
+    // starPoints: 5,
     name: "",
     numPoints: 5,
     fontFamily: "Arial",
@@ -39,7 +39,7 @@ export default function Tester() {
     fill: "#100a09",
     stroke: "#000000",
     strokeWidth: 0,
-    addShadow: false,
+    shadowEnabled: false,
     shadowColor: "#000000",
     shadowBlur: 0,
     shadowX: 0,
@@ -56,6 +56,7 @@ export default function Tester() {
   const [isScaleLock, setisScaleLock] = useState(false);
   // control function states
   const [handleBorderState, setHandleBorderState] = useState(false);
+  const [handleShadowState, setHandleShadowState] = useState(false);
   // ref for the layer and stage
   const layerRef = useRef(null); // Defining the Layer ref
   const stageRef = useRef(null);
@@ -402,7 +403,7 @@ export default function Tester() {
     const newStarPoints = parseInt(e.target.value, 10);
     setActiveAttributes((prevAttributes) => ({
       ...prevAttributes,
-      starPoints: newStarPoints,
+      numPoints: newStarPoints,
     }));
 
     if (activeShape && activeAttributes.type === "star") {
@@ -460,6 +461,17 @@ export default function Tester() {
       ...prevAttributes,
       radius: newRadius,
     }));
+  };
+
+  const handleShadowColorChange = (event) => {
+    const { value } = event.target;
+    if (handleShadowState === true) {
+      setActiveAttributes((prevAttributes) => ({
+        ...prevAttributes,
+        shadowEnabled: true,
+        shadowColor: value,
+      }));
+    }
   };
 
   const handleNameChange = (e) => {
@@ -763,7 +775,7 @@ export default function Tester() {
                     id="star-points"
                     min="3"
                     max="10"
-                    value={activeAttributes.starPoints || 5}
+                    value={activeAttributes.numPoints || 5}
                     onChange={handleChangeStarPoints}
                   />
                 </>
@@ -876,13 +888,15 @@ export default function Tester() {
                   type="checkbox"
                   name="addShadow"
                   id="add-shadow"
-                  checked={activeAttributes.addShadow || false}
+                  checked={handleShadowState || false}
+                  onChange={() => setHandleShadowState(!handleShadowState)}
                 />
                 <input
                   type="color"
                   name="shadowColor"
                   id="shadow-color"
-                  value={activeAttributes.shadowColor || "#000000"}
+                  value={activeAttributes.shadowColor}
+                  onChange={handleShadowColorChange}
                 />
                 <input
                   type="number"
