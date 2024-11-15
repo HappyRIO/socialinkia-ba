@@ -50,7 +50,7 @@ const isSessionValid = (req, res, next) => {
 router.post("/register", async (req, res) => {
   connectDB();
   console.log("Registering new user");
-  const { email, password } = req.body;
+  const { email, password, subscription } = req.body;
 
   // Check if email exists
   const existingUser = await User.findOne({ email });
@@ -64,7 +64,11 @@ router.post("/register", async (req, res) => {
   const newUser = new User({
     email,
     password: hashedPassword,
+    subscription: {
+      plan: subscription,
+    },
   });
+
   console.log({ hashedPassword: hashedPassword });
 
   try {

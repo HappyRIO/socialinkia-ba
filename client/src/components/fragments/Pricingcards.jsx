@@ -22,13 +22,13 @@ export default function Pricingcard() {
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      <div className="w-full h-[80vh] flex flex-col justify-center items-center bg-[url('/images/hero-bg-2.png')] bg-cover bg-center bg-no-repeat text-white">
-        <h1 className="w-full text-center text-3xl font-bold md:text-7xl">
+      <div className="w-full h-[70vh] flex flex-col justify-center items-center bg-[url('/images/hero-bg-2.png')] bg-cover bg-center bg-no-repeat text-white">
+        <h1 className="w-full px-2 text-center text-3xl font-bold md:text-7xl">
           pick a plan that works best for you
         </h1>
-        <p>no credit card required</p>
+        <p className="px-2">no credit card required</p>
       </div>
-      <div className="w-full py-10 max-w-[1000px] md:gap-4 gap-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+      <div className="w-full px-2 py-10 max-w-[1000px] md:gap-4 gap-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
         <div className="w-full shadow-lg rounded-lg bg-background2 flex flex-col gap-4 p-3">
           <p className="font-bold text-2xl">BASIC</p>
           <br />
