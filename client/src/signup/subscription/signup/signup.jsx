@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Loader from "../components/fragments/Loader";
-import Header from "../components/navigation/Header";
-import Footer from "../components/navigation/Footer";
+import { useLocation } from "react-router-dom";
+import Header from "../../../components/navigation/Header";
+import Footer from "../../../components/navigation/Footer";
 
-export default function Login() {
-  const [loading, setLoading] = useState(false);
+export default function SignupMain() {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const plan = params.get("plan");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    subscription: `${plan}`,
   });
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -18,32 +22,38 @@ export default function Login() {
   };
 
   const handleSubmit = async (e) => {
-    setLoading(true);
     e.preventDefault();
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/login`,
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify(formData),
+          credentials: "include", // Send cookies with the request
         }
       );
 
       if (response.ok) {
-        setLoading(false);
-        navigate("/dashboard");
+        // Successful registration, proceed to the next signup step
+        navigate("/subscription/signup/details"); // Use navigate for internal routing
       } else {
-        setLoading(false);
-        alert("Invalid credentials. Please try again.");
+        const data = await response.json();
+
+        if (data.error === "Email already exists.") {
+          // Redirect to login page if email already exists
+          alert("Email already exists. Redirecting to login...");
+          navigate("/login");
+        } else {
+          // Show a general error alert for other cases
+          alert("Signup failed. Please try again.");
+        }
       }
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred. Please try again.");
-      setLoading(false);
     }
   };
 
@@ -54,7 +64,7 @@ export default function Login() {
     });
   }, []);
 
-  const googlelogin = () => {
+  const googlesignup = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
     }/api/google/auth/google?redirectToDashboard=true`;
@@ -74,10 +84,9 @@ export default function Login() {
         <img className="scale-[10]" src="/Login-bro.svg" alt="login svg" />
       </div>
       <div className="w-full py-32 flex flex-col justify-center items-center">
-        {loading && <Loader />}
         <form onSubmit={handleSubmit} className="form space-y-4 p-4">
           <input
-            className="px-2 py-2 w-full rounded-lg border-secondary focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
             type="email"
             id="email"
             autoComplete="off"
@@ -88,7 +97,7 @@ export default function Login() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg border-secondary focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
             type="password"
             id="password"
             autoComplete="off"
@@ -102,24 +111,24 @@ export default function Login() {
             type="submit"
             className="px-4 py-2 bg-accent text-white rounded-lg w-full hover:bg-secondary"
           >
-            Login
+            Sign Up
           </button>
         </form>
         <div className="social">
           <button
-            onClick={googlelogin}
+            onClick={googlesignup}
             className="rounded-lg px-3 py-2 bg-red-500 text-white hover:bg-red-800"
           >
-            Login with Google
+            Sign up with Google
           </button>
         </div>
-        <div className="dont-have-account hover:underline hover:text-primary">
-          <Link to={"/signup"}>
-            <p>Dont have an account? Sign up</p>
+        <div className="dont-have-account hover:underline">
+          <Link to={"/login"}>
+            <p>Already have an account? Sign in</p>
           </Link>
         </div>
       </div>
-      <div className="footer w-full">
+      <div className="foot w-full">
         <Footer />
       </div>
     </div>

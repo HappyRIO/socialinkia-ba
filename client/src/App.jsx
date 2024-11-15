@@ -18,6 +18,9 @@ import CreatTemplate from "./dashboard/creat/CreatTemplate";
 import PostCreation from "./dashboard/creat/post/PostCreation";
 import Editpost from "./dashboard/edit/Editpost";
 import Aboutus from "./components/page/about/Aboutus";
+import Subscrptionmain from "./signup/subscription/sub";
+import SignupMain from "./signup/subscription/signup/signup";
+import BusinessForm from "./signup/subscription/signup/companies/Details";
 
 const router = createBrowserRouter([
   { path: "/", element: <Home /> },
@@ -27,7 +30,9 @@ const router = createBrowserRouter([
   { path: "/signup/details", element: <CompaniesDetails /> },
   { path: "/contact", element: <Contact /> },
   { path: "/about", element: <Aboutus /> },
-  { path: "/subscription", element: <Subscription /> },
+  { path: "/subscription", element: <Subscrptionmain /> },
+  { path: "/subscription/signup", element: <SignupMain /> },
+  { path: "/subscription/signup/details", element: <BusinessForm /> },
 
   // Direct routes with PrivateRoute applied to each protected route
   { path: "/dashboard", element: <PrivateRoute Component={Dashboard} /> },

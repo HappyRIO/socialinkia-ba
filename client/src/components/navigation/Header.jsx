@@ -54,7 +54,7 @@ export default function Header() {
             Login
           </Link>
           <Link
-            to={"/signup"}
+            to={"/subscription"}
             className="text-white bg-accent px-6 p-2 rounded-full animate-pulse font-bold hover:underline"
           >
             signup
@@ -113,7 +113,7 @@ export default function Header() {
                 Login
               </Link>
               <Link
-                to={"/signup"}
+                to={"/subscription"}
                 className="text-black bg-background px-6 p-2 rounded-full animate-pulse font-bold hover:underline"
               >
                 signup
