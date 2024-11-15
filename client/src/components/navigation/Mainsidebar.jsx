@@ -27,6 +27,9 @@ export default function Mainsidebar({ menufunction, menustate, pagename }) {
           </div>
           <div className="flex-1">
             <ul className="pt-2 pb-4 space-y-1 text-sm">
+              <div className="w-full">
+                
+              </div>
               <li className="rounded-sm">
                 <NavLink
                   to="/dashboard"

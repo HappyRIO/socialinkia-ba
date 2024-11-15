@@ -64,6 +64,57 @@ router.post("/create-payment-intent", async (req, res) => {
 });
 
 // Route to create a subscription with a 1-week free trial
+// router.post("/create-subscription", isSessionValid, async (req, res) => {
+//   const { plan, cardDetails } = req.body;
+//   const price = subscriptionPlans.monthly[plan];
+
+//   try {
+//     const paymentMethod = await stripe.paymentMethods.create({
+//       type: "card",
+//       card: {
+//         number: cardDetails.cardNumber,
+//         exp_month: cardDetails.expiryMonth,
+//         exp_year: cardDetails.expiryYear,
+//         cvc: cardDetails.cvc,
+//       },
+//     });
+
+//     const customer = await stripe.customers.create({
+//       payment_method: paymentMethod.id,
+//       email: req.user.email,
+//       invoice_settings: { default_payment_method: paymentMethod.id },
+//     });
+
+//     const subscription = await stripe.subscriptions.create({
+//       customer: customer.id,
+//       items: [
+//         {
+//           price_data: {
+//             currency: "usd",
+//             recurring: { interval: "month" },
+//             unit_amount: price,
+//           },
+//         },
+//       ],
+//       trial_period_days: 7,
+//       expand: ["latest_invoice.payment_intent"],
+//     });
+
+//     const user = await User.findById(req.user._id);
+//     user.subscription = {
+//       id: subscription.id,
+//       active: true,
+//       plan,
+//     };
+//     await user.save();
+
+//     res.status(200).json({ subscriptionDetails: user.subscription });
+//   } catch (error) {
+//     console.error("Error creating subscription:", error);
+//     res.status(500).json({ error: "Failed to create subscription" });
+//   }
+// });
+// Route to create a subscription with a 1-week free trial
 router.post("/create-subscription", isSessionValid, async (req, res) => {
   const { plan, cardDetails } = req.body;
   const price = subscriptionPlans.monthly[plan];
@@ -105,7 +156,20 @@ router.post("/create-subscription", isSessionValid, async (req, res) => {
       id: subscription.id,
       active: true,
       plan,
+      amount: price,
+      currency: "usd",
+      trialEnd: new Date(subscription.trial_end * 1000), // Convert from timestamp
+      renewalDate: new Date(subscription.current_period_end * 1000),
     };
+
+    // Add the first payment to payment history
+    user.subscription.paymentHistory.push({
+      amount: price,
+      currency: "usd",
+      status: "succeeded", // Assuming the payment is successful
+      date: new Date(),
+    });
+
     await user.save();
 
     res.status(200).json({ subscriptionDetails: user.subscription });
@@ -166,7 +230,6 @@ router.get("/subscription-status", isSessionValid, async (req, res) => {
 });
 
 // Route to retrieve user subscription details
-// Route to retrieve user subscription details
 router.get("/details", isSessionValid, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -194,5 +257,79 @@ router.get("/details", isSessionValid, async (req, res) => {
     res.status(500).json({ error: "Failed to retrieve user details" });
   }
 });
+
+// Route to retrieve subscription and payment history
+router.get("/subscription-history", isSessionValid, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate("subscription"); // Populating the subscription field
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the user has a subscription
+    const subscription = user.subscription;
+    if (!subscription) {
+      return res.status(404).json({ error: "No subscription found for user" });
+    }
+
+    // Prepare subscription history response
+    const subscriptionHistory = {
+      plan: subscription.plan || "No plan",
+      status: subscription.active ? "Active" : "Inactive",
+      amount: subscription.amount
+        ? `$${(subscription.amount / 100).toFixed(2)}`
+        : "0.00",
+      trialEnd: subscription.trialEnd || null,
+      renewalDate: subscription.renewalDate || null,
+      paymentHistory: subscription.paymentHistory || [], // Return payment history
+    };
+
+    res.status(200).json(subscriptionHistory);
+  } catch (error) {
+    console.error("Error retrieving subscription history:", error);
+    res.status(500).json({ error: "Failed to retrieve subscription history" });
+  }
+});
+
+// Stripe webhook to handle successful payments (e.g., invoice.payment_succeeded)
+router.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event for successful payment
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object;
+
+      // Find the subscription from the invoice
+      const user = await User.findOne({
+        "subscription.id": invoice.subscription,
+      });
+      if (user) {
+        // Add payment to the payment history
+        user.subscription.paymentHistory.push({
+          amount: invoice.amount_paid,
+          currency: invoice.currency,
+          status: "succeeded",
+          date: new Date(invoice.created * 1000),
+        });
+
+        await user.save();
+      }
+    }
+
+    res.status(200).send("Event received");
+  }
+);
 
 module.exports = router;

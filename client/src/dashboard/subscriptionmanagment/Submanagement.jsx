@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 
 export default function Submanagement() {
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [paymentHistory, setPaymentHistory] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState("basic");
   const [cardDetails, setCardDetails] = useState({
     cardNumber: "",
@@ -30,12 +31,30 @@ export default function Submanagement() {
 
         const data = await response.json();
         setSubscriptionData(data);
+        console.log(data);
       } catch (error) {
         console.error("Error fetching user details:", error);
       }
     };
 
+    const fetchPaymentHistory = async () => {
+      try {
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_SERVER_BASE_URL
+          }/api/subscription/subscription-history`
+        );
+        const data = await response.json();
+        if (data.paymentHistory) {
+          setPaymentHistory(data.paymentHistory);
+        }
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+      }
+    };
+
     fetchUserDetails();
+    fetchPaymentHistory();
   }, []);
 
   const handleDownloadPDF = () => {
@@ -159,7 +178,7 @@ export default function Submanagement() {
             <label className="block mb-2 font-semibold">Upgrade Plan:</label>
             <select
               className="px-4 py-2 border rounded"
-              value={selectedPlan}
+              value={subscriptionData.plan}
               onChange={(e) => setSelectedPlan(e.target.value)}
             >
               <option value="basic">Basic</option>
@@ -212,6 +231,47 @@ export default function Submanagement() {
               </button>
             </form>
           </div>
+        </div>
+
+        <div className="w-full mt-4 bg-background2 rounded-lg flex flex-col justify-center items-center p-6">
+          <h2 className="text-xl font-semibold mb-4">Payment History</h2>
+          <table className="w-full table-auto border-collapse border border-gray-200">
+            <thead>
+              <tr className="bg-background rounded-lg">
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Amount</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Currency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paymentHistory.length > 0 ? (
+                paymentHistory.map((payment, index) => (
+                  <tr key={index} className="border-b border-gray-200">
+                    <td className="px-4 py-2">
+                      {new Date(payment.date).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-2">{`$${(
+                      payment.amount / 100
+                    ).toFixed(2)}`}</td>
+                    <td className="px-4 py-2 capitalize">{payment.status}</td>
+                    <td className="px-4 py-2">
+                      {payment.currency.toUpperCase()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="px-4 py-2 text-center text-gray-500"
+                  >
+                    No payment history available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

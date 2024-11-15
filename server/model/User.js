@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const CompanyDetailsSchema = new Schema({
   UserName: { type: String, default: "" },
+  logo: { type: String, default: "" },
   category: { type: String, default: "" },
   CompanyTradeName: { type: String, default: "" },
   addressVisible: { type: String, enum: ["YES", "NO"], default: "NO" },

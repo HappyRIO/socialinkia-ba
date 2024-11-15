@@ -123,6 +123,58 @@ router.get("/auth/google/:flow/callback", async (req, res) => {
       });
       await user.save();
       console.log({ newUser: user });
+
+      const sessionToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+        expiresIn: "2h",
+      });
+
+      user.sessionToken = sessionToken;
+      user.sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      await user.save();
+
+      res.cookie("sessionToken", sessionToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        maxAge: 2 * 60 * 60 * 1000,
+      });
+
+      // Determine redirect URL based on flow type
+      const redirectUrl =
+        flow === "signup"
+          ? `${process.env.CLIENT_BASE_URL}/subscription/signup/details`
+          : `${process.env.CLIENT_BASE_URL}/dashboard`;
+
+      // Respond with the HTML for the popup window to redirect and close
+      return res.status(201).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Redirecting</title>
+        </head>
+        <body>
+            <script>
+            if (window.opener) {
+                window.opener.postMessage(
+                    { redirectUrl: "${redirectUrl}" },
+                    "${process.env.CLIENT_BASE_URL}"
+                );
+                window.close();
+
+                // // Redirect the opener window to the subscription page
+                // window.opener.location.href = "${redirectUrl}";
+                // // Close the current window
+                // window.close();
+            } else {
+                window.location.href = "${redirectUrl}";
+                window.close();
+            }
+            </script>
+        </body>
+        </html>
+      `);
     } else if (flow === "login" && !user) {
       // Redirect to the subscription page for sign-up
       const redirectUrl = `${process.env.CLIENT_BASE_URL}/subscription`;

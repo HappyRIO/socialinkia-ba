@@ -230,6 +230,7 @@ router.put(
     try {
       const {
         UserName,
+        logo,
         category,
         CompanyTradeName,
         addressVisible,
