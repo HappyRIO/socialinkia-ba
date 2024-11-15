@@ -3,7 +3,7 @@ import Mainsidebar from "./Mainsidebar";
 import { useState } from "react";
 
 // eslint-disable-next-line react/prop-types
-export default function ResponsiveSidebar({ user, pagename }) {
+export default function ResponsiveSidebar({ pagename }) {
   const [menuOpen, setOpenMenu] = useState(false);
   function handlemenuopen() {
     setOpenMenu(!menuOpen);

@@ -10,9 +10,37 @@ import {
   Podcast,
   UserRound,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // eslint-disable-next-line react/prop-types
 export default function Mainsidebar({ menufunction, menustate, pagename }) {
+  const [UserData, setUserData] = useState({});
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/user/details`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json(); // Parse the response as JSON
+          setUserData(data.user.companyDetails);
+          console.log(data); // Log the parsed data
+        } else {
+          console.error("Failed to fetch user data:", response.status);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
   return (
     <div className="h-screen bg-background w-fit fixed left-0 top-0 shadow-xl">
       <div className="flex flex-col h-full p-3 w-60">
@@ -129,9 +157,9 @@ export default function Mainsidebar({ menufunction, menustate, pagename }) {
             className="w-12 h-12 rounded-lg"
           />
           <div>
-            <h2 className="text-md">name lastname</h2>
+            <h2 className="text-md">{UserData ? UserData.UserName : ""}</h2>
             <span className="flex items-center space-x-1 text-sm hover:underline text-gray-500">
-              <NavLink to="/dashboard">View profile</NavLink>
+              <NavLink to="/dashboard/profile">View profile</NavLink>
             </span>
           </div>
         </div>
