@@ -42,19 +42,47 @@ export default function Pricingcard() {
             Ideal for individuals and small businesses just getting started.
           </p>
           <ul>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck /> Ai-Ready Data Prep
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Facebook Posts
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Feature Engineering
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Publications: 7 per month
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Classification Models
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> AI generated content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> User uploaded content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Creating and designing posts manually
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> User uploaded content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Creation and design of posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Auto-publish
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Editing and rescheduling posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Image post format
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Storing metrics
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Annual price: €100 per year
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Monthly price: €15 per month
             </li>
           </ul>
-          <div className="w-full flex justify-center items-center">
+          <div className="w-full flex justify-center items-end h-full">
             <button
               onClick={BasicPlan}
               className="rounded-full font-bold p-4 border-[2px] border-black hover:bg-accent transition-all duration-1000 ease-in-out"
@@ -78,19 +106,50 @@ export default function Pricingcard() {
             out.
           </p>
           <ul>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck /> Ai-Ready Data Prep
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Facebook Posts
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Feature Engineering
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Instagram Posts
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Classification Models
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Publications: 20 per month
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> AI generated content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> User uploaded content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Creating and designing posts manually
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> User uploaded content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Creation and design of posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Auto-publish
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Editing and rescheduling posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Image and carousel post format
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Storing metrics
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> PRICE: €200 per year
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Monthly price: €20 per month
             </li>
           </ul>
-          <div className="w-full flex justify-center items-center">
+          <div className="w-full flex justify-center items-end h-full">
             <button
               onClick={StandardPlan}
               className="rounded-full font-bold p-4 border-[2px] border-black hover:bg-accent transition-all duration-1000 ease-in-out"
@@ -114,16 +173,47 @@ export default function Pricingcard() {
             blogs.
           </p>
           <ul>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck /> Ai-Ready Data Prep
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Posts on Google My Business
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Feature Engineering
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Facebook Posts
             </li>
-            <li className="font-bold flex flex-row items-center gap-2">
-              <BadgeCheck />
-              Classification Models
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Instagram Posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Maximum publications: 30 per month
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> AI generated content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> User uploaded content
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Creating and designing posts manually
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Auto-publish
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Editing and rescheduling posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Image and carousel post format
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Video post format – these would be text posts
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Storing metrics
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> PRICE: €350 per year
+            </li>
+            <li className="font-bold text-sm flex flex-row items-center gap-2">
+              <BadgeCheck /> Monthly price: €35 per month
             </li>
           </ul>
           <div className="w-full flex justify-center items-center">

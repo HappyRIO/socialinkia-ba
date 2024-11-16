@@ -1045,29 +1045,30 @@ export default function Tester() {
           </Stage>
         </div>
       </div>
-      <div className="main-side-pannel sm:relative top-0 right-0 h-full bg-background2 shadow-lg w-full max-w-[400px] p-2">
+      <div className="main-side-pannel overflow-y-scroll bg-background2 shadow-lg w-[400px] p-2">
+        <div className="top-side-panel flex flex-row gap-2 border-b-[2px] border-b-accent py-2">
+          <button
+            onClick={toggleSettingsVisibility}
+            className={`w-full rounded-md py-1 ${
+              isSettingsVisible ? "bg-accent" : "bg-background"
+            }`}
+          >
+            Properties
+          </button>
+          <button
+            onClick={toggleSettingsVisibility}
+            className={`w-full rounded-md py-1 ${
+              isSettingsVisible ? "bg-background" : "bg-accent"
+            }`}
+          >
+            Export
+          </button>
+        </div>
         {isSettingsVisible ? (
-          <div className="settings-zone">
-            <div className="top-side-panel flex flex-row gap-2 border-b-[2px] border-b-accent py-2">
-              <button
-                onClick={toggleSettingsVisibility}
-                className={`w-full rounded-md py-1 ${
-                  isSettingsVisible ? "bg-accent" : "bg-background"
-                }`}
-              >
-                Properties
-              </button>
-              <button
-                onClick={toggleSettingsVisibility}
-                className={`w-full rounded-md py-1 ${
-                  isSettingsVisible ? "bg-background" : "bg-accent"
-                }`}
-              >
-                Export
-              </button>
-            </div>
-            <div className="position-controls">
+          <div className="settings-zone flex flex-col gap-3 justify-center items-center">
+            <div className="position-controls flex flex-row gap-2 pt-3">
               <input
+                className="rounded-lg p-1 w-full"
                 type="number"
                 name="translateY"
                 id="translate-y"
@@ -1076,6 +1077,7 @@ export default function Tester() {
                 onChange={(e) => handleLocationYChange(e.target.value)}
               />
               <input
+                className="rounded-lg p-1 w-full"
                 type="number"
                 name="translateX"
                 id="translate-x"
@@ -1085,8 +1087,9 @@ export default function Tester() {
               />
             </div>
 
-            <div className="size-controls">
+            <div className="size-controls flex flex-row gap-2">
               <input
+                className="rounded-lg p-1 w-full"
                 type="number"
                 name="scaleY"
                 id="scale-y"
@@ -1095,6 +1098,7 @@ export default function Tester() {
                 onChange={handleScaleYChange}
               />
               <input
+                className="rounded-lg p-1 w-full"
                 type="number"
                 name="scaleX"
                 id="scale-x"
@@ -1107,7 +1111,7 @@ export default function Tester() {
               </button>
             </div>
 
-            <div className="rotation-controls">
+            <div className="rotation-controls flex flex-col w-full justify-center">
               <label htmlFor="rotate">rotation</label>
               <input
                 value={activeAttributes.rotation || ""}
@@ -1120,10 +1124,11 @@ export default function Tester() {
               />
             </div>
 
-            <div className="object-editing">
-              <div className="">
+            <div className="object-editing w-full flex flex-col gap-2 justify-center">
+              <div className="flex flex-col w-full">
                 <label htmlFor="starPoint">star points</label>
                 <input
+                  className="rounded-lg p-1 w-full"
                   type="range"
                   name="starPoints"
                   id="star-points"
@@ -1144,6 +1149,7 @@ export default function Tester() {
               </div>
               <input
                 type="text"
+                className="rounded-lg p-1 w-full"
                 placeholder="element name......"
                 id="element-name"
                 name="elementName"
@@ -1151,10 +1157,11 @@ export default function Tester() {
                 onChange={(e) => handleChangeObjectName(e.target.value)}
               />
 
-              <div className="fontselector">
-                <div className="font-list-zone">
+              <div className="fontselector w-full flex flex-col justify-center">
+                <div className="font-list-zone flex flex-col gap-2 justify-center">
                   <div className="font-picker">
                     <select
+                      className="rounded-lg p-1 w-full"
                       onChange={handleFontUpdate}
                       name="fontFamily"
                       id="font-family-selector"
@@ -1167,6 +1174,7 @@ export default function Tester() {
                   </div>
                   <div className="font-weight-selector">
                     <select
+                      className="rounded-lg p-1 w-full"
                       onChange={handleFontUpdate}
                       name="fontWeight"
                       id="font-weight-selector"
@@ -1197,7 +1205,7 @@ export default function Tester() {
               />
             </div>
 
-            <div className="border-controls">
+            <div className="border-controls flex flex-col justify-center">
               {/* only if this is checked thats is when border should be added */}
               <div className="">
                 <label htmlFor="corner-radius">border radius</label>
@@ -1210,107 +1218,126 @@ export default function Tester() {
                   onChange={(e) => handleChangeBorderRadius(e.target.value)}
                 />
               </div>
-              <label htmlFor="addBorder">Add Border</label>
-              <input
-                type="checkbox"
-                name="addBorder"
-                id="add-border"
-                checked={handleBorderState}
-                onChange={() => {
-                  setHandleBorderState(!handleBorderState);
-                  handleBorderUpdate(); // Update the border when toggling
-                }}
-              />
-
-              <label htmlFor="borderColor">Border Color</label>
-              <input
-                type="color"
-                name="borderColor"
-                id="border-color"
-                value={borderColor}
-                onChange={(e) => {
-                  setBorderColor(e.target.value);
-                  handleBorderUpdate(); // Update the border color
-                }}
-              />
-
-              <label htmlFor="borderWidth">Border Width</label>
-              <input
-                type="range"
-                name="borderWidth"
-                id="border-width"
-                min="1"
-                max="10"
-                value={borderWidth}
-                onChange={(e) => {
-                  setBorderWidth(e.target.value);
-                  handleBorderUpdate(); // Update the border width
-                }}
-              />
-            </div>
-
-            <div className="effect-controls">
-              <div className="shadow-controls">
-                <label htmlFor="addShadow">Add Shadow</label>
+              <div className="flex flex-row gap-2 items-center">
+                <label htmlFor="addBorder">Add Border</label>
                 <input
                   type="checkbox"
-                  name="addShadow"
-                  id="add-shadow"
-                  checked={handleShadowState || false}
+                  name="addBorder"
+                  id="add-border"
+                  checked={handleBorderState}
                   onChange={() => {
-                    const newState = !handleShadowState;
-                    setHandleShadowState(newState);
-                    handleShadowUpdate(); // Update shadow properties
+                    setHandleBorderState(!handleBorderState);
+                    handleBorderUpdate(); // Update the border when toggling
                   }}
                 />
+              </div>
 
-                <label htmlFor="shadowColor">Shadow Color</label>
+              <div className="flex flex-row gap-2 items-center">
+                <label htmlFor="borderColor">Border Color</label>
                 <input
                   type="color"
-                  name="shadowColor"
-                  id="shadow-color"
-                  value={shadowColor}
+                  name="borderColor"
+                  id="border-color"
+                  value={borderColor}
                   onChange={(e) => {
-                    setShadowColor(e.target.value);
-                    handleShadowUpdate(); // Update shadow color
+                    setBorderColor(e.target.value);
+                    handleBorderUpdate(); // Update the border color
                   }}
                 />
+              </div>
 
-                <label htmlFor="shadowBlur">Shadow Blur</label>
+              <div className="flex flex-col justify-center">
+                <label htmlFor="borderWidth">Border Width</label>
                 <input
-                  type="number"
-                  name="shadowBlur"
-                  id="shadow-blur"
-                  value={shadowBlur}
+                  type="range"
+                  name="borderWidth"
+                  id="border-width"
+                  min="1"
+                  max="10"
+                  value={borderWidth}
                   onChange={(e) => {
-                    setShadowBlur(e.target.value);
-                    handleShadowUpdate(); // Update shadow blur
+                    setBorderWidth(e.target.value);
+                    handleBorderUpdate(); // Update the border width
                   }}
                 />
+              </div>
+            </div>
 
-                <label htmlFor="shadowX">Shadow X</label>
-                <input
-                  type="number"
-                  name="shadowX"
-                  id="shadow-x"
-                  value={shadowX}
-                  onChange={(e) => {
-                    setShadowX(e.target.value);
-                    handleShadowUpdate(); // Update shadow X offset
-                  }}
-                />
+            <div className="effect-controls w-full">
+              <div className="shadow-controls w-full">
+                <div className="flex flex-row gap-2 items-center">
+                  <label htmlFor="addShadow">Add Shadow</label>
+                  <input
+                    type="checkbox"
+                    name="addShadow"
+                    id="add-shadow"
+                    checked={handleShadowState || false}
+                    onChange={() => {
+                      const newState = !handleShadowState;
+                      setHandleShadowState(newState);
+                      handleShadowUpdate(); // Update shadow properties
+                    }}
+                  />
+                </div>
 
-                <label htmlFor="shadowY">Shadow Y</label>
-                <input
-                  type="number"
-                  name="shadowY"
-                  id="shadow-y"
-                  value={shadowY}
-                  onChange={(e) => {
-                    setShadowY(e.target.value);
-                    handleShadowUpdate(); // Update shadow Y offset
-                  }}
-                />
+                <div className="flex flex-row gap-2 items-center">
+                  <label htmlFor="shadowColor">Shadow Color</label>
+                  <input
+                    type="color"
+                    name="shadowColor"
+                    id="shadow-color"
+                    value={shadowColor}
+                    onChange={(e) => {
+                      setShadowColor(e.target.value);
+                      handleShadowUpdate(); // Update shadow color
+                    }}
+                  />
+                </div>
+
+                <div className="w-full flex flex-col justify-center">
+                  <label htmlFor="shadowBlur w-full">Shadow Blur</label>
+                  <input
+                    type="number"
+                    className="rounded-lg p-1 w-full"
+                    name="shadowBlur"
+                    id="shadow-blur"
+                    value={shadowBlur}
+                    onChange={(e) => {
+                      setShadowBlur(e.target.value);
+                      handleShadowUpdate(); // Update shadow blur
+                    }}
+                  />
+                </div>
+
+                <div className="w-full flex flex-col justify-center">
+                  <label htmlFor="shadowX">Shadow X</label>
+                  <input
+                    className="rounded-lg p-1 w-full"
+                    type="number"
+                    name="shadowX"
+                    id="shadow-x"
+                    value={shadowX}
+                    onChange={(e) => {
+                      setShadowX(e.target.value);
+                      handleShadowUpdate(); // Update shadow X offset
+                    }}
+                  />
+                </div>
+
+                <div className="w-full flex flex-col justify-center">
+                  <label htmlFor="shadowY">Shadow Y</label>
+                  <input
+                    className="rounded-lg p-1 w-full"
+                    type="number"
+                    name="shadowY"
+                    id="shadow-y"
+                    value={shadowY}
+                    onChange={(e) => {
+                      setShadowY(e.target.value);
+                      handleShadowUpdate(); // Update shadow Y offset
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
