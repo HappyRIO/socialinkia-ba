@@ -68,20 +68,41 @@ const SubscriptionSchema = new Schema({
 const postSchema = new Schema({
   text: { type: String },
   platform: {
-    both: { type: Boolean, default: false },
+    all: { type: Boolean, default: false },
+    gmb: { type: Boolean, default: false },
     insta: { type: Boolean, default: false },
     fbook: { type: Boolean, default: false },
   },
-  uploaddate: { type: String },
-  images: [],
+  uploaddate: { type: String }, // Use ISO 8601 format for consistency
+  images: [String],
+  videos: [String],
+  status: {
+    type: String,
+    enum: ["scheduled", "published", "failed"],
+    default: "scheduled",
+  },
+  socialPlatformIds: {
+    gmb: { type: String, default: null },
+    insta: { type: String, default: null },
+    fbook: { type: String, default: null },
+  },
 });
 
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  post: [postSchema],
+  posts: [postSchema],
   deleted: { type: Boolean, default: false },
-  instagramAccountId: { type: String },
+
+  gmbAccessToken: { type: String },
+  gmbRefreshToken: { type: String },
+  gmbTokenExpiresAt: { type: String },
+  gmbAccountId: { type: String },
+  gmbLocationId: { type: String },
+
+  facebookAccessToken: { type: String },
+  instagramAccessToken: { type: String },
+
   subscription: SubscriptionSchema,
   createdAt: { type: Date, default: Date.now },
   sessionToken: { type: String },

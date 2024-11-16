@@ -39,7 +39,11 @@ const router = createBrowserRouter([
 
   // Direct routes with PrivateRoute applied to each protected route
   { path: "/dashboard", element: <PrivateRoute Component={Dashboard} /> },
-  { path: "/dashboard/profile", element: <PrivateRoute Component={Profile} /> },
+  {
+    path: "/dashboard/profile",
+    element: <PrivateRoute Component={Profile} />
+    // element: <Profile />,
+  },
   {
     path: "/dashboard/subscription",
     element: <PrivateRoute Component={Submanagement} />,

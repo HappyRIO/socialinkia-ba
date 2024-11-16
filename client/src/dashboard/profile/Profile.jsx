@@ -1,39 +1,52 @@
 import { useState, useEffect } from "react";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 import { toast, ToastContainer } from "react-toastify";
-import { Facebook, Instagram } from "lucide-react";
+import { Facebook, Instagram, Store } from "lucide-react";
 
 export default function Profile() {
   const [formData, setFormData] = useState({
-    UserName: "",
-    category: "",
-    CompanyTradeName: "",
-    addressVisible: "NO",
+    userName: "",
+    logo: null,
+    logoPreview: null, // For preview
+    companyTradeName: "",
+    businessSector: "",
+    addressVisible: "",
     country: "",
     province: "",
     locality: "",
     postalCode: "",
-    address: "",
-    website: "",
-    contactMethod: "",
-    phone: "",
-    schedule: "",
-    salesChannel: "",
-    motto: "",
-    businessDefinition: "",
-    highlight: "",
-    productService: "",
-    featuresBenefits: "",
-    additionalProducts: [],
-    publicationObjective: "",
+    webPage: "",
+    webPageUrl: "",
+    showContactInfo: "",
+    contactInfo: "",
     photos: [],
-    serviceArea: "",
-    customerType: [],
-    ageRange: "",
-    valuableContent: [],
-    communicationStyle: "",
+    photosPreview: [], // For preview
+    schedule: "",
+    sales_channels: "",
+    motto: "",
+    motto_field: "",
+    business_definition: [],
+    business_definition_other: "",
+    highlight: "",
+    star_product: "",
+    star_product_field: "",
+    features: "",
+    add_products: "no",
+    add_products_field: "",
+    add_features: "",
+    objectives: "",
+    exterior_photo: null,
+    interior_photo: null,
+    special_place_photo: null,
+    staff_photo: null,
+    area_of_influence: "",
+    customer_type: [],
+    age_range: [],
+    valuable_content: [],
+    valuable_content_other: "",
+    communication_style: "",
+    communication_style_other: "",
   });
-
   const [loading, setLoading] = useState(false);
   const [connectfb, setconnectfb] = useState(false);
   const [connectig, setconnectig] = useState(false);
@@ -57,6 +70,7 @@ export default function Profile() {
           ...data.user.companyDetails,
           photos: data.user.companyDetails?.photos || [],
         });
+        console.log(formData);
       } catch (error) {
         console.error("Error fetching user info:", error);
       }
@@ -137,7 +151,7 @@ export default function Profile() {
 
   function handleconnectFacebook() {
     openAuthPopup(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/meta/auth/facebook`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/facebook/auth/facebook`,
       () => {
         setconnectfb(true);
         toast("Facebook connected", { theme: "dark" });
@@ -147,7 +161,19 @@ export default function Profile() {
 
   function handleconnectInstagram() {
     openAuthPopup(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/meta/auth/instagram`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/instagram/auth/instagram`,
+      () => {
+        setconnectig(true);
+        toast("Instagram connected", { theme: "dark" });
+      }
+    );
+  }
+
+  function handleconnectGoogleMyBusiness() {
+    openAuthPopup(
+      `${
+        import.meta.env.VITE_SERVER_BASE_URL
+      }/api/google/auth/google-my-business`,
       () => {
         setconnectig(true);
         toast("Instagram connected", { theme: "dark" });
@@ -161,18 +187,25 @@ export default function Profile() {
       <div className="side-bar">
         <ResponsiveSidebar pagename="Profile" />
       </div>
-      <div className="w-full ml-0 sm:ml-64 pt-3 px-2 flex flex-col justify-center items-center">
-        <div className="flex flex-row justify-between w-full px-4 py-2">
+      <div className="w-full ml-0 sm:ml-64 py-3 px-2 flex flex-col justify-center items-center">
+        <div className="flex gap-2 flex-col sm:flex-row justify-between w-full px-4 py-2">
+          <button
+            className="bg-red-500 w-full h-[100px] flex flex-col justify-center items-center text-white p-4 rounded-lg shadow-lg"
+            onClick={handleconnectGoogleMyBusiness}
+          >
+            connect gmb
+            <Store />
+          </button>
           <button
             onClick={handleconnectFacebook}
-            className="bg-blue-500 text-white p-4 rounded-lg shadow-lg"
+            className="bg-blue-500 w-full h-[100px] flex flex-col justify-center items-center text-white p-4 rounded-lg shadow-lg"
           >
             {connectfb ? "Facebook Connected" : "Connect Facebook"}
             <Facebook />
           </button>
           <button
             onClick={handleconnectInstagram}
-            className="bg-red-400 text-white p-4 rounded-lg shadow-lg"
+            className="bg-red-400 w-full h-[100px] flex flex-col justify-center items-center text-white p-4 rounded-lg shadow-lg"
           >
             {connectig ? "Instagram Connected" : "Connect Instagram"}
             <Instagram />
@@ -182,378 +215,669 @@ export default function Profile() {
         {loading && <div className="spinner">Loading...</div>}
         <form
           onSubmit={handleSubmit}
-          className="form flex flex-col gap-2 justify-center"
+          className="form flex flex-col gap-2 justify-center w-full"
         >
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="UserName">
-              User Name
-            </label>
+          <div className="form-section-1 bg-background2 flex flex-col justify-center items-center gap-3 rounded-lg p-2">
+            <h2 className="text-lg font-bold">Block 1: YOUR BUSINESS</h2>
             <input
+              className="p-2 rounded-lg w-full"
               type="text"
-              name="UserName"
-              className="p-2 rounded-lg"
-              placeholder="Your User Name"
-              value={formData.UserName}
+              name="userName"
+              placeholder="Your user name"
+              value={formData.userName}
               onChange={handleChange}
             />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="photos">
-              Upload Photos
-            </label>
-            <input type="file" name="photos" multiple onChange={handleChange} />
-          </div>
-
-          <div className="flex flex-col">
             <label
-              className="text-neutral-400 text-sm"
-              htmlFor="CompanyTradeName"
+              htmlFor="logo"
+              className="text-left w-full text-sm text-gray-500"
             >
-              Company Trade Name
+              logo
             </label>
             <input
-              type="text"
-              className="p-2 rounded-lg"
-              name="CompanyTradeName"
-              placeholder="Company Trade Name"
-              value={formData.CompanyTradeName}
+              className="p-2 rounded-lg w-full"
+              type="file"
+              name="logo"
+              accept=".png,.jpg,.jpeg"
               onChange={handleChange}
             />
-          </div>
-
-          <div className="flex flex-col">
-            <label
-              className="text-neutral-400 text-sm"
-              htmlFor="CompanyTradeName"
-            >
-              Company's Trade Name
-            </label>
+            {formData.logoPreview && (
+              <img
+                src={formData.logoPreview}
+                alt="Logo Preview"
+                className="mt-2 w-24 h-24 object-cover rounded-lg"
+              />
+            )}
             <input
-              className="p-2 rounded-lg"
+              className="p-2 rounded-lg w-full"
               type="text"
-              name="CompanyTradeName"
-              placeholder="company's trade name"
-              value={formData.CompanyTradeName}
+              name="companyTradeName"
+              placeholder="Company trade name"
+              value={formData.companyTradeName}
               onChange={handleChange}
             />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="category">
-              Select Category
-            </label>
             <select
-              className="p-2 rounded-lg"
-              name="category"
-              value={formData.category}
+              className="p-2 rounded-lg w-full"
+              name="businessSector"
+              value={formData.businessSector}
               onChange={handleChange}
             >
-              <option value="">Select Category</option>
-              <option value="Fashion and accessories">
-                Fashion and accessories
-              </option>
-              <option value="Music">Music</option>
-              <option value="Leisure and free time">
-                Leisure and free time
-              </option>
-              <option value="Orthopedics">Orthopedics</option>
-              <option value="Bakery">Bakery</option>
-              <option value="Hair salon">Hair salon</option>
-              <option value="Data protection and GDPR">
-                Data protection and GDPR
-              </option>
-              <option value="Psychology">Psychology</option>
-              <option value="Restaurant">Restaurant</option>
-              <option value="Health- well-being">Health- well-being</option>
-              <option value="Dental health">Dental health</option>
-              <option value="Insurance">Insurance</option>
-              <option value="IT Services">IT Services</option>
-              <option value="Car workshop">Car workshop</option>
-              <option value="Motorcycle workshop">Motorcycle workshop</option>
-              <option value="Pet store">Pet store</option>
-              <option value="Tourism">Tourism</option>
-              <option value="Trips">Trips</option>
-              <option value="Spirituality/ Esotericism">
-                Spirituality/ Esotericism
-              </option>
-              <option value="Chiropodist">Chiropodist</option>
-              <option value="Other">Other</option>
+              <option value="">Main business sector</option>
+              {[
+                "Craft",
+                "Children's items",
+                "Consulting",
+                "Café",
+                "Carnage",
+                "Hunt",
+                "Beauty center",
+                "Veterinary center",
+                "Decoration",
+                "E-commerce multiproduct",
+                "Sports and fitness",
+                "Household appliances",
+                "Events",
+                "Hardware",
+                "Physiotherapy",
+                "Training",
+                "Photograph",
+                "Nurseries",
+                "Real estate",
+                "Gardening",
+                "Jeweler's",
+                "Legal and juridical",
+                "Cleaning",
+                "Marketing",
+                "Fashion and accessories",
+                "Music",
+                "Leisure and free time",
+                "Orthopedics",
+                "Bakery",
+                "Hair salon",
+                "Data protection and GDPR",
+                "Psychology",
+                "Restaurant",
+                "Health-well-being",
+                "Dental health",
+                "Insurance",
+                "IT Services",
+                "Car workshop",
+                "Motorcycle workshop",
+                "Pet store",
+                "Tourism",
+                "Trips",
+                "Spirituality/Esotericism",
+                "Chiropodist",
+                "Other",
+              ].map((sector) => (
+                <option key={sector} value={sector}>
+                  {sector}
+                </option>
+              ))}
             </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label
-              className="text-neutral-400 text-sm"
-              htmlFor="addressVisible"
-            >
-              Should the physical address of the business appear?
-            </label>
             <select
-              className="p-2 rounded-lg"
+              className="p-2 rounded-lg w-full"
               name="addressVisible"
               value={formData.addressVisible}
               onChange={handleChange}
             >
+              <option value="">
+                Should the physical address of the business appear?
+              </option>
               <option value="NO">No</option>
-              <option value="Yes">Yes</option>
+              <option value="YES">Yes</option>
             </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="country">
-              Country
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="country"
-              placeholder="Where the company is located (COUNTRY)"
-              value={formData.country}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="province">
-              Province
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="province"
-              placeholder="Province"
-              value={formData.province}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="locality">
-              Locality
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="locality"
-              placeholder="Locality"
-              value={formData.locality}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="postalCode">
-              Postal Code
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="postalCode"
-              placeholder="Postal code"
-              value={formData.postalCode}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="address">
-              Address
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="address"
-              placeholder="Address (Plaza street, local)"
-              value={formData.address}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="website">
-              Website
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="website"
-              placeholder="Web page"
-              value={formData.website}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="phone">
-              Telephone (+34)
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="phone"
-              placeholder="Telephone (+34)"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="ageRange">
-              Target Customer Age
-            </label>
+            {formData.addressVisible === "YES" && (
+              <>
+                <input
+                  className="p-2 rounded-lg w-full"
+                  type="text"
+                  name="country"
+                  placeholder="Country (e.g., Spain)"
+                  value={formData.country}
+                  onChange={handleChange}
+                />
+                <select
+                  className="p-2 rounded-lg w-full"
+                  name="province"
+                  value={formData.province}
+                  onChange={handleChange}
+                >
+                  <option value="">Province</option>
+                  {[
+                    "A Coruña",
+                    "Alava",
+                    "Alicante",
+                    "Almeria",
+                    "Asturias",
+                    "Avila",
+                    "Badajoz",
+                    "Barcelona",
+                    "Burgos",
+                    "Caceres",
+                    "Cadiz",
+                    "Cantabria",
+                    "Castellon",
+                    "City Royal",
+                    "Cordova",
+                    "Basin",
+                    "Girona",
+                    "Grenade",
+                    "Guadalajara",
+                    "Guipuzcoa",
+                    "Huelva",
+                    "Huesca",
+                    "Balearic Islands",
+                    "Jaen",
+                    "Corunna",
+                    "Rioja",
+                    "Las Palmas",
+                    "Lion",
+                    "Lleida",
+                    "Lugo",
+                    "Madrid",
+                    "Malaga",
+                    "Murcia",
+                    "Navarre",
+                    "Ourense",
+                    "Palencia",
+                    "Pontevedra",
+                    "Salamanca",
+                    "Santa Cruz de Tenerife",
+                    "Segovia",
+                    "Seville",
+                    "Soria",
+                    "Tarragona",
+                    "Teruel",
+                    "Toledo",
+                    "Valencia",
+                    "Valladolid",
+                    "Biscay (Bizkaia)",
+                    "Zamora",
+                    "Saragossa",
+                  ].map((province) => (
+                    <option key={province} value={province}>
+                      {province}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="p-2 rounded-lg w-full"
+                  type="text"
+                  name="locality"
+                  placeholder="Locality"
+                  value={formData.locality}
+                  onChange={handleChange}
+                />
+                <input
+                  className="p-2 rounded-lg w-full"
+                  type="text"
+                  name="postalCode"
+                  placeholder="Postal Code"
+                  value={formData.postalCode}
+                  onChange={handleChange}
+                />
+              </>
+            )}
             <select
-              className="p-2 rounded-lg"
-              name="ageRange"
-              value={formData.ageRange}
+              className="p-2 rounded-lg w-full"
+              name="webPage"
+              value={formData.webPage}
               onChange={handleChange}
             >
-              <option value="">Target Customer Age</option>
-              <option value="18 below">18 below</option>
-              <option value="18 above">18 above</option>
-              <option value="18-25">18-25</option>
-              <option value="26-35">26-35</option>
-              <option value="36-50">36-50</option>
-              <option value="51+">51+</option>
+              <option value="">Do you have a web page?</option>
+              <option value="NO">No</option>
+              <option value="YES">Yes</option>
             </select>
+            {formData.webPage === "YES" && (
+              <input
+                className="p-2 rounded-lg w-full"
+                type="text"
+                name="webPageUrl"
+                placeholder="Website URL"
+                value={formData.webPageUrl}
+                onChange={handleChange}
+              />
+            )}
+            <select
+              className="p-2 rounded-lg w-full"
+              name="showContactInfo"
+              value={formData.showContactInfo}
+              onChange={handleChange}
+            >
+              <option value="">Show phone or email?</option>
+              <option value="NO">No</option>
+              <option value="YES">Yes</option>
+            </select>
+            {formData.showContactInfo === "YES" && (
+              <input
+                className="p-2 rounded-lg w-full"
+                type="text"
+                name="contactInfo"
+                placeholder="Contact Information (e.g., +34...)"
+                value={formData.contactInfo}
+                onChange={handleChange}
+              />
+            )}
           </div>
+          {/* Block 2: products or services */}
+          <div className="form-section-2 bg-background2 flex flex-col justify-center items-center gap-3 rounded-lg p-2">
+            <h2 className="text-lg font-bold">
+              Block 2: Tell us about your products or services
+            </h2>
 
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="schedule">
+            <label htmlFor="schedule" className="block font-medium">
               What days are you open?
             </label>
             <select
-              className="p-2 rounded-lg"
+              id="schedule"
               name="schedule"
+              className="p-2 rounded-lg w-full"
               value={formData.schedule}
               onChange={handleChange}
             >
-              <option value="">What days are you open?</option>
-              <option value="Week">
-                Monday-Tuesday-Wednesday-Thursday-Friday-Saturday-Sunday
+              <option value="">Choose an option</option>
+              <option value="week">
+                Week: Monday-Tuesday-Wednesday-Thursday-Friday-Saturday-Sunday
               </option>
-              <option value="Week without weekends">
-                Monday-Tuesday-Wednesday-Thursday-Friday
+              <option value="week_no_weekends">
+                Week without weekends: Monday-Tuesday-Wednesday-Thursday-Friday
               </option>
-              <option value="All weekend">Saturdays and Sundays</option>
-              <option value="We never close">We never close</option>
+              <option value="all_weekend">
+                All weekend (Saturdays and Sundays)
+              </option>
+              <option value="never_close">We never close</option>
             </select>
-          </div>
 
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="salesChannel">
-              Sales or Customer Service Channels
+            <label htmlFor="sales_channels" className="block mt-4 font-medium">
+              Sales or customer service channels
             </label>
             <select
-              className="p-2 rounded-lg"
-              name="salesChannel"
-              value={formData.salesChannel}
+              id="sales_channels"
+              name="sales_channels"
+              className="p-2 rounded-lg w-full"
+              value={formData.sales_channels}
               onChange={handleChange}
             >
-              <option value="">Sales or customer service channels</option>
-              <option value="Ecommerce 24 hours">
+              <option value="">Choose an option</option>
+              <option value="ecommerce_24hrs">
                 I am an ecommerce (online sales) store open 24 hours a day
               </option>
-              <option value="Ecommerce with customer service">
+              <option value="ecommerce_service_hours">
                 I am an Ecommerce (online sales) with customer service hours
               </option>
-              <option value="Physical sales">
+              <option value="ecommerce_physical">
                 In addition to an Ecommerce, I have a place with physical sales
               </option>
-              <option value="Physical location only">
+              <option value="physical_location">
                 I only have one physical location
               </option>
             </select>
-          </div>
 
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="motto">
+            <label htmlFor="motto" className="block mt-4 font-medium">
               Motto
             </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
+            <select
+              id="motto"
               name="motto"
-              placeholder="Motto"
+              className="p-2 rounded-lg w-full"
               value={formData.motto}
               onChange={handleChange}
-            />
-          </div>
+            >
+              <option value="">Choose an option</option>
+              <option value="have">Have</option>
+              <option value="dont_have">Don't have</option>
+            </select>
+            <textarea
+              id="motto_field"
+              name="motto_field"
+              className="mt-2 p-2 rounded-lg w-full"
+              placeholder="Add your motto here (if applicable)"
+              value={formData.motto_field}
+              onChange={handleChange}
+            ></textarea>
 
-          <div className="flex flex-col">
-            <label className="text-neutral-400 text-sm" htmlFor="highlight">
-              Highlight about your business
+            <label
+              htmlFor="business_definition"
+              className="block mt-4 font-medium"
+            >
+              How would you define your business?
             </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "Attention",
+                "Creativity",
+                "Strategy",
+                "Experience",
+                "Quality",
+                "Closeness",
+                "Knowledge",
+                "Artisanal",
+                "Innovation",
+                "Passion",
+                "Personalization",
+                "Planning",
+                "Price",
+                "Professionalism",
+                "Service",
+                "Speed",
+                "Technology",
+                "Traditional",
+                "Vision",
+              ].map((item) => (
+                <label key={item}>
+                  <input
+                    type="checkbox"
+                    name="business_definition"
+                    value={item}
+                    checked={formData.business_definition.includes(item)}
+                    onChange={handleChange}
+                  />{" "}
+                  {item}
+                </label>
+              ))}
+              <textarea
+                id="business_definition_other"
+                name="business_definition_other"
+                className="mt-2 p-2 rounded-lg w-full"
+                placeholder="Other (please specify)"
+                value={formData.business_definition_other}
+                onChange={handleChange}
+              ></textarea>
+            </div>
+
+            <label htmlFor="highlight" className="block mt-4 font-medium">
+              What would you like to highlight about your business?
+            </label>
+            <textarea
+              id="highlight"
               name="highlight"
-              placeholder="What would you like to highlight about your business?"
+              className="p-2 rounded-lg w-full"
+              placeholder="Free text field"
               value={formData.highlight}
               onChange={handleChange}
-            />
-          </div>
+            ></textarea>
 
-          <div className="flex flex-col">
-            <label
-              className="text-neutral-400 text-sm"
-              htmlFor="productService"
-            >
-              Star Service or Product
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="productService"
-              placeholder="Star service or product"
-              value={formData.productService}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label
-              className="text-neutral-400 text-sm"
-              htmlFor="featuresBenefits"
-            >
-              Features and/or Benefits
-            </label>
-            <input
-              className="p-2 rounded-lg"
-              type="text"
-              name="featuresBenefits"
-              placeholder="Features and/or Benefits"
-              value={formData.featuresBenefits}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label
-              className="text-neutral-400 text-sm"
-              htmlFor="communicationStyle"
-            >
-              Style of Communication
+            <label htmlFor="star_product" className="block mt-4 font-medium">
+              Star service or product
             </label>
             <select
-              className="p-2 rounded-lg"
-              name="communicationStyle"
-              value={formData.communicationStyle}
+              id="star_product"
+              name="star_product"
+              className="p-2 rounded-lg w-full"
+              value={formData.star_product}
               onChange={handleChange}
             >
-              <option value="">Style of Communication</option>
-              <option value="formal">Formal</option>
-              <option value="casual">Casual</option>
-              <option value="professional">Professional</option>
-              <option value="friendly">Friendly</option>
-              <option value="marketing">Marketing-focused</option>
+              <option value="">Choose an option</option>
+              <option value="product">Product</option>
+              <option value="service">Service</option>
+              <option value="both">Both product or service options</option>
             </select>
+            <input
+              type="text"
+              id="star_product_field"
+              name="star_product_field"
+              className="mt-2 p-2 rounded-lg w-full"
+              placeholder="Free field, maximum 45 characters"
+              value={formData.star_product_field}
+              onChange={handleChange}
+            />
+
+            <label htmlFor="features" className="block mt-4 font-medium">
+              Features and/or Benefits
+            </label>
+            <textarea
+              id="features"
+              name="features"
+              className="p-2 rounded-lg w-full"
+              placeholder="Free field without emoticons"
+              value={formData.features}
+              onChange={handleChange}
+            ></textarea>
+
+            <label htmlFor="add_products" className="block mt-4 font-medium">
+              Add more products or services (up to 5)
+            </label>
+            <select
+              id="add_products"
+              name="add_products"
+              className="p-2 rounded-lg w-full"
+              value={formData.add_products}
+              onChange={handleChange}
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+            <input
+              type="text"
+              id="add_products_field"
+              name="add_products_field"
+              className="mt-2 p-2 rounded-lg w-full"
+              placeholder="Free field, maximum 45 characters"
+              value={formData.add_products_field}
+              onChange={handleChange}
+            />
+            <textarea
+              id="add_features"
+              name="add_features"
+              className="mt-2 p-2 rounded-lg w-full"
+              placeholder="Features and/or Benefits (Free field without emoticons)"
+              value={formData.add_features}
+              onChange={handleChange}
+            ></textarea>
+
+            <label htmlFor="objectives" className="block mt-4 font-medium">
+              What do you want to achieve with your publications?
+            </label>
+            <select
+              id="objectives"
+              name="objectives"
+              className="p-2 rounded-lg w-full"
+              value={formData.objectives}
+              onChange={handleChange}
+            >
+              <option value="">Choose an option</option>
+              <option value="appointment_required">Appointment required</option>
+              <option value="book_by_phone">Book by phone</option>
+              <option value="physical_visit">
+                Physical visit to the premises
+              </option>
+              <option value="only_web">Only on the web</option>
+              <option value="visit_web_or_premises">
+                Visiting the premises or via the web
+              </option>
+            </select>
+
+            <label className="block mt-4 font-medium">Add photos</label>
+            <input
+              type="file"
+              name="photos"
+              accept="image/png, image/jpg, image/jpeg"
+              multiple
+              className="p-2 rounded-lg w-full mt-2"
+              onChange={handleChange}
+            />
+            <div className="flex flex-wrap gap-4 mt-2">
+              {formData.photosPreview.map((preview, index) => (
+                <img
+                  key={index}
+                  src={preview}
+                  alt={`Photo ${index + 1} Preview`}
+                  className="w-24 h-24 object-cover rounded-lg"
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Block 3: area of influence */}
+          <div className="form-section-3 bg-background2 flex flex-col justify-center items-center gap-3 rounded-lg p-2">
+            <h2 className="text-lg font-bold">
+              Block 3: Area of Influence and Audience
+            </h2>
+
+            {/* Area of Influence */}
+            <label
+              htmlFor="area_of_influence"
+              className="block font-medium mt-4"
+            >
+              Where the company provides services
+            </label>
+            <select
+              id="area_of_influence"
+              name="area_of_influence"
+              className="p-2 rounded-lg w-full"
+              onChange={handleChange}
+              value={formData.area_of_influence}
+            >
+              <option value="">Choose an option</option>
+              <option value="local">At local level</option>
+              <option value="provincial">At the provincial level</option>
+              <option value="autonomous">
+                At the autonomous community level
+              </option>
+              <option value="national">At the national level</option>
+              <option value="international">At international level</option>
+            </select>
+
+            {/* Customer Type */}
+            <label htmlFor="customer_type" className="block font-medium mt-4">
+              Customer type (select 1 or 2 options)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {["men", "women", "both", "companies", "all"].map((type) => (
+                <label key={type}>
+                  <input
+                    type="checkbox"
+                    name="customer_type"
+                    value={type}
+                    className="mr-2"
+                    onChange={handleChange}
+                    checked={formData.customer_type.includes(type)}
+                  />{" "}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </label>
+              ))}
+            </div>
+
+            {/* Age Range */}
+            <label htmlFor="age_range" className="block font-medium mt-4">
+              Age range (multiple selection possible)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "under_24",
+                "25_35",
+                "36_45",
+                "46_55",
+                "56_65",
+                "over_65",
+                "companies",
+              ].map((age) => (
+                <label key={age}>
+                  <input
+                    type="checkbox"
+                    name="age_range"
+                    value={age}
+                    className="mr-2"
+                    onChange={handleChange}
+                    checked={formData.age_range.includes(age)}
+                  />{" "}
+                  {age
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+                </label>
+              ))}
+            </div>
+
+            {/* Valuable Content */}
+            <label
+              htmlFor="valuable_content"
+              className="block font-medium mt-4"
+            >
+              Valuable content for your target audience (Topics)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                "sporting_events",
+                "cultural_activities",
+                "geeky_content",
+                "social_issues",
+              ].map((content) => (
+                <label key={content}>
+                  <input
+                    type="checkbox"
+                    name="valuable_content"
+                    value={content}
+                    className="mr-2"
+                    onChange={handleChange}
+                    checked={formData.valuable_content.includes(content)}
+                  />{" "}
+                  {content
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+                </label>
+              ))}
+            </div>
+            <div className="other-content-style w-full">
+              <textarea
+                id="valuable_content_other"
+                name="valuable_content_other"
+                className="mt-2 p-2 rounded-lg w-full"
+                rows={5}
+                placeholder="Other topics (please specify)"
+                onChange={handleChange}
+                value={formData.valuable_content_other}
+              ></textarea>
+            </div>
+
+            {/* Communication Style */}
+            <label
+              htmlFor="communication_style"
+              className="block font-medium mt-4"
+            >
+              Desired communication style
+            </label>
+            <select
+              id="communication_style"
+              name="communication_style"
+              className="p-2 rounded-lg w-full"
+              onChange={handleChange}
+              value={formData.communication_style}
+            >
+              <option value="">Choose an option</option>
+              {[
+                "corporate",
+                "formal",
+                "nearby",
+                "emotional",
+                "fun",
+                "inspirational",
+                "professional",
+                "narrative",
+                "persuasive",
+                "informative",
+                "technical",
+                "motivational",
+              ].map((style) => (
+                <option key={style} value={style}>
+                  {style.charAt(0).toUpperCase() + style.slice(1)}
+                </option>
+              ))}
+            </select>
+            <textarea
+              id="communication_style_other"
+              name="communication_style_other"
+              className="mt-2 p-2 rounded-lg w-full"
+              placeholder="Other styles (please specify)"
+              onChange={handleChange}
+              value={formData.communication_style_other}
+            ></textarea>
           </div>
 
           <button
             type="submit"
             className="bg-accent text-white rounded-lg w-full"
           >
-            Submit Details
+            Update Details
           </button>
         </form>
       </div>

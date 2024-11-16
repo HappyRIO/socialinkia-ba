@@ -10,7 +10,7 @@ router.get("/auth/instagram", (req, res) => {
   const teststring =
     "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=3470054769957639&redirect_uri=https://auto-social-api.onrender.com/api/instagram/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
   const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_basic,instagram_business_basic`;
-  res.redirect(instagramAuthUrl);
+  res.redirect(teststring);
 });
 // ----------------- Content Management Routes ------------------
 
@@ -144,5 +144,57 @@ router.post("/post", validateAndRefreshToken, async (req, res) => {
     res.status(500).json({ error: "Failed to post content on Instagram." });
   }
 });
+
+// get posts
+router.get("/user/media", validateAndRefreshToken, async (req, res) => {
+  try {
+    const mediaResponse = await axios.get(
+      `https://graph.instagram.com/me/media`,
+      {
+        params: {
+          fields:
+            "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
+          access_token: req.session.accessToken,
+        },
+      }
+    );
+
+    res.status(200).json({
+      message: "User media retrieved successfully!",
+      media: mediaResponse.data.data,
+    });
+  } catch (error) {
+    console.error("Error retrieving user media:", error.message);
+    res.status(500).json({ error: "Failed to retrieve user media." });
+  }
+});
+
+router.get(
+  "/post/:postId/insights",
+  validateAndRefreshToken,
+  async (req, res) => {
+    const { postId } = req.params;
+
+    try {
+      const insightsResponse = await axios.get(
+        `https://graph.facebook.com/v17.0/${postId}/insights`,
+        {
+          params: {
+            metric: "impressions,reach,engagement",
+            access_token: req.session.accessToken,
+          },
+        }
+      );
+
+      res.status(200).json({
+        message: "Post insights retrieved successfully!",
+        insights: insightsResponse.data.data,
+      });
+    } catch (error) {
+      console.error("Error retrieving post insights:", error.message);
+      res.status(500).json({ error: "Failed to retrieve post insights." });
+    }
+  }
+);
 
 module.exports = router;

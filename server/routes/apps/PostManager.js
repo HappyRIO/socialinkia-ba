@@ -5,261 +5,319 @@ const { cloudinary, connectCloudinary } = require("../../data/file");
 const { Readable } = require("stream");
 const router = express.Router();
 const multer = require("multer");
+const Agenda = require("agenda");
+const {
+  publishToFacebook,
+  publishToInstagram,
+  publishToGmb,
+} = require("../../handlers/PostRoutesHandler");
 
-// Multer configuration for in-memory file storage
+// Multer configuration
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Middleware to validate user session
-const isSessionValid = (req, res, next) => {
-  connectDB();
-  const { sessionToken } = req.cookies;
+// Initialize Agenda for scheduling
+const agenda = new Agenda({
+  db: { address: "mongodb://localhost/autosocial" },
+});
 
-  if (!sessionToken) {
-    return res.status(401).json({ error: "No session token provided." });
+// Middleware for session validation
+const isSessionValid = async (req, res, next) => {
+  try {
+    connectDB();
+    const { sessionToken } = req.cookies;
+
+    if (!sessionToken) {
+      return res.status(401).json({ error: "No session token provided." });
+    }
+
+    const user = await User.findOne({ sessionToken });
+    if (!user || new Date(user.sessionExpiresAt) <= new Date()) {
+      return res.status(401).json({ error: "Invalid or expired session." });
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
   }
-
-  User.findOne({ sessionToken })
-    .then((user) => {
-      if (!user) {
-        return res.status(401).json({ error: "Invalid session token." });
-      }
-      const expirationTime = new Date(user.sessionExpiresAt);
-      if (expirationTime <= new Date()) {
-        return res.status(401).json({ error: "Session expired." });
-      }
-      req.user = user;
-      next();
-    })
-    .catch((error) => res.status(500).json({ error: "Server error" }));
 };
 
-// Helper function to upload images to Cloudinary
+// Cloudinary helpers
 const uploadImagesToCloudinary = async (files) => {
-  console.log("uploading images to Cloudinary...");
   const urls = [];
-
   for (const file of files) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: "automedia" },
         (error, result) => {
-          if (error) return reject(error);
+          if (error) reject(error);
           resolve(result.secure_url);
         }
       );
-
-      // Convert buffer to readable stream and pipe to Cloudinary
       Readable.from(file.buffer).pipe(stream);
     });
     urls.push(result);
   }
-
-  console.log("Uploaded image URLs:", urls);
   return urls;
 };
 
-//helper function for deleting images
-const deleteImagesFromCloudinary = async (imageUrls) => {
-  for (const url of imageUrls) {
-    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
-    await cloudinary.uploader.destroy(`automedia/${publicId}`);
+const uploadVideosToCloudinary = async (files) => {
+  const urls = [];
+  for (const file of files) {
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: "automedia", resource_type: "video" },
+        (error, result) => {
+          if (error) reject(error);
+          resolve(result.secure_url);
+        }
+      );
+      Readable.from(file.buffer).pipe(stream);
+    });
+    urls.push(result);
+  }
+  return urls;
+};
+
+// Helper function to delete media from Cloudinary
+const deleteMediaFromCloudinary = async (mediaUrls, resourceType = "image") => {
+  for (const url of mediaUrls) {
+    const publicId = url.split("/").pop().split(".")[0];
+    await cloudinary.uploader.destroy(`automedia/${publicId}`, {
+      resource_type: resourceType,
+    });
   }
 };
 
-// Create a new post
+//helper function for deleting images
+async function deleteImagesFromCloudinary(imageUrls) {
+  for (const url of imageUrls) {
+    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+    await cloudinary.uploader.destroy(automedia / $, { publicId });
+  }
+}
+
+// Schedule a post for publishing
+const schedulePost = async (postId, userId) => {
+  // Define the publish post job in Agenda
+  agenda.define("publish post", async (job) => {
+    const { userId, postId } = job.attrs.data;
+
+    // Fetch the user and the specific post by its ID
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const post = user.posts.id(postId);
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    try {
+      // Publish to platforms based on the post's platform flags
+      if (post.platform.fbook) {
+        const fbResult = await publishToFacebook(post, user);
+        post.socialPlatformIds.fbook = fbResult.postId; // Store the FB post ID
+      }
+
+      if (post.platform.insta) {
+        const instaResult = await publishToInstagram(post, user);
+        post.socialPlatformIds.insta = instaResult.postId; // Store the Instagram post ID
+      }
+
+      if (post.platform.gmb) {
+        const gmbResult = await publishToGmb(post, user);
+        post.socialPlatformIds.gmb = gmbResult.postId; // Store the GMB post ID
+      }
+
+      // Update post status to "published"
+      post.status = "published";
+      await user.save(); // Save the updated user document with post details
+      console.log("Post published successfully:", postId);
+    } catch (error) {
+      console.error("Failed to publish post:", error);
+      post.status = "failed"; // Set the post status to "failed" if an error occurs
+      await user.save(); // Save the post with updated status
+    }
+  });
+
+  // Fetch the post and schedule the job at the specified time
+  const post = await User.findOne({ "posts._id": postId }, { "posts.$": 1 });
+
+  if (!post || !post.posts.length) {
+    throw new Error("Post not found or no valid post in the user document.");
+  }
+
+  // Schedule the job to run at the post's scheduled upload date
+  await agenda.schedule(
+    new Date(post.posts[0].uploaddate), // Use the post's upload date as the scheduled time
+    "publish post", // Define the job name
+    { userId, postId } // Attach userId and postId as data for the job
+  );
+};
+
+// Route to create and schedule a post
 router.post(
   "/create",
   isSessionValid,
-  upload.array("images"), // Ensure the "images" name matches the file input name from the frontend
+  upload.fields([
+    { name: "images", maxCount: 10 },
+    { name: "videos", maxCount: 5 },
+  ]),
   async (req, res) => {
-    connectDB();
-    connectCloudinary();
-
     try {
       const { text, uploadDate, platform } = req.body;
-      const images = req.files;
+      const images = req.files.images || [];
+      const videos = req.files.videos || [];
 
-      console.log({ text, uploadDate, platform });
-      console.log("Received images:", images);
+      const imageUrls = await uploadImagesToCloudinary(images);
+      const videoUrls = await uploadVideosToCloudinary(videos);
 
-      // Check if files are received properly
-      if (!images || images.length === 0) {
-        return res.status(400).json({ message: "No images uploaded" });
-      }
-
-      // If platform is a string, parse it into an object
-      let parsedPlatform = platform;
-      if (typeof platform === "string") {
-        parsedPlatform = JSON.parse(platform);
-      }
-
-      console.log("Processing images...");
-      // Process and upload images to Cloudinary
-      const uploadedImageUrls = await uploadImagesToCloudinary(images);
-
-      console.log("Creating post...");
-      // Add the new post to the user's posts
-      const newPost = {
+      const post = {
         text,
-        uploaddate: uploadDate,
-        images: uploadedImageUrls,
-        platform: parsedPlatform,
+        platform: JSON.parse(platform),
+        uploadDate,
+        images: imageUrls,
+        videos: videoUrls,
       };
 
-      req.user.post.push(newPost);
-      await req.user.save();
+      req.user.posts.push(post);
+      const savedUser = await req.user.save();
+
+      const newPost = savedUser.posts[savedUser.posts.length - 1];
+      await schedulePost(newPost._id, req.user._id);
 
       res
         .status(201)
-        .json({ message: "Post created successfully", post: newPost });
+        .json({ message: "Post created and scheduled", post: newPost });
     } catch (error) {
       console.error("Error creating post:", error);
-      res.status(500).json({
-        message: "Server error, unable to upload images",
-      });
+      res.status(500).json({ error: "Failed to create post" });
     }
   }
 );
 
-// Get all posts from a user
-router.get("/all", isSessionValid, async (req, res) => {
-  connectDB();
-
+// Route to retrieve scheduled posts
+router.get("/scheduled", isSessionValid, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("post");
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Ensure that the response is always an array
-    const posts = Array.isArray(user.post) ? user.post : [user.post];
-    res.json({ posts });
+    const posts = req.user.posts.filter((post) => post.status === "scheduled");
+    res.status(200).json({ posts });
   } catch (error) {
-    console.error("Error retrieving posts:", error);
-    res.status(500).json({ error: "Failed to retrieve posts." });
+    res.status(500).json({ error: "Failed to fetch scheduled posts" });
   }
 });
 
-// Get a post by ID
-router.get("/:postId", isSessionValid, async (req, res) => {
-  connectDB();
-
+// Route to retrieve published posts
+router.get("/published", isSessionValid, async (req, res) => {
   try {
-    const postId = req.params.postId;
+    const posts = req.user.posts.filter((post) => post.status === "published");
+    res.status(200).json({ posts });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch published posts" });
+  }
+});
 
-    // Find the post with the matching ID in the user's post array
-    const post = req.user.post.find((p) => p._id.toString() === postId);
-
+// Route to retrieve post by ID
+router.get("/:id", isSessionValid, async (req, res) => {
+  try {
+    const post = req.user.posts.id(req.params.id);
     if (!post) {
-      return res.status(404).json({ message: "Post not found." });
+      return res.status(404).json({ error: "Post not found" });
     }
-
-    res.json({ post });
+    res.status(200).json({ post });
   } catch (error) {
-    console.error("Error retrieving post by ID:", error);
-    res.status(500).json({ error: "Failed to retrieve post." });
+    res.status(500).json({ error: "Failed to fetch post" });
   }
 });
 
-// PUT route to update post by ID
+// Route to update a post
 router.put(
-  "/:postId",
+  "/:id",
   isSessionValid,
-  upload.array("images"),
+  upload.fields([
+    { name: "images", maxCount: 10 },
+    { name: "videos", maxCount: 5 },
+  ]),
   async (req, res) => {
-    connectDB();
-    connectCloudinary();
-    console.log(req.body.images);
-
     try {
-      // Find the post
-      const post = req.user.post.find(
-        (p) => p._id.toString() === req.params.postId
-      );
+      const { text, uploadDate, platform } = req.body;
+      const newImages = req.files.images || [];
+      const newVideos = req.files.videos || [];
 
+      const post = req.user.posts.id(req.params.id);
       if (!post) {
-        return res.status(404).json({ message: "Post not found." });
+        return res.status(404).json({ error: "Post not found" });
       }
 
-      const { text, uploadDate, images: incomingImages } = req.body;
+      // Upload new images and videos
+      const uploadedImageUrls = await uploadImagesToCloudinary(newImages);
+      const uploadedVideoUrls = await uploadVideosToCloudinary(newVideos);
 
-      // Ensure images is an array
-      const images = Array.isArray(incomingImages) ? incomingImages : [];
-
-      const existingImages = post.images || [];
-
-      // Define newImages
-      const newImages = req.files;
-
-      // Find images to be removed
-      const removedImages = existingImages.filter(
-        (img) => !images.includes(img)
+      // Check for removed images and videos
+      const removedImages = post.images.filter(
+        (url) => !req.body.existingImages.includes(url)
+      );
+      const removedVideos = post.videos.filter(
+        (url) => !req.body.existingVideos.includes(url)
       );
 
-      // Upload new images to Cloudinary
-      const uploadedImageUrls =
-        newImages.length > 0 ? await uploadImagesToCloudinary(newImages) : [];
-
-      // Delete removed images from Cloudinary
+      // Delete removed media from Cloudinary
       if (removedImages.length > 0) {
         await deleteImagesFromCloudinary(removedImages);
+      }
+
+      if (removedVideos.length > 0) {
+        const videoPublicIds = removedVideos.map(
+          (url) => url.split("/").pop().split(".")[0]
+        );
+        for (const publicId of videoPublicIds) {
+          await cloudinary.uploader.destroy(`automedia/videos/${publicId}`, {
+            resource_type: "video",
+          });
+        }
       }
 
       // Update post fields
       post.text = text || post.text;
       post.uploadDate = uploadDate || post.uploadDate;
-      post.images = [
-        ...existingImages.filter((img) => images.includes(img)),
-        ...uploadedImageUrls,
-      ];
+      post.platform = platform ? JSON.parse(platform) : post.platform;
+      post.images = [...req.body.existingImages, ...uploadedImageUrls];
+      post.videos = [...req.body.existingVideos, ...uploadedVideoUrls];
 
       await req.user.save();
-      res.json({ message: "Post updated successfully", post });
+
+      res.status(200).json({ message: "Post updated successfully", post });
     } catch (error) {
-      console.error("Update error:", error);
-      res.status(500).json({ error: "Failed to update post." });
+      console.error("Error updating post:", error);
+      res.status(500).json({ error: "Failed to update post" });
     }
   }
 );
 
-// Delete a post by ID
-router.delete("/delete/:postId", isSessionValid, async (req, res) => {
-  connectDB();
-  connectCloudinary();
-
+// Route to delete a post (scheduled or published)
+router.delete("/:id", isSessionValid, async (req, res) => {
   try {
-    // Find the post with the matching ID in the user's posts array
-    const post = req.user.post.find(
-      (p) => p._id.toString() === req.params.postId
-    );
-
+    const post = req.user.posts.id(req.params.id);
     if (!post) {
-      return res.status(404).json({ message: "Post not found." });
+      return res.status(404).json({ error: "Post not found" });
     }
 
-    // Delete images from Cloudinary
-    if (post.images && post.images.length > 0) {
-      for (const imageUrl of post.images) {
-        if (imageUrl) {
-          // Check if imageUrl is not null or undefined
-          const publicId = imageUrl.split("/").pop().split(".")[0];
-          await cloudinary.uploader.destroy(`automedia/${publicId}`);
-        }
-      }
+    if (post.images.length) {
+      await deleteImagesFromCloudinary(post.images);
     }
 
-    // Remove the post from the user's posts array
-    req.user.post = req.user.post.filter(
-      (p) => p._id.toString() !== req.params.postId
-    );
+    req.user.posts.pull(req.params.id);
     await req.user.save();
 
-    res.json({ message: "Post deleted successfully" });
+    res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
-    console.error("Error deleting post:", error);
-    res.status(500).json({ error: "Failed to delete post." });
+    res.status(500).json({ error: "Failed to delete post" });
   }
 });
+
+// Start Agenda
+agenda.start();
 
 module.exports = router;

@@ -3,8 +3,8 @@ import { Navigate } from "react-router-dom";
 
 // eslint-disable-next-line react/prop-types
 const PrivateRoute = ({ Component }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as `true` to show the loading spinner initially
 
   const validateUser = async () => {
     try {
@@ -15,13 +15,16 @@ const PrivateRoute = ({ Component }) => {
           credentials: "include",
         }
       );
-      // setIsAuthenticated(response.ok);
-      setIsAuthenticated(true);
+      if (response.ok) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+      }
     } catch (err) {
-      setIsAuthenticated(true);
+      setIsAuthenticated(false);
       console.error("Error validating user:", err);
     } finally {
-      setLoading(false);
+      setLoading(false); // Ensure loading is stopped regardless of success or failure
     }
   };
 
