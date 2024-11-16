@@ -114,6 +114,7 @@ router.post("/create-payment-intent", async (req, res) => {
 //     res.status(500).json({ error: "Failed to create subscription" });
 //   }
 // });
+
 // Route to create a subscription with a 1-week free trial
 router.post("/create-subscription", isSessionValid, async (req, res) => {
   const { plan, cardDetails } = req.body;
@@ -147,7 +148,7 @@ router.post("/create-subscription", isSessionValid, async (req, res) => {
           },
         },
       ],
-      trial_period_days: 7,
+      trial_period_days: 5,
       expand: ["latest_invoice.payment_intent"],
     });
 
