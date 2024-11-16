@@ -270,4 +270,99 @@ router.get("/auth/google/:flow/callback", async (req, res) => {
   }
 });
 
+router.post("/user/gmb/post", async (req, res) => {
+  const { userId, locationId, postContent } = req.body;
+
+  if (!userId || !locationId || !postContent) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  try {
+    // Fetch user from database
+    const user = await User.findById(userId);
+    if (!user || !user.googleAccessToken) {
+      return res
+        .status(403)
+        .json({ error: "User not authenticated with Google." });
+    }
+
+    // Post to Google My Business
+    const response = await axios.post(
+      `https://mybusiness.googleapis.com/v4/accounts/${user.googleAccountId}/locations/${locationId}/localPosts`,
+      {
+        summary: postContent.summary,
+        event: postContent.event, // optional
+        media: postContent.media, // optional
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${user.googleAccessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res
+      .status(200)
+      .json({ message: "Post created successfully", data: response.data });
+  } catch (error) {
+    console.error("Error posting to Google My Business:", error.message);
+    res.status(500).json({
+      error: "Failed to create a post on Google My Business",
+      details: error.response ? error.response.data : error.message,
+    });
+  }
+});
+
+router.get("/user/gmb/posts", async (req, res) => {
+  const { userId, locationId } = req.query;
+
+  if (!userId || !locationId) {
+    return res
+      .status(400)
+      .json({ error: "Missing required query parameters." });
+  }
+
+  try {
+    // Fetch user from database
+    const user = await User.findById(userId);
+    if (!user || !user.googleAccessToken) {
+      return res
+        .status(403)
+        .json({ error: "User not authenticated with Google." });
+    }
+
+    // Get posts from Google My Business
+    const response = await axios.get(
+      `https://mybusiness.googleapis.com/v4/accounts/${user.googleAccountId}/locations/${locationId}/localPosts`,
+      {
+        headers: {
+          Authorization: `Bearer ${user.googleAccessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const posts = response.data.localPosts || [];
+    const analysis = posts.map((post) => ({
+      id: post.name,
+      summary: post.summary,
+      createdTime: post.createTime,
+      media: post.media,
+      event: post.event,
+    }));
+
+    res.status(200).json({ message: "Posts retrieved successfully", analysis });
+  } catch (error) {
+    console.error(
+      "Error retrieving posts from Google My Business:",
+      error.message
+    );
+    res.status(500).json({
+      error: "Failed to retrieve posts from Google My Business",
+      details: error.response ? error.response.data : error.message,
+    });
+  }
+});
+
 module.exports = router;

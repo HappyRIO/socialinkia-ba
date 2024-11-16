@@ -316,7 +316,7 @@ export default function CreateTemplate() {
     if (customSize.height === 0 || customSize.width === 0) {
       alert("Please add both dimensions.");
     } else {
-      window.location.href = `/dashboard/create/design/${customSize.height}/${customSize.width}`;
+      window.location.href = `/dashboard/create/design?height=${customSize.height}&width=${customSize.width}`;
     }
   }
 
@@ -378,7 +378,7 @@ export default function CreateTemplate() {
           {imageData.map((data, index) => (
             <Link
               key={index}
-              to={`/dashboard/create/design/${data.height}/${data.width}`} // Use the height and width from the data
+              to={`/dashboard/create/design?height=${data.height}&width=${data.width}`} // Correct query parameter format
             >
               <img
                 className="rounded-lg mb-4 shadow-md w-full object-cover"

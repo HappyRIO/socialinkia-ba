@@ -37,4 +37,8 @@ router.post("/send-contact-email", async (req, res) => {
   }
 });
 
+router.post("/news-letter", function (req, res) {
+  res.send("POST request to the homepage");
+});
+
 module.exports = router;

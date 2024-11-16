@@ -225,37 +225,50 @@ router.get("/user/details", isSessionValid, async (req, res) => {
 router.put(
   "/user/details",
   isSessionValid,
-  upload.array("photos"),
+  upload.fields([
+    { name: "photos", maxCount: 10 },
+    { name: "logo", maxCount: 1 },
+    { name: "exterior_photo", maxCount: 1 },
+    { name: "interior_photo", maxCount: 1 },
+    { name: "special_place_photo", maxCount: 1 },
+    { name: "staff_photo", maxCount: 1 },
+  ]),
   async (req, res) => {
     try {
       const {
-        UserName,
-        logo,
-        category,
-        CompanyTradeName,
+        userName,
+        companyTradeName,
+        businessSector,
         addressVisible,
         country,
         province,
         locality,
         postalCode,
-        address,
-        website,
-        contactMethod,
-        phone,
+        webPage,
+        webPageUrl,
+        showContactInfo,
+        contactInfo,
         schedule,
-        salesChannel,
+        sales_channels,
         motto,
-        businessDefinition,
+        motto_field,
+        business_definition,
+        business_definition_other,
         highlight,
-        productService,
-        featuresBenefits,
-        additionalProducts,
-        publicationObjective,
-        serviceArea,
-        customerType,
-        ageRange,
-        valuableContent,
-        communicationStyle,
+        star_product,
+        star_product_field,
+        features,
+        add_products,
+        add_products_field,
+        add_features,
+        objectives,
+        area_of_influence,
+        customer_type,
+        age_range,
+        valuable_content,
+        valuable_content_other,
+        communication_style,
+        communication_style_other,
       } = req.body;
 
       connectCloudinary();
@@ -263,14 +276,42 @@ router.put(
       console.log("Request body:", req.body);
       console.log("Uploaded files:", req.files);
 
-      const newPhotos = req.files; // New photos from the request
+      // Handle uploaded images
+      const newPhotos = req.files.photos || [];
+      const newLogo = req.files.logo ? req.files.logo[0] : null;
+      const newExteriorPhoto = req.files.exterior_photo
+        ? req.files.exterior_photo[0]
+        : null;
+      const newInteriorPhoto = req.files.interior_photo
+        ? req.files.interior_photo[0]
+        : null;
+      const newSpecialPlacePhoto = req.files.special_place_photo
+        ? req.files.special_place_photo[0]
+        : null;
+      const newStaffPhoto = req.files.staff_photo
+        ? req.files.staff_photo[0]
+        : null;
+
       const existingPhotos =
         (req.user.companyDetails && req.user.companyDetails.photos) || [];
       const retainedPhotos = req.body.photos || [];
 
-      // Upload new photos to Cloudinary
+      // Upload new images to Cloudinary
       const newPhotoUrls =
         newPhotos.length > 0 ? await uploadImagesToCloudinary(newPhotos) : [];
+      const logoUrl = newLogo ? await uploadImagesToCloudinary(newLogo) : "";
+      const exteriorPhotoUrl = newExteriorPhoto
+        ? await uploadImagesToCloudinary(newExteriorPhoto)
+        : "";
+      const interiorPhotoUrl = newInteriorPhoto
+        ? await uploadImagesToCloudinary(newInteriorPhoto)
+        : "";
+      const specialPlacePhotoUrl = newSpecialPlacePhoto
+        ? await uploadImagesToCloudinary(newSpecialPlacePhoto)
+        : "";
+      const staffPhotoUrl = newStaffPhoto
+        ? await uploadImagesToCloudinary(newStaffPhoto)
+        : "";
 
       // Identify removed images and delete from Cloudinary
       const removedPhotos = existingPhotos.filter(
@@ -280,36 +321,51 @@ router.put(
         await deleteImagesFromCloudinary(removedPhotos);
       }
 
-      // Update data with new and retained photos
+      // Prepare update data
       const updateData = {
         companyDetails: {
-          UserName,
-          category,
-          CompanyTradeName,
+          userName,
+          logo: logoUrl || req.user.companyDetails.logo,
+          companyTradeName,
+          businessSector,
           addressVisible,
           country,
           province,
           locality,
           postalCode,
-          address,
-          website,
-          contactMethod,
-          phone,
+          webPage,
+          webPageUrl,
+          showContactInfo,
+          contactInfo,
           schedule,
-          salesChannel,
+          sales_channels,
           motto,
-          businessDefinition: parseJSON(businessDefinition),
+          motto_field,
+          business_definition: parseJSON(business_definition),
+          business_definition_other,
           highlight,
-          productService,
-          featuresBenefits,
-          additionalProducts: parseJSON(additionalProducts),
-          publicationObjective,
-          photos: [...retainedPhotos, ...newPhotoUrls], // Only retained and new photos
-          serviceArea,
-          customerType: parseJSON(customerType),
-          ageRange: parseJSON(ageRange),
-          valuableContent: parseJSON(valuableContent),
-          communicationStyle,
+          star_product,
+          star_product_field,
+          features,
+          add_products,
+          add_products_field,
+          add_features,
+          objectives,
+          photos: [...retainedPhotos, ...newPhotoUrls],
+          exterior_photo:
+            exteriorPhotoUrl || req.user.companyDetails.exterior_photo,
+          interior_photo:
+            interiorPhotoUrl || req.user.companyDetails.interior_photo,
+          special_place_photo:
+            specialPlacePhotoUrl || req.user.companyDetails.special_place_photo,
+          staff_photo: staffPhotoUrl || req.user.companyDetails.staff_photo,
+          area_of_influence,
+          customer_type: parseJSON(customer_type),
+          age_range: parseJSON(age_range),
+          valuable_content: parseJSON(valuable_content),
+          valuable_content_other,
+          communication_style,
+          communication_style_other,
         },
       };
 

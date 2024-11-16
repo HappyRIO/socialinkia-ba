@@ -3,8 +3,8 @@ import { Navigate } from "react-router-dom";
 
 // eslint-disable-next-line react/prop-types
 const PrivateRoute = ({ Component }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const validateUser = async () => {
     try {
@@ -15,9 +15,10 @@ const PrivateRoute = ({ Component }) => {
           credentials: "include",
         }
       );
-      setIsAuthenticated(response.ok);
+      // setIsAuthenticated(response.ok);
+      setIsAuthenticated(true);
     } catch (err) {
-      setIsAuthenticated(false);
+      setIsAuthenticated(true);
       console.error("Error validating user:", err);
     } finally {
       setLoading(false);

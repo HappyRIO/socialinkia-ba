@@ -51,8 +51,8 @@ const getInstagramBusinessAccountId = async (accessToken) => {
 // Step 1: Redirect to Facebook for authorization
 router.get("/auth/facebook", (req, res) => {
   console.log("Redirecting to Facebook for authentication...");
-  const facebookAppId = process.env.META_ID;
-  const facebookRedirectUri = process.env.META_REDIRECT_URL;
+  const facebookAppId = process.env.FACEBOOK_APP_ID;
+  const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
   const state = generateRandomString();
 
@@ -60,8 +60,6 @@ router.get("/auth/facebook", (req, res) => {
   const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${encodeURIComponent(
     facebookRedirectUri
   )}&state=${state}&scope=email,public_profile,pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights`;
-
-  console.log("Session object:", req.session);
 
   // Optionally, store the state in session for CSRF protection
   req.session.oauthState = state;
@@ -89,9 +87,9 @@ router.get("/auth/facebook/callback", async (req, res) => {
       `https://graph.facebook.com/v17.0/oauth/access_token`,
       {
         params: {
-          client_id: process.env.META_ID,
-          client_secret: process.env.META_SECRET,
-          redirect_uri: process.env.META_REDIRECT_URL,
+          client_id: process.env.FACEBOOK_APP_ID,
+          client_secret: process.env.FACEBOOK_APP_SECRET,
+          redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
           code,
         },
       }
@@ -158,8 +156,8 @@ const validateAndRefreshToken = async (req, res, next) => {
         {
           params: {
             grant_type: "fb_exchange_token",
-            client_id: process.env.META_ID,
-            client_secret: process.env.META_SECRET,
+            client_id: process.env.FACEBOOK_APP_ID,
+            client_secret: process.env.FACEBOOK_APP_SECRET,
             fb_exchange_token: req.session.accessToken,
           },
         }

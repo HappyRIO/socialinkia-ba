@@ -5,17 +5,23 @@ import {
   CaseUpper,
   CopyX,
   Layers3,
+  ArrowLeftToLine,
 } from "lucide-react";
-import { useState, useRef } from "react";
-import { Stage, Layer } from "react-konva";
+import { useState, useRef, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Stage, Layer, Rect } from "react-konva";
 import Showtemplates from "../editor/ShowTemplate";
 import Showshape from "../editor/Showshape";
 import Showfonts from "../editor/Showfonts";
 import ShowLayerManager from "../editor/Showlayermanager";
 import Showuploads from "../editor/Showuploads";
-import ShadowControls from "../editor/controllers/ShadowColler";
 
 export default function Tester() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const height = queryParams.get("height");
+  const width = queryParams.get("width");
   const [openUploads, setOpenuploads] = useState(false);
   const [openTextelement, setOpentextelement] = useState(false);
   const [openshapelement, setopenshapeelement] = useState(false);
@@ -23,14 +29,12 @@ export default function Tester() {
   const [openLayermanager, setopenLayermanager] = useState(false);
   // toolbar activities
   const [activeShape, setActiveShape] = useState(null);
-  // const [activeAttributes, setActiveAttributes] = useState(null);
   const [activeAttributes, setActiveAttributes] = useState({
     translateY: 0,
     translateX: 0,
     scaleY: 1,
     scaleX: 1,
     rotate: 0,
-    // starPoints: 5,
     name: "",
     numPoints: 5,
     fontFamily: "Arial",
@@ -48,7 +52,7 @@ export default function Tester() {
     gussianBlurRange: 0,
     width: 100,
     height: 100,
-    type: "text",
+    type: "",
   });
   const [originalAttributes, setOriginalAttributes] = useState({});
   //locking seetings
@@ -56,14 +60,53 @@ export default function Tester() {
   const [isScaleLock, setisScaleLock] = useState(false);
   // control function states
   const [handleBorderState, setHandleBorderState] = useState(false);
+  const [borderColor, setBorderColor] = useState("#000000"); // Default black
+  const [borderWidth, setBorderWidth] = useState(1); // Default width of 1
   const [handleShadowState, setHandleShadowState] = useState(false);
+  const [shadowColor, setShadowColor] = useState("#000000"); // Default shadow color
+  const [shadowBlur, setShadowBlur] = useState(10); // Default blur
+  const [shadowX, setShadowX] = useState(10); // Default X offset
+  const [shadowY, setShadowY] = useState(10); // Default Y offset
+
   // ref for the layer and stage
+  const [scaledWidth, setScaledWidth] = useState(window.innerWidth);
+  const [scaledHeight, setScaledHeight] = useState(window.innerHeight);
   const layerRef = useRef(null); // Defining the Layer ref
   const stageRef = useRef(null);
+  const parentRef = useRef(null); // Reference for the parent container
 
-  const handleScaleLock = () => {
-    setisScaleLock((prevState) => !prevState);
+  // Handle window resize and parent container size changes
+  const handleResize = () => {
+    const parentWidth = parentRef.current.clientWidth;
+    const parentHeight = parentRef.current.clientHeight;
+
+    const aspectRatio = width / height;
+    let newWidth = parentWidth;
+    let newHeight = parentHeight;
+
+    // Scale based on the aspect ratio and parent container size
+    if (parentWidth / parentHeight > aspectRatio) {
+      newWidth = parentHeight * aspectRatio;
+    } else {
+      newHeight = parentWidth / aspectRatio;
+    }
+
+    setScaledWidth(newWidth);
+    setScaledHeight(newHeight);
   };
+
+  useEffect(() => {
+    // Initial resize calculation
+    handleResize();
+
+    // Add event listener for window resizing
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup the event listener when component unmounts
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [width, height]);
 
   const toggleSettingsVisibility = () => {
     setIsSettingsVisible((prevState) => !prevState);
@@ -112,7 +155,7 @@ export default function Tester() {
     setopenLayermanager(!openLayermanager);
   }
 
-  //function for draging elements
+  // Function for handling drag start
   const handleDragStart = (e) => {
     const target = e.target;
 
@@ -126,44 +169,56 @@ export default function Tester() {
 
     // Store the original attributes so they can be restored on drag end
     setOriginalAttributes({
-      // Only store attributes needed for restoring outlines
-      stroke: target.stroke(),
-      strokeWidth: target.strokeWidth(),
+      stroke: target.stroke(), // Save the original stroke color
+      strokeWidth: target.strokeWidth(), // Save the original stroke width
+      shadowEnabled: target.shadowEnabled(), // Save whether shadow is enabled
+      shadowColor: target.shadowColor(), // Save the original shadow color
+      shadowBlur: target.shadowBlur(), // Save the original shadow blur
+      scaleX: target.scaleX(), // Save the original scaleX
+      scaleY: target.scaleY(), // Save the original scaleY
+      rotation: target.rotation(), // Save the original rotation
+      // x: target.x(), // Save the original x position
+      // y: target.y(), // Save the original y position
     });
 
-    // Determine the stroke color based on the element's current color
-    const outlineColor = target.fill() === "blue" ? "red" : "blue";
-
-    // Apply temporary attributes for drag start feedback (only outline)
+    // Apply temporary blue outline for drag feedback
     target.setAttrs({
-      stroke: outlineColor,
+      stroke: "blue",
       strokeWidth: 2,
+      shadowEnabled: true, // Enable shadow while dragging (optional)
+      shadowColor: "rgba(0, 0, 0, 0.5)", // Optional shadow effect during drag
+      shadowBlur: 10, // Optional shadow blur during drag
     });
 
     // Set the dragged element as the active shape
     setActiveShape(target);
   };
 
-  // Function to handle drag end
+  // Function to handle drag end and restore the original state
   const handleDragEnd = (e) => {
     const target = e.target;
 
-    // Immediately reset outline attributes before animation
-    target.stroke(originalAttributes.stroke || null); // Restore original stroke color
-    target.strokeWidth(originalAttributes.strokeWidth || 0); // Reset stroke width
-
-    // Restore other original attributes with animation (if needed)
-    target.to({
-      duration: 0.5,
-      easing: Konva.Easings.ElasticEaseOut,
-      ...originalAttributes, // Restore all stored attributes
+    // Restore the original attributes
+    target.setAttrs({
+      stroke: originalAttributes.stroke || null, // Restore original stroke color
+      strokeWidth: originalAttributes.strokeWidth || 0, // Reset stroke width
+      shadowEnabled: originalAttributes.shadowEnabled || false, // Restore shadow state
+      shadowColor: originalAttributes.shadowColor || null, // Restore shadow color
+      shadowBlur: originalAttributes.shadowBlur || 0, // Restore shadow blur
+      scaleX: originalAttributes.scaleX, // Restore original scaleX
+      scaleY: originalAttributes.scaleY, // Restore original scaleY
+      rotation: originalAttributes.rotation, // Restore original rotation
+      // x: originalAttributes.x, // Restore original x position
+      // y: originalAttributes.y, // Restore original y position
     });
+
+    // Redraw the layer after restoring the attributes
+    target.getLayer().batchDraw();
 
     // Set the dragged element as inactive after drag ends
     setActiveShape(null);
-    console.log("drag ends");
-    console.log("reset active element to null");
-    console.log(activeShape);
+
+    console.log("Drag ends, original state restored.");
   };
 
   // Function to handle stage click to clear selection
@@ -331,72 +386,157 @@ export default function Tester() {
     }
   };
 
-  const handleScaleYChange = (e) => {
-    const newScaleY = parseFloat(e.target.value);
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      scaleY: newScaleY,
-      scaleX: isScaleLock
-        ? newScaleY * (prevAttributes.scaleX / prevAttributes.scaleY)
-        : prevAttributes.scaleX,
-    }));
-
-    if (activeShape) {
-      activeShape.scaleY(newScaleY);
-      if (isScaleLock) {
-        const newScaleX =
-          newScaleY * (activeShape.scaleX() / activeShape.scaleY());
-        activeShape.scaleX(newScaleX);
-      }
-      activeShape.getLayer().batchDraw();
-    }
-  };
-
   const handleScaleXChange = (e) => {
     const newScaleX = parseFloat(e.target.value);
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      scaleX: newScaleX,
-      scaleY: isScaleLock
-        ? newScaleX * (prevAttributes.scaleY / prevAttributes.scaleX)
-        : prevAttributes.scaleY,
-    }));
-
     if (activeShape) {
-      activeShape.scaleX(newScaleX);
       if (isScaleLock) {
-        const newScaleY =
-          newScaleX * (activeShape.scaleY() / activeShape.scaleX());
-        activeShape.scaleY(newScaleY);
+        // Apply the same scale to Y if the lock is on
+        const currentScaleY = activeShape.scaleY();
+        activeShape.scale({
+          x: newScaleX,
+          y: currentScaleY * (newScaleX / activeShape.scaleX()),
+        });
+        // Update state with the new values
+        setActiveAttributes((prev) => ({
+          ...prev,
+          scaleX: newScaleX,
+          scaleY: currentScaleY * (newScaleX / activeShape.scaleX()), // Adjust scaleY
+        }));
+      } else {
+        // Apply only to X if lock is off
+        activeShape.scaleX(newScaleX);
+        setActiveAttributes((prev) => ({
+          ...prev,
+          scaleX: newScaleX,
+        }));
       }
-      activeShape.getLayer().batchDraw();
+      activeShape.getLayer().batchDraw(); // Redraw the layer
     }
   };
 
-  const handleLocationYChange = (e) => {
-    const newTranslateY = parseFloat(e.target.value);
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      translateY: newTranslateY,
-    }));
-
+  const handleScaleYChange = (e) => {
+    const newScaleY = parseFloat(e.target.value);
     if (activeShape) {
-      activeShape.y(newTranslateY);
-      activeShape.getLayer().batchDraw();
+      if (isScaleLock) {
+        // Apply the same scale to X if the lock is on
+        const currentScaleX = activeShape.scaleX();
+        activeShape.scale({
+          x: currentScaleX * (newScaleY / activeShape.scaleY()),
+          y: newScaleY,
+        });
+        // Update state with the new values
+        setActiveAttributes((prev) => ({
+          ...prev,
+          scaleX: currentScaleX * (newScaleY / activeShape.scaleY()), // Adjust scaleX
+          scaleY: newScaleY,
+        }));
+      } else {
+        // Apply only to Y if lock is off
+        activeShape.scaleY(newScaleY);
+        setActiveAttributes((prev) => ({
+          ...prev,
+          scaleY: newScaleY,
+        }));
+      }
+      activeShape.getLayer().batchDraw(); // Redraw the layer
     }
   };
 
-  const handleLocationXChange = (e) => {
-    const newTranslateX = parseFloat(e.target.value);
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      translateX: newTranslateX,
-    }));
-
-    if (activeShape) {
-      activeShape.x(newTranslateX);
-      activeShape.getLayer().batchDraw();
+  const handleScaleLock = () => {
+    setisScaleLock((prev) => !prev);
+    if (isScaleLock) {
+      // If scale lock is on, update both scales based on the current state
+      activeShape.scale({
+        x: activeAttributes.scaleX,
+        y: activeAttributes.scaleY,
+      });
+      activeShape.getLayer().batchDraw(); // Redraw the layer
     }
+  };
+
+  const handleLocationYChange = (newY) => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
+
+    // Ensure the newY is a number
+    const yValue = Number(newY);
+
+    if (isNaN(yValue)) {
+      console.error("Invalid Y position value");
+      return;
+    }
+
+    // Set the new Y position
+    activeShape.y(yValue);
+
+    // Redraw the layer to reflect the change
+    activeShape.getLayer().batchDraw();
+
+    // Update the active attributes to reflect the new position
+    const updatedAttributes = { ...activeAttributes, y: yValue };
+    setActiveAttributes(updatedAttributes);
+
+    console.log(`Object Y position changed to: ${yValue}`);
+  };
+
+  const handleLocationXChange = (newX) => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
+
+    // Ensure the newX is a number
+    const xValue = Number(newX);
+
+    if (isNaN(xValue)) {
+      console.error("Invalid X position value");
+      return;
+    }
+
+    // Set the new X position
+    activeShape.x(xValue);
+
+    // Redraw the layer to reflect the change
+    activeShape.getLayer().batchDraw();
+
+    // Update the active attributes to reflect the new position
+    const updatedAttributes = { ...activeAttributes, x: xValue };
+    setActiveAttributes(updatedAttributes);
+
+    console.log(`Object X position changed to: ${xValue}`);
+  };
+
+  const handleRotationChange = (newRotation) => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
+
+    // Ensure the newRotation is a number
+    const rotationValue = Number(newRotation);
+
+    if (isNaN(rotationValue)) {
+      console.error("Invalid rotation value");
+      return;
+    }
+
+    // Set the rotation origin to the center of the shape
+    activeShape.offsetX(activeShape.width() / 2);
+    activeShape.offsetY(activeShape.height() / 2);
+
+    // Apply the rotation
+    activeShape.rotation(rotationValue);
+
+    // Redraw the layer to reflect the change
+    activeShape.getLayer().batchDraw();
+
+    // Update the active attributes to reflect the new rotation
+    const updatedAttributes = { ...activeAttributes, rotation: rotationValue };
+    setActiveAttributes(updatedAttributes);
+
+    console.log(`Object rotated to: ${rotationValue} degrees`);
   };
 
   const handleChangeStarPoints = (e) => {
@@ -425,75 +565,187 @@ export default function Tester() {
     }
   };
 
-  const handleBorderColorChange = (e) => {
-    const newBorderColor = e.target.value;
-    if (handleBorderState === true) {
-      setActiveAttributes((prevAttributes) => ({
-        ...prevAttributes,
-        borderColor: newBorderColor,
-      }));
-
-      if (activeShape) {
-        activeShape.stroke(newBorderColor);
-        activeShape.getLayer().batchDraw(); // Redraw the layer to apply changes
-      }
+  const handleBorderUpdate = () => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
     }
-  };
 
-  const handleBorderWidthChange = (e) => {
-    const newBorderWidth = parseFloat(e.target.value);
-    if (handleBorderState === true) {
-      setActiveAttributes((prevAttributes) => ({
-        ...prevAttributes,
-        borderWidth: newBorderWidth,
-      }));
-
-      if (activeShape) {
-        activeShape.strokeWidth(newBorderWidth);
-        activeShape.getLayer().batchDraw(); // Redraw the layer to apply changes
-      }
+    if (handleBorderState) {
+      // When the border is enabled (checkbox checked)
+      activeShape.stroke(borderColor); // Set the stroke color
+      activeShape.strokeWidth(borderWidth); // Set the stroke width
+    } else {
+      // If border is disabled (checkbox unchecked)
+      activeShape.stroke(null); // Remove stroke (no border)
+      activeShape.strokeWidth(0); // Remove stroke width
     }
+
+    // Redraw the layer to reflect changes
+    activeShape.getLayer().batchDraw();
+
+    // Update the active attributes state with the new border properties
+    const updatedAttributes = {
+      ...activeAttributes,
+      borderColor: handleBorderState ? borderColor : null,
+      borderWidth: handleBorderState ? borderWidth : 0,
+    };
+    setActiveAttributes(updatedAttributes);
   };
 
-  const handleCornerRadiusChange = (event) => {
-    const newRadius = event.target.value;
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      radius: newRadius,
-    }));
-  };
-
-  const handleShadowColorChange = (event) => {
-    const { value } = event.target;
-    if (handleShadowState === true) {
-      setActiveAttributes((prevAttributes) => ({
-        ...prevAttributes,
-        shadowEnabled: true,
-        shadowColor: value,
-      }));
+  const handleChangeBorderRadius = (newRadius) => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
     }
+
+    // Ensure the newRadius is a number
+    const radiusValue = Number(newRadius);
+
+    if (isNaN(radiusValue)) {
+      console.error("Invalid radius value");
+      return;
+    }
+
+    // Check if the active shape is a Rect (or similar object that supports cornerRadius)
+    if (activeShape.className === "Rect") {
+      activeShape.cornerRadius(radiusValue);
+      activeShape.getLayer().batchDraw();
+    }
+
+    // If the active shape is an Image
+    if (activeShape.className === "Image") {
+      // Apply rounded corners by clipping the image with a rounded rectangle
+      activeShape.cache(); // Cache the image for clipping
+      activeShape.clipFunc((ctx) => {
+        const { x, y, width, height } = activeShape.getClientRect();
+        ctx.beginPath();
+        ctx.moveTo(x + radiusValue, y);
+        ctx.lineTo(x + width - radiusValue, y);
+        ctx.arcTo(x + width, y, x + width, y + height, radiusValue);
+        ctx.lineTo(x + width, y + height - radiusValue);
+        ctx.arcTo(
+          x + width,
+          y + height,
+          x + width - radiusValue,
+          y + height,
+          radiusValue
+        );
+        ctx.lineTo(x + radiusValue, y + height);
+        ctx.arcTo(x, y + height, x, y + height - radiusValue, radiusValue);
+        ctx.lineTo(x, y + radiusValue);
+        ctx.arcTo(x, y, x + radiusValue, y, radiusValue);
+        ctx.closePath();
+        ctx.clip();
+      });
+
+      activeShape.getLayer().batchDraw(); // Re-draw the layer
+    }
+
+    // Update active attributes if necessary
+    const updatedAttributes = {
+      ...activeAttributes,
+      cornerRadius: radiusValue,
+    };
+    setActiveAttributes(updatedAttributes);
+
+    console.log(`Object border radius changed to: ${radiusValue}`);
   };
 
-  const handleNameChange = (e) => {
-    const newName = e.target.value;
-    console.log(newName);
-    setActiveAttributes((prevAttributes) => ({
-      ...prevAttributes,
-      name: newName,
-    }));
-    console.log(activeAttributes);
+  const handleShadowUpdate = () => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
 
-    if (activeShape) {
-      // If the active shape is a text element, update its text content
-      if (activeAttributes.type === "text") {
-        activeShape.text(newName);
-      }
+    // Update shadow properties based on the current state
+    if (handleShadowState) {
+      activeShape.shadowColor(shadowColor); // Set shadow color
+      activeShape.shadowBlur(shadowBlur); // Set shadow blur radius
+      activeShape.shadowOffsetX(shadowX); // Set horizontal offset
+      activeShape.shadowOffsetY(shadowY); // Set vertical offset
+      activeShape.shadowEnabled(true); // Enable shadow
+    } else {
+      activeShape.shadowEnabled(false); // Disable the shadow
+    }
+
+    // Redraw the layer to reflect changes
+    activeShape.getLayer().batchDraw();
+
+    // Update the active attributes state with the new shadow properties
+    const updatedAttributes = {
+      ...activeAttributes,
+      shadowColor: handleShadowState ? shadowColor : null,
+      shadowBlur: handleShadowState ? shadowBlur : 0,
+      shadowX: handleShadowState ? shadowX : 0,
+      shadowY: handleShadowState ? shadowY : 0,
+    };
+    setActiveAttributes(updatedAttributes);
+  };
+
+  const handleFontUpdate = () => {
+    const fontFamily = document.getElementById("font-family-selector").value;
+    const fontWeight = document.getElementById("font-weight-selector").value;
+
+    if (activeShape && activeShape.className === "Text") {
+      activeShape.fontFamily(fontFamily); // Set the font family
+      activeShape.fontWeight(fontWeight); // Set the font weight
       activeShape.getLayer().batchDraw(); // Redraw the layer to apply changes
     }
   };
 
+  // name changing function
+  const handleChangeObjectName = (newName) => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
+
+    // Check if the active shape is a Text object
+    if (activeShape.className === "Text") {
+      // If it's a Text element, change the text content as well
+      activeShape.text(newName);
+    }
+
+    // Change the name of the object (element)
+    activeShape.name(newName);
+
+    // Redraw the layer to immediately apply the changes
+    activeShape.getLayer().batchDraw();
+
+    // Update active attributes if necessary
+    const updatedAttributes = { ...activeAttributes, name: newName };
+    setActiveAttributes(updatedAttributes);
+
+    console.log(`Object name changed to: ${newName}`);
+  };
+
+  // delete function
+  const handleDeleteObject = () => {
+    if (!activeShape) {
+      console.log("No active shape selected");
+      return;
+    }
+
+    // Get the layer of the active shape
+    const layer = activeShape.getLayer();
+
+    // Remove the active shape from the layer
+    activeShape.destroy();
+
+    // Redraw the layer to immediately reflect the changes
+    layer.batchDraw();
+
+    // Reset the active shape state
+    setActiveShape(null);
+    setActiveAttributes({}); // Clear the attributes if any
+
+    console.log("Active shape deleted:", activeShape);
+  };
+
   // object selection function
   const handleObjectClick = (e) => {
+    setisScaleLock(false);
     const clickedElement = e.target;
 
     // Reset the outline of the previously active element, if any
@@ -571,16 +823,101 @@ export default function Tester() {
     console.log("Captured attributes:", attributes);
   };
 
+  // export section zone
+  const DownloadStageImage = () => {
+    if (!stageRef.current) return;
+
+    // Export the stage to a base64 image
+    const dataURL = stageRef.current.toDataURL({
+      pixelRatio: 20, // Optional: Set higher pixel ratio for better resolution
+      backgroundColor: "transparent", // Optional: Set background color if needed
+    });
+
+    // Create an anchor element to trigger download
+    const link = document.createElement("a");
+    link.href = dataURL;
+    link.download = "konva-image.png"; // Set the file name
+    link.click();
+  };
+
+  const exportStageAsJson = () => {
+    if (!stageRef.current) return;
+
+    // Export the stage to JSON
+    const jsonData = stageRef.current.toJSON();
+
+    console.log(jsonData);
+
+    // Create a Blob with the JSON data and trigger download
+    const blob = new Blob([jsonData], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "konva-stage.json"; // Set the file name
+    link.click();
+  };
+
+  const saveImageToCloud = async () => {
+    if (!stageRef.current) return;
+
+    // Export the stage as a base64 image
+    const dataURL = stageRef.current.toDataURL({
+      pixelRatio: 3, // Increase the resolution if needed
+      mimeType: "image/png", // Can change to image/jpeg if needed
+    });
+
+    try {
+      // Convert base64 data URL to binary data
+      const response = await fetch(dataURL);
+      const blob = await response.blob();
+
+      // Prepare FormData to send the image to Cloudinary
+      const formData = new FormData();
+      formData.append("file", blob);
+      formData.append("upload_preset", "your_upload_preset"); // Use your Cloudinary upload preset
+      formData.append("folder", "your_folder"); // Optional: Specify a folder in Cloudinary
+
+      // Send the request to Cloudinary
+      const cloudinaryResponse = await fetch(
+        "https://api.cloudinary.com/v1_1/your_cloud_name/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const cloudinaryData = await cloudinaryResponse.json();
+
+      if (cloudinaryData.secure_url) {
+        // Successfully uploaded to Cloudinary
+        console.log("Image uploaded successfully:", cloudinaryData.secure_url);
+        return cloudinaryData.secure_url; // This is the URL of the uploaded image
+      } else {
+        throw new Error("Failed to upload image to Cloudinary");
+      }
+    } catch (error) {
+      console.error("Error uploading image to Cloudinary:", error);
+    }
+  };
+
+  const handleGoBack = () => {
+    const confirmGoBack = window.confirm(
+      "Are you sure you want to go back? changes you've made wont be saved"
+    );
+    if (confirmGoBack) {
+      navigate(-1); // Go back to the previous page
+    }
+  };
+
   return (
-    <div className="w-full h-screen flex flex-row bg-green-200">
-      <div className="elementsbar bg-green-500 w-[80px] py-3 flex flex-col justify-evenly items-center">
+    <div className="w-full h-screen flex flex-row">
+      <div className="elementsbar bg-background2 shadow-lg w-[80px] py-3 flex flex-col justify-evenly items-center">
         <div id="layer-manager sidebar">
           <button
-            onClick={handleopenlayermanager}
+            onClick={handleGoBack}
             className="flex flex-col justify-center items-center text-[15px] hover:text-red-500"
           >
-            <Layers3 />
-            <p>layer</p>
+            <ArrowLeftToLine />
+            <p>back</p>
           </button>
         </div>
         <div id="layer-manager sidebar">
@@ -682,53 +1019,69 @@ export default function Tester() {
           <Showtemplates />
         </div>
       )}
-      <div className="board w-full bg-red-900 flex flex-col gap-2 p-2 h-full">
-        <div className="canvas w-full h-full flex flex-col justify-center items-center rounded-lg bg-yellow-500">
+      <div className="board w-full flex flex-col gap-2 p-2 h-full">
+        <div
+          ref={parentRef}
+          className="canvas w-full p-2 drop-shadow-lg h-full flex flex-col justify-center items-center rounded-lg"
+        >
           <Stage
-            width={400}
-            height={600}
+            width={scaledWidth}
+            height={scaledHeight}
             ref={stageRef}
             onMouseDown={handleStageClick}
             style={{ backgroundColor: "lightgray" }}
           >
-            <Layer ref={layerRef}></Layer>
+            <Layer ref={layerRef}>
+              <Rect
+                x={0} // X position of the rectangle
+                y={0} // Y position of the rectangle
+                width={width + 20} // Rectangle width
+                height={height + 20} // Rectangle height
+                fill="white" // Fill color of the rectangle
+                name="background"
+                onClick={handleObjectClick}
+              />
+            </Layer>
           </Stage>
         </div>
       </div>
-      <div className="main-side-pannel w-full max-w-[400px] p-2">
-        <div className="top-side-panel flex flex-row gap-2 border-b-[2px] border-b-accent py-2">
-          <button
-            onClick={toggleSettingsVisibility}
-            className="w-full bg-accent rounded-md py-1"
-          >
-            Properties
-          </button>
-          <button
-            onClick={toggleSettingsVisibility}
-            className="w-full bg-accent rounded-md py-1"
-          >
-            Export
-          </button>
-        </div>
-
+      <div className="main-side-pannel sm:relative top-0 right-0 h-full bg-background2 shadow-lg w-full max-w-[400px] p-2">
         {isSettingsVisible ? (
           <div className="settings-zone">
+            <div className="top-side-panel flex flex-row gap-2 border-b-[2px] border-b-accent py-2">
+              <button
+                onClick={toggleSettingsVisibility}
+                className={`w-full rounded-md py-1 ${
+                  isSettingsVisible ? "bg-accent" : "bg-background"
+                }`}
+              >
+                Properties
+              </button>
+              <button
+                onClick={toggleSettingsVisibility}
+                className={`w-full rounded-md py-1 ${
+                  isSettingsVisible ? "bg-background" : "bg-accent"
+                }`}
+              >
+                Export
+              </button>
+            </div>
             <div className="position-controls">
               <input
                 type="number"
                 name="translateY"
                 id="translate-y"
                 placeholder="Translate Y"
-                value={activeAttributes.translateY || ""}
-                onChange={handleLocationYChange}
+                value={activeAttributes.y || 0}
+                onChange={(e) => handleLocationYChange(e.target.value)}
               />
               <input
                 type="number"
                 name="translateX"
                 id="translate-x"
                 placeholder="Translate X"
-                value={activeAttributes.translateX || ""}
-                onChange={handleLocationXChange}
+                value={activeAttributes.x || 0}
+                onChange={(e) => handleLocationXChange(e.target.value)}
               />
             </div>
 
@@ -738,7 +1091,7 @@ export default function Tester() {
                 name="scaleY"
                 id="scale-y"
                 placeholder="Scale Y"
-                value={activeAttributes.scaleY || 1}
+                value={activeAttributes.scaleY}
                 onChange={handleScaleYChange}
               />
               <input
@@ -746,7 +1099,7 @@ export default function Tester() {
                 name="scaleX"
                 id="scale-x"
                 placeholder="Scale X"
-                value={activeAttributes.scaleX || 1}
+                value={activeAttributes.scaleX}
                 onChange={handleScaleXChange}
               />
               <button onClick={handleScaleLock}>
@@ -755,86 +1108,83 @@ export default function Tester() {
             </div>
 
             <div className="rotation-controls">
+              <label htmlFor="rotate">rotation</label>
               <input
-                value={activeAttributes.rotate || ""}
+                value={activeAttributes.rotation || ""}
                 type="range"
                 name="rotate"
                 id="rotate"
                 min="0"
                 max="360"
+                onChange={(e) => handleRotationChange(e.target.value)}
               />
             </div>
 
             <div className="object-editing">
-              {activeAttributes.type === "star" && (
-                <>
-                  <label htmlFor="starPoint">star</label>
-                  <input
-                    type="range"
-                    name="starPoints"
-                    id="star-points"
-                    min="3"
-                    max="10"
-                    value={activeAttributes.numPoints || 5}
-                    onChange={handleChangeStarPoints}
-                  />
-                </>
-              )}
+              <div className="">
+                <label htmlFor="starPoint">star points</label>
+                <input
+                  type="range"
+                  name="starPoints"
+                  id="star-points"
+                  min="3"
+                  max="10"
+                  value={activeAttributes.numPoints || 5}
+                  onChange={handleChangeStarPoints}
+                />
+              </div>
+              <div className="color-controls">
+                <input
+                  type="color"
+                  name="color"
+                  id="color"
+                  value={activeAttributes.fill || "#00000"}
+                  onChange={handleColorChange}
+                />
+              </div>
               <input
                 type="text"
                 placeholder="element name......"
                 id="element-name"
                 name="elementName"
                 value={activeAttributes.name || ""}
-                onChange={handleNameChange}
+                onChange={(e) => handleChangeObjectName(e.target.value)}
               />
 
-              <input
-                type="range"
-                name="corner-radius"
-                id="corner-radius"
-                placeholder="Corner Radius"
-                value={activeAttributes.radius || 0}
-                onChange={handleCornerRadiusChange}
-              />
-
-              {activeAttributes.type === "text" && (
-                <div className="fontselector">
-                  <div className="font-list-zone">
-                    <div className="font-picker">
-                      <select
-                        name="fontFamily"
-                        id="font-family-selector"
-                        value={activeAttributes.fontFamily || "Arial"}
-                      >
-                        <option value="Arial">Arial</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Helvetica">Helvetica</option>
-                      </select>
-                    </div>
-                    <div className="font-weight-selector">
-                      <select
-                        name="fontWeight"
-                        id="font-weight-selector"
-                        value={
-                          activeAttributes && activeAttributes.fontWeight
-                            ? activeAttributes.fontWeight
-                            : "normal"
-                        }
-                      >
-                        <option value="thin">Thin</option>
-                        <option value="normal">Normal</option>
-                        <option value="medium">Medium</option>
-                        <option value="bold">Bold</option>
-                        <option value="black">Black</option>
-                      </select>
-                    </div>
+              <div className="fontselector">
+                <div className="font-list-zone">
+                  <div className="font-picker">
+                    <select
+                      onChange={handleFontUpdate}
+                      name="fontFamily"
+                      id="font-family-selector"
+                      value={activeAttributes.fontFamily}
+                    >
+                      <option value="Arial">Arial</option>
+                      <option value="Verdana">Verdana</option>
+                      <option value="Helvetica">Helvetica</option>
+                    </select>
+                  </div>
+                  <div className="font-weight-selector">
+                    <select
+                      onChange={handleFontUpdate}
+                      name="fontWeight"
+                      id="font-weight-selector"
+                      value={activeAttributes.fontWeight}
+                    >
+                      <option value="thin">Thin</option>
+                      <option value="normal">Normal</option>
+                      <option value="medium">Medium</option>
+                      <option value="bold">Bold</option>
+                      <option value="black">Black</option>
+                    </select>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             <div className="opacity-controls">
+              <label htmlFor="opacity">opacity</label>
               <input
                 type="range"
                 name="opacity"
@@ -847,92 +1197,128 @@ export default function Tester() {
               />
             </div>
 
-            <div className="color-controls">
-              <input
-                type="color"
-                name="color"
-                id="color"
-                value={activeAttributes.fill || "#00000"}
-                onChange={handleColorChange}
-              />
-            </div>
-
             <div className="border-controls">
               {/* only if this is checked thats is when border should be added */}
+              <div className="">
+                <label htmlFor="corner-radius">border radius</label>
+                <input
+                  type="range"
+                  name="corner-radius"
+                  id="corner-radius"
+                  placeholder="Corner Radius"
+                  value={activeAttributes.cornerRadius || 0}
+                  onChange={(e) => handleChangeBorderRadius(e.target.value)}
+                />
+              </div>
+              <label htmlFor="addBorder">Add Border</label>
               <input
                 type="checkbox"
                 name="addBorder"
                 id="add-border"
                 checked={handleBorderState}
-                onChange={() => setHandleBorderState(!handleBorderState)}
+                onChange={() => {
+                  setHandleBorderState(!handleBorderState);
+                  handleBorderUpdate(); // Update the border when toggling
+                }}
               />
+
+              <label htmlFor="borderColor">Border Color</label>
               <input
                 type="color"
                 name="borderColor"
                 id="border-color"
-                value={activeAttributes.stroke || "#000000"}
-                onChange={handleBorderColorChange}
+                value={borderColor}
+                onChange={(e) => {
+                  setBorderColor(e.target.value);
+                  handleBorderUpdate(); // Update the border color
+                }}
               />
+
+              <label htmlFor="borderWidth">Border Width</label>
               <input
                 type="range"
                 name="borderWidth"
                 id="border-width"
-                value={activeAttributes.strokeWidth || 0}
-                onChange={handleBorderWidthChange}
+                min="1"
+                max="10"
+                value={borderWidth}
+                onChange={(e) => {
+                  setBorderWidth(e.target.value);
+                  handleBorderUpdate(); // Update the border width
+                }}
               />
             </div>
 
             <div className="effect-controls">
               <div className="shadow-controls">
+                <label htmlFor="addShadow">Add Shadow</label>
                 <input
                   type="checkbox"
                   name="addShadow"
                   id="add-shadow"
                   checked={handleShadowState || false}
-                  onChange={() => setHandleShadowState(!handleShadowState)}
+                  onChange={() => {
+                    const newState = !handleShadowState;
+                    setHandleShadowState(newState);
+                    handleShadowUpdate(); // Update shadow properties
+                  }}
                 />
+
+                <label htmlFor="shadowColor">Shadow Color</label>
                 <input
                   type="color"
                   name="shadowColor"
                   id="shadow-color"
-                  value={activeAttributes.shadowColor}
-                  onChange={handleShadowColorChange}
+                  value={shadowColor}
+                  onChange={(e) => {
+                    setShadowColor(e.target.value);
+                    handleShadowUpdate(); // Update shadow color
+                  }}
                 />
+
+                <label htmlFor="shadowBlur">Shadow Blur</label>
                 <input
                   type="number"
                   name="shadowBlur"
                   id="shadow-blur"
-                  placeholder="Shadow Blur"
-                  value={activeAttributes.shadowBlur || 0}
+                  value={shadowBlur}
+                  onChange={(e) => {
+                    setShadowBlur(e.target.value);
+                    handleShadowUpdate(); // Update shadow blur
+                  }}
                 />
+
+                <label htmlFor="shadowX">Shadow X</label>
                 <input
                   type="number"
                   name="shadowX"
                   id="shadow-x"
-                  placeholder="Shadow X"
-                  value={activeAttributes.shadowX || 0}
+                  value={shadowX}
+                  onChange={(e) => {
+                    setShadowX(e.target.value);
+                    handleShadowUpdate(); // Update shadow X offset
+                  }}
                 />
+
+                <label htmlFor="shadowY">Shadow Y</label>
                 <input
                   type="number"
                   name="shadowY"
                   id="shadow-y"
-                  placeholder="Shadow Y"
-                  value={activeAttributes.shadowY || 0}
-                />
-              </div>
-
-              <div className="blur-controls">
-                <input
-                  type="range"
-                  name="gussianBlurRange"
-                  id="gussian-blur-range"
-                  value={activeAttributes.gussianBlurRange || 0}
+                  value={shadowY}
+                  onChange={(e) => {
+                    setShadowY(e.target.value);
+                    handleShadowUpdate(); // Update shadow Y offset
+                  }}
                 />
               </div>
             </div>
 
             <div className="delete-object">
-              <button className="w-full p-2 py-1 bg-red-500 text-white">
+              <button
+                onClick={handleDeleteObject}
+                className="w-full p-2 py-1 bg-red-500 text-white"
+              >
                 Delete
               </button>
             </div>
@@ -944,14 +1330,26 @@ export default function Tester() {
               <p>Width: {activeAttributes.width || 100}px</p>
               <p>Height: {activeAttributes.height || 100}px</p>
             </div>
+            <div className="export-name">
+              <input type="text" name="project_name" id="project_name" />
+            </div>
             <div className="save-controls pt-5 flex flex-col gap-3">
-              <button className="bg-green-500 w-full rounded-md py-1 p-2 text-center">
-                Save to Cloud
+              <button
+                onClick={saveImageToCloud}
+                className="bg-green-500 w-full rounded-md py-1 p-2 text-center"
+              >
+                Save image to Cloud
               </button>
-              <button className="bg-gray-500 w-full rounded-md py-1 p-2 text-center">
+              <button
+                onClick={exportStageAsJson}
+                className="bg-gray-500 w-full rounded-md py-1 p-2 text-center"
+              >
                 Save as Template
               </button>
-              <button className="bg-blue-500 w-full rounded-md py-1 p-2 text-center">
+              <button
+                onClick={DownloadStageImage}
+                className="bg-blue-500 w-full rounded-md py-1 p-2 text-center"
+              >
                 Download
               </button>
             </div>

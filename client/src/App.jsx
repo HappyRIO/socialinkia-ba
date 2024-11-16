@@ -5,7 +5,6 @@ import Dashboard from "./dashboard/page";
 import Login from "./login/page";
 import Signup from "./signup/page";
 import Contact from "./contact/page";
-import Subscription from "./subscription/page";
 import TemplatePage from "./dashboard/template/page";
 import Pending from "./dashboard/pending/page";
 import PrivateRoute from "./components/security/Privatepage";
@@ -35,6 +34,7 @@ const router = createBrowserRouter([
   {
     path: "/subscription/signup/details",
     element: <PrivateRoute Component={BusinessForm} />,
+    // element: <BusinessForm />,
   },
 
   // Direct routes with PrivateRoute applied to each protected route
@@ -53,7 +53,7 @@ const router = createBrowserRouter([
     element: <PrivateRoute Component={PostCreation} />,
   },
   {
-    path: "/dashboard/create/design/:canvashight/:canvaswidth",
+    path: "/dashboard/create/design",
     element: <PrivateRoute Component={CreateDesign} />,
   },
   {
