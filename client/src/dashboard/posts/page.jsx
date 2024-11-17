@@ -107,9 +107,9 @@ export default function Pending() {
       <div className="navbarzone w-fit">
         <ResponsiveSidebar pagename={"Pending post"} />
       </div>
-      <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full">
-        <div className="w-full flex justify-between bg-background2 py-5 px-2 rounded-lg shadow-lg">
-          <div className="flex items-center">
+      <div className="contentzone flex flex-col gap-3 pt-3 px-2 ml-0 sm:ml-64 w-full">
+        <div className="w-full flex flex-col justify-center items-center bg-background2 px-2 rounded-lg">
+          <div className="flex py-4 items-center">
             <input
               type="text"
               value={searchPendingPost}
@@ -118,7 +118,7 @@ export default function Pending() {
               className="border px-4 py-2 rounded-md"
             />
           </div>
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <select
               onChange={handleChange}
               className="border px-4 py-2 rounded-md"
@@ -127,6 +127,25 @@ export default function Pending() {
               <option value="insta">Instagram</option>
               <option value="fbook">Facebook</option>
             </select>
+          </div> */}
+        </div>
+        <div className="postsellectors w-full bg-background2 p-2 rounded-lg">
+          <div className="media-selecto flex flex-row w-full justify-evenly pt-5">
+            <div className="all-selector cursor-pointer text-center w-full border-[2px] border-accent border-b-[2px] border-b-background2">
+              all
+            </div>
+            <div className="fbook-selector cursor-pointer text-center w-full border-b-[2px] border-b-accent">
+              facebbok
+            </div>
+            <div className="instagram-selector cursor-pointer text-center w-full border-b-[2px] border-b-accent">
+              instagram
+            </div>
+            <div className="gmb-selector cursor-pointer text-center w-full border-b-[2px] border-b-accent">
+              google
+            </div>
+          </div>
+          <div className="postzone w-full h-10">
+            <div className="w-full"></div>
           </div>
         </div>
 
