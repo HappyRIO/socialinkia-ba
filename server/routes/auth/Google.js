@@ -57,9 +57,16 @@ router.get("/auth/google/:flow/callback", async (req, res) => {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
+  if (!state) {
+    console.log("Authorization state missing.");
+    return res.status(400).json({ error: "Authorization state missing." });
+  }
+
   connectDB();
 
   const { flow, plan } = JSON.parse(state);
+
+  console.log(flow, plan);
 
   console.log(`Flow type: ${flow}`); // "login" will be printed if it's a login
   // Parse state
@@ -269,6 +276,5 @@ router.get("/auth/google/:flow/callback", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;
