@@ -7,7 +7,7 @@ const router = express.Router();
 // OAuth2 client setup
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = "http://localhost:4000/api/gmb/auth/google/gmb/callback";
+const REDIRECT_URI = `${process.env.SERVER_BASE_URL}/api/gmb/auth/google/gmb/callback`;
 const oAuth2Client = new google.auth.OAuth2(
   CLIENT_ID,
   CLIENT_SECRET,
