@@ -94,6 +94,7 @@ const UserSchema = new Schema({
   posts: [postSchema],
   deleted: { type: Boolean, default: false },
 
+  gmbrefreshToken: { type: String },
   gmbAccessToken: { type: String },
   gmbRefreshToken: { type: String },
   gmbTokenExpiresAt: { type: String },

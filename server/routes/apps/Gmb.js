@@ -1,227 +1,174 @@
 const express = require("express");
-const querystring = require("querystring");
-const axios = require("axios");
+const { google } = require("googleapis");
 const connectDB = require("../../data/db");
 const User = require("../../model/User");
 const router = express.Router();
 
+// OAuth2 client setup
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const SERVER_BASE_URL = process.env.SERVER_BASE_URL;
+const REDIRECT_URI = "http://localhost:4000/api/gmb/auth/google/gmb/callback";
+const oAuth2Client = new google.auth.OAuth2(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
 
-if (!CLIENT_ID || !CLIENT_SECRET || !SERVER_BASE_URL) {
-  throw new Error("Missing required environment variables.");
-}
+// Middleware: Check if session token is valid
+const isSessionValid = (req, res, next) => {
+  connectDB();
+  console.log("Validating session");
+  console.log("Cookies:", req.cookies); // Check all cookies received
+  const { sessionToken } = req.cookies;
 
-// Initiate Google OAuth for GMB access
-router.get("/auth/google/gmb", (req, res) => {
-  const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
-  const scopes = [
-    "https://www.googleapis.com/auth/business.manage",
-    "openid",
-    "profile",
-    "email",
-  ];
-
-  const queryParams = new URLSearchParams({
-    client_id: CLIENT_ID,
-    redirect_uri: `${SERVER_BASE_URL}/api/google/auth/google/gmb/callback`,
-    response_type: "code",
-    scope: scopes.join(" "),
-    access_type: "offline",
-    prompt: "consent",
-  });
-
-  console.log("Redirecting to Google OAuth with query:", queryParams);
-  res.redirect(`${authEndpoint}?${queryParams}`);
-});
-
-router.get("/auth/google/gmb/callback", async (req, res) => {
-  const { code } = req.query;
-
-  if (!code) {
-    return res.status(400).json({ error: "Authorization code missing." });
+  if (!sessionToken) {
+    console.log("No session token provided");
+    return res.status(401).json({ error: "No session token provided." });
   }
 
-  try {
-    await connectDB();
+  User.findOne({ sessionToken })
+    .then((user) => {
+      if (!user) {
+        console.log("Invalid session token.");
+        return res.status(401).json({ error: "Invalid session token." });
+      }
 
-    const tokenEndpoint = "https://oauth2.googleapis.com/token";
+      const expirationTime = new Date(user.sessionExpiresAt);
+      const currentTime = new Date();
+      if (expirationTime <= currentTime) {
+        console.log("Session expired.");
+        return res.status(401).json({ error: "Session expired." });
+      }
 
-    const requestBody = querystring.stringify({
-      code,
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      redirect_uri: `${SERVER_BASE_URL}/api/google/auth/google/gmb/callback`,
-      grant_type: "authorization_code",
+      req.user = user;
+      next();
+    })
+    .catch((error) => {
+      console.error("Error checking session validity:", error);
+      res.status(500).json({ error: "Server error" });
     });
-
-    const tokenResponse = await axios.post(tokenEndpoint, requestBody, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
-
-    const { access_token, refresh_token, expires_in } = tokenResponse.data;
-
-    const accountsEndpoint = "https://mybusiness.googleapis.com/v4/accounts";
-
-    const accountsResponse = await axios.get(accountsEndpoint, {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    const accounts = accountsResponse.data.accounts;
-
-    if (!accounts || accounts.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "No Google My Business accounts found." });
-    }
-
-    const accountId = accounts[0].name.split("/")[1];
-
-    const locationsEndpoint = `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations`;
-
-    const locationsResponse = await axios.get(locationsEndpoint, {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
-
-    const locations = locationsResponse.data.locations;
-
-    if (!locations || locations.length === 0) {
-      return res.status(400).json({ error: "No locations found for account." });
-    }
-
-    const locationId = locations[0].name.split("/")[3];
-
-    const profileResponse = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${access_token}` } }
-    );
-
-    const { email } = profileResponse.data;
-
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({ email });
-    }
-
-    user.gmbAccessToken = access_token;
-    user.gmbRefreshToken = refresh_token;
-    user.gmbTokenExpiresAt = new Date(Date.now() + expires_in * 1000);
-    user.gmbAccountId = accountId;
-    user.gmbLocationId = locationId;
-
-    await user.save();
-
-    res.redirect("/success");
-  } catch (error) {
-    console.error("Error handling callback:", error.message);
-    res.status(500).json({ error: "Failed to process OAuth callback." });
-  }
-});
-
-const refreshAccessToken = async (req, res, next) => {
-  const { user } = req;
-
-  if (!user || !user.gmbRefreshToken) {
-    return res
-      .status(400)
-      .json({ error: "No refresh token available for user." });
-  }
-
-  const tokenEndpoint = "https://oauth2.googleapis.com/token";
-
-  try {
-    const requestBody = querystring.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      refresh_token: user.gmbRefreshToken,
-      grant_type: "refresh_token",
-    });
-
-    const response = await axios.post(tokenEndpoint, requestBody, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
-
-    const { access_token, expires_in } = response.data;
-
-    user.gmbAccessToken = access_token;
-    user.gmbTokenExpiresAt = new Date(Date.now() + expires_in * 1000);
-    await user.save();
-
-    console.log("Access token refreshed for user:", user.email);
-    next();
-  } catch (error) {
-    console.error("Failed to refresh access token:", error.message);
-    return res.status(500).json({
-      error: "Failed to refresh access token.",
-      details: error.message,
-    });
-  }
 };
 
-router.get(
-  "/gmb/posts",
-  isSessionValid,
-  refreshAccessToken,
-  async (req, res) => {
-    try {
-      const { gmbAccountId, gmbLocationId } = req.user;
+// Routes
 
-      if (!gmbAccountId || !gmbLocationId) {
-        return res.status(400).json({
-          error: "Google My Business account or location details missing.",
-        });
-      }
+// Step 1: Login route to start OAuth process
+router.get("/auth/gmb", (req, res) => {
+  const authUrl = oAuth2Client.generateAuthUrl({
+    access_type: "offline",
+    scope: [
+      "https://www.googleapis.com/auth/business.manage",
+      "https://www.googleapis.com/auth/business.profile.performance",
+    ],
+  });
 
-      const postsEndpoint = `https://mybusiness.googleapis.com/v4/accounts/${gmbAccountId}/locations/${gmbLocationId}/localPosts`;
+  console.log(oAuth2Client.credentials.scope);
 
-      const response = await axios.get(postsEndpoint, {
-        headers: { Authorization: `Bearer ${req.user.gmbAccessToken}` },
-      });
+  res.redirect(authUrl);
+});
 
-      res.status(200).json({
-        message: "Posts retrieved successfully.",
-        posts: response.data,
-      });
-    } catch (error) {
-      console.error("Error fetching posts:", error.message);
-      res.status(500).json({ error: "Failed to retrieve posts." });
-    }
+// Step 2: Callback route to handle OAuth response
+router.get("/auth/google/gmb/callback", async (req, res) => {
+  const { code } = req.query;
+  if (!code)
+    return res.status(400).json({ error: "Authorization code missing" });
+
+  try {
+    const { tokens } = await oAuth2Client.getToken(code);
+    oAuth2Client.setCredentials(tokens);
+
+    const plus = google.plus({ version: "v1", auth: oAuth2Client });
+    const userInfo = await plus.people.get({ userId: "me" });
+
+    const userEmail = userInfo.data.emails[0].value;
+
+    // Save user and tokens to database
+    const user = await User.findOneAndUpdate(
+      { email: userEmail },
+      { gmbrefreshToken: tokens.refresh_token },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json({ message: "Login successful", user });
+  } catch (error) {
+    console.error("Error during OAuth callback:", error);
+    res.status(500).json({ error: "Failed to log in" });
   }
-);
+});
 
-router.get(
-  "/gmb/posts/performance",
-  isSessionValid,
-  refreshAccessToken,
-  async (req, res) => {
-    try {
-      const { gmbAccountId, gmbLocationId, gmbAccessToken } = req.user;
+// Step 3: Create a post
+router.post("/posts", isSessionValid, async (req, res) => {
+  try {
+    const { user } = req;
+    const { gmbrefreshToken } = user;
 
-      if (!gmbAccountId || !gmbLocationId) {
-        return res.status(400).json({
-          error: "Google My Business account or location details missing.",
-        });
-      }
+    oAuth2Client.setCredentials({ refresh_token: gmbrefreshToken });
+    const myBusiness = google.mybusiness({ version: "v4", auth: oAuth2Client });
 
-      const performanceEndpoint = `https://mybusiness.googleapis.com/v4/accounts/${gmbAccountId}/locations/${gmbLocationId}/localPosts/{postId}/insights`;
-
-      const response = await axios.get(performanceEndpoint, {
-        headers: { Authorization: `Bearer ${gmbAccessToken}` },
-      });
-
-      res.status(200).json({
-        message: "Post performance report retrieved successfully.",
-        insights: response.data,
-      });
-    } catch (error) {
-      console.error("Error fetching post performance report:", error.message);
-      res.status(500).json({
-        error: "Failed to retrieve post performance report.",
-        details: error.message,
-      });
+    const { locationId, postContent } = req.body;
+    if (!locationId || !postContent) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
+
+    const response = await myBusiness.accounts.locations.localPosts.create({
+      parent: `accounts/${locationId}`,
+      requestBody: {
+        summary: postContent,
+        languageCode: "en-US",
+      },
+    });
+
+    res.status(200).json({ message: "Post created", post: response.data });
+  } catch (error) {
+    console.error("Error creating post:", error);
+    res.status(500).json({ error: "Failed to create post" });
   }
-);
+});
+
+// Step 4: Get posts with analysis
+router.get("/posts/:locationId", isSessionValid, async (req, res) => {
+  try {
+    const { user } = req;
+    const { gmbrefreshToken } = user;
+
+    oAuth2Client.setCredentials({ refresh_token: gmbrefreshToken });
+    const myBusiness = google.mybusiness({ version: "v4", auth: oAuth2Client });
+    const { locationId } = req.params;
+
+    const response = await myBusiness.accounts.locations.localPosts.list({
+      parent: `accounts/${locationId}`,
+    });
+
+    const posts = response.data.localPosts || [];
+    const analysis = posts.map((post) => ({
+      id: post.name,
+      content: post.summary,
+      verified: post.state === "VERIFIED",
+      metrics: post.metric,
+    }));
+
+    res.status(200).json({ posts: analysis });
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    res.status(500).json({ error: "Failed to fetch posts" });
+  }
+});
+
+// Step 5: Delete a post
+router.delete("/posts/:postId", isSessionValid, async (req, res) => {
+  try {
+    const { user } = req;
+    const { gmbrefreshToken } = user;
+
+    oAuth2Client.setCredentials({ refresh_token: gmbrefreshToken });
+    const myBusiness = google.mybusiness({ version: "v4", auth: oAuth2Client });
+    const { postId } = req.params;
+
+    await myBusiness.accounts.locations.localPosts.delete({ name: postId });
+    res.status(200).json({ message: "Post deleted" });
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    res.status(500).json({ error: "Failed to delete post" });
+  }
+});
 
 module.exports = router;
