@@ -1,19 +1,85 @@
 const express = require("express");
 const fetch = require("node-fetch");
-const app = express();
+const router = express.Router();
 
 const CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
 const CHATGPT_API_KEY = "your-api-key";
 
-const userDetails = {
-  companyName: "Example Corp",
-  slogan: "Innovating the Future",
-  subscriptionPlan: "Standard", // Use Basic, Standard, or Premium
-  products: ["Smartphones", "Accessories"],
+// stupid gpt
+const API_TOKEN = "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";
+const MODEL_URL =
+  "https://api-inference.huggingface.co/models/openai-community/gpt2";
+
+// Check if session token is valid
+const isSessionValid = (req, res, next) => {
+  connectDB();
+  console.log("Validating session");
+  console.log("Cookies:", req.cookies); // Check all cookies received
+  const { sessionToken } = req.cookies;
+
+  if (!sessionToken) {
+    console.log("No session token provided");
+    return res.status(401).json({ error: "No session token provided." });
+  }
+
+  User.findOne({ sessionToken })
+    .then((user) => {
+      if (!user) {
+        console.log("Invalid session token.");
+        return res.status(401).json({ error: "Invalid session token." });
+      }
+
+      const expirationTime = new Date(user.sessionExpiresAt);
+      const currentTime = new Date();
+      if (expirationTime <= currentTime) {
+        return res.status(401).json({ error: "Session expired." });
+      }
+
+      req.user = user;
+      next();
+    })
+    .catch((error) => {
+      console.error("Error checking session validity:", error);
+      res.status(500).json({ error: "Server error" });
+    });
 };
 
-// Generate Post Content and Konva Data
-async function generatePost(details) {
+// POST generation route
+router.get("/generate-posts", isSessionValid, async (req, res) => {
+  try {
+    const user = req.user;
+    const subscriptionPlan = user.subscription?.plan || "basic";
+    const companyDetails = user.companiesdetails;
+
+    if (!companyDetails || !subscriptionPlan) {
+      return res
+        .status(400)
+        .json({ error: "Missing company details or subscription plan" });
+    }
+
+    const postLimit =
+      {
+        basic: 7,
+        standard: 20,
+        premium: 30,
+      }[subscriptionPlan] || 7;
+
+    const posts = [];
+
+    for (let i = 0; i < postLimit; i++) {
+      const generatedPost = await generatePost(companyDetails);
+      posts.push(generatedPost);
+    }
+
+    res.json(posts); // Send response to frontend
+  } catch (error) {
+    console.error("Error generating posts:", error);
+    res.status(500).json({ error: "Failed to generate posts" });
+  }
+});
+
+// Function to call ChatGPT API
+async function generatePost(companyDetails) {
   const response = await fetch(CHATGPT_API_URL, {
     method: "POST",
     headers: {
@@ -26,48 +92,109 @@ async function generatePost(details) {
         {
           role: "system",
           content:
-            "You are an AI assistant generating social media posts for businesses with JSON-formatted output compatible with Konva. Include captions with hashtags and a `konvaData` object for layout design.",
+            "You are an AI that generates social media posts with JSON output. Each post should have a caption and Konva-compatible layout data.",
         },
         {
           role: "user",
-          content: `Generate a post for the following details:
-- Company Name: ${details.companyName}
-- Slogan: ${details.slogan}
-- Products: ${details.products.join(", ")}
-- Subscription Plan: ${details.subscriptionPlan}`,
+          content: `Create a post for the following company details:
+- Name: ${companyDetails.companyTradeName}
+- Sector: ${companyDetails.businessSector}
+- Slogan: ${companyDetails.motto}
+- Highlight: ${companyDetails.highlight}
+- Star Product: ${companyDetails.star_product}
+- Communication Style: ${companyDetails.communication_style}
+        `,
         },
       ],
     }),
   });
 
   const data = await response.json();
-  return data.choices[0]?.message?.content;
+  return JSON.parse(data.choices[0]?.message?.content);
 }
 
-// API Endpoint
-app.get("/generate-posts", async (req, res) => {
+// stupid route
+// Function to generate text
+async function generateText(prompt) {
   try {
-    const postLimit =
+    const response = await axios.post(
+      MODEL_URL,
+      { inputs: prompt },
       {
-        Basic: 7,
-        Standard: 20,
-        Premium: 30,
-      }[userDetails.subscriptionPlan] || 7;
+        headers: { Authorization: `Bearer ${API_TOKEN}` },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error generating text:", error);
+    throw error;
+  }
+}
 
-    const posts = [];
-    for (let i = 0; i < postLimit; i++) {
-      const post = await generatePost(userDetails);
-      posts.push(JSON.parse(post)); // Ensure valid JSON format
+// Function to create a prompt from CompanyDetails
+function createPrompt(companyDetails) {
+  const {
+    userName,
+    companyTradeName,
+    businessSector,
+    motto,
+    star_product,
+    contactInfo,
+  } = companyDetails;
+
+  return `
+  Create a compelling social media post for ${userName || "a business"}.
+  Business Name: ${companyTradeName || "N/A"}
+  Sector: ${businessSector || "N/A"}
+  Motto: ${motto || "N/A"}
+  Star Product: ${star_product || "N/A"}
+  Contact Info: ${contactInfo || "N/A"}
+  Highlight key benefits and call to action for the audience.
+  `;
+}
+
+// POST route to generate posts
+router.post("/generate-stupid-posts", isSessionValid, async (req, res) => {
+  try {
+    const user = req.user; // User is already validated by middleware
+    const { companyDetails, subscription } = user;
+
+    if (!companyDetails) {
+      return res.status(400).json({ error: "Company details are required." });
     }
 
-    res.json(posts); // Return the JSON response
+    if (!subscription || !subscription.active) {
+      return res
+        .status(400)
+        .json({ error: "User does not have an active subscription." });
+    }
+
+    // Determine the number of posts based on the subscription plan
+    const postsToGenerate =
+      {
+        basic: 7,
+        standard: 20,
+        premium: 30,
+      }[subscription.plan.toLowerCase()] || 0;
+
+    if (postsToGenerate === 0) {
+      return res.status(400).json({ error: "Invalid subscription plan." });
+    }
+
+    // Generate posts
+    const prompt = createPrompt(companyDetails);
+    const generatedPosts = [];
+
+    for (let i = 0; i < postsToGenerate; i++) {
+      const generatedText = await generateText(prompt);
+      generatedPosts.push(generatedText); // Collect each generated post
+    }
+
+    res.json({ posts: generatedPosts }); // Return all generated posts
   } catch (error) {
-    console.error("Error generating posts:", error);
-    res.status(500).json({ error: "Failed to generate posts" });
+    console.error("Error in generate-posts route:", error);
+    res.status(500).json({ error: "Failed to generate posts." });
   }
 });
 
-// Start Server
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
+module.exports = router;

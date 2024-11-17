@@ -55,6 +55,7 @@ const paymentRoutes = require("./routes/apps/Stripe");
 const PostRoutes = require("./routes/apps/PostManager");
 const MetaRoutes = require("./routes/apps/Meta");
 const GmbRoutes = require("./routes/apps/Gmb");
+const GptRoute = require("./routes/apps/GPT");
 
 // Test route
 app.get("/", (req, res) => {
@@ -77,6 +78,7 @@ app.use("/api/subscription", paymentRoutes);
 app.use("/api/posts", PostRoutes);
 app.use("/api/meta", MetaRoutes);
 app.use("/api/gmb", GmbRoutes);
+app.use("/api/gpt", GptRoute);
 
 // Start server
 app.listen(4000, () => {

@@ -18,7 +18,7 @@ const upload = multer({ storage });
 
 // Initialize Agenda for scheduling
 const agenda = new Agenda({
-  db: { address: "mongodb://localhost/autosocial" },
+  db: { address: `${process.env.DATA_BASE_URL}` },
 });
 
 // Middleware for session validation
