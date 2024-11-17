@@ -19,10 +19,16 @@ router.get("/test", (req, res) => {
 });
 
 const uploadImagesToCloudinary = async (files) => {
-  console.log("uploading images to Cloudinary...");
-  const urls = [];
+  if (!files || (!Array.isArray(files) && !files.buffer)) {
+    console.error("No valid files to upload.");
+    return [];
+  }
 
-  for (const file of files) {
+  const fileArray = Array.isArray(files) ? files : [files]; // Ensure files is always an array
+  console.log("Uploading images to Cloudinary...");
+
+  const urls = [];
+  for (const file of fileArray) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: "automedia" },
@@ -271,14 +277,17 @@ router.put(
         communication_style_other,
       } = req.body;
 
-      connectCloudinary();
-
       console.log("Request body:", req.body);
       console.log("Uploaded files:", req.files);
 
+      connectCloudinary();
+
+      // Ensure companyDetails exists before accessing its properties
+      const companyDetails = req.user.companyDetails || {};
+
       // Handle uploaded images
       const newPhotos = req.files.photos || [];
-      const newLogo = req.files.logo ? req.files.logo[0] : null;
+      const newLogo = req.files.logo ? req.files.logo[0] : "";
       const newExteriorPhoto = req.files.exterior_photo
         ? req.files.exterior_photo[0]
         : null;
@@ -292,31 +301,37 @@ router.put(
         ? req.files.staff_photo[0]
         : null;
 
-      const existingPhotos =
-        (req.user.companyDetails && req.user.companyDetails.photos) || [];
-      const retainedPhotos = req.body.photos || [];
-
       // Upload new images to Cloudinary
       const newPhotoUrls =
         newPhotos.length > 0 ? await uploadImagesToCloudinary(newPhotos) : [];
-      const logoUrl = newLogo ? await uploadImagesToCloudinary(newLogo) : "";
+      const logoUrl = newLogo
+        ? await uploadImagesToCloudinary(newLogo).then((urls) => urls[0])
+        : ""; // Ensure this is a single URL
+
+      // For each photo, check if it exists, and either upload or use the existing one
       const exteriorPhotoUrl = newExteriorPhoto
         ? await uploadImagesToCloudinary(newExteriorPhoto)
-        : "";
+        : companyDetails.exterior_photo || "";
+
       const interiorPhotoUrl = newInteriorPhoto
         ? await uploadImagesToCloudinary(newInteriorPhoto)
-        : "";
+        : companyDetails.interior_photo || "";
+
       const specialPlacePhotoUrl = newSpecialPlacePhoto
         ? await uploadImagesToCloudinary(newSpecialPlacePhoto)
-        : "";
+        : companyDetails.special_place_photo || "";
+
       const staffPhotoUrl = newStaffPhoto
         ? await uploadImagesToCloudinary(newStaffPhoto)
-        : "";
+        : companyDetails.staff_photo || "";
 
       // Identify removed images and delete from Cloudinary
+      const existingPhotos = companyDetails.photos || [];
+      const retainedPhotos = req.body.photos || [];
       const removedPhotos = existingPhotos.filter(
         (img) => !retainedPhotos.includes(img)
       );
+
       if (removedPhotos.length > 0) {
         await deleteImagesFromCloudinary(removedPhotos);
       }
@@ -325,7 +340,7 @@ router.put(
       const updateData = {
         companyDetails: {
           userName,
-          logo: logoUrl || req.user.companyDetails.logo,
+          logo: logoUrl || companyDetails.logo,
           companyTradeName,
           businessSector,
           addressVisible,
@@ -352,13 +367,10 @@ router.put(
           add_features,
           objectives,
           photos: [...retainedPhotos, ...newPhotoUrls],
-          exterior_photo:
-            exteriorPhotoUrl || req.user.companyDetails.exterior_photo,
-          interior_photo:
-            interiorPhotoUrl || req.user.companyDetails.interior_photo,
-          special_place_photo:
-            specialPlacePhotoUrl || req.user.companyDetails.special_place_photo,
-          staff_photo: staffPhotoUrl || req.user.companyDetails.staff_photo,
+          exterior_photo: exteriorPhotoUrl,
+          interior_photo: interiorPhotoUrl,
+          special_place_photo: specialPlacePhotoUrl,
+          staff_photo: staffPhotoUrl,
           area_of_influence,
           customer_type: parseJSON(customer_type),
           age_range: parseJSON(age_range),

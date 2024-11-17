@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import {
-  ClockArrowUp,
+  Mailbox,
   LayoutDashboard,
   LayoutPanelTop,
   List,
@@ -97,15 +97,15 @@ export default function Mainsidebar({ menufunction, menustate, pagename }) {
               </li>
               <li className="rounded-sm">
                 <NavLink
-                  to="/dashboard/pending"
+                  to="/dashboard/posts"
                   className={({ isActive }) =>
                     `flex items-center p-2 space-x-3 rounded-md ${
                       isActive ? "bg-accent" : ""
                     }`
                   }
                 >
-                  <ClockArrowUp />
-                  <span>pending</span>
+                  <Mailbox />
+                  <span>posts</span>
                 </NavLink>
               </li>
               <li className="rounded-sm">

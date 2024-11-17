@@ -173,7 +173,7 @@ export default function Profile() {
     openAuthPopup(
       `${
         import.meta.env.VITE_SERVER_BASE_URL
-      }/api/google/auth/google-my-business`,
+      }/api/gmb/auth/gmb`,
       () => {
         setconnectig(true);
         toast("Instagram connected", { theme: "dark" });

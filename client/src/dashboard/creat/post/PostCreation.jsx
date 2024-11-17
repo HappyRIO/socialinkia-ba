@@ -120,7 +120,7 @@ export default function PostCreation() {
             theme: "dark",
           });
           console.log("Post created successfully:", data);
-          reroute("/dashboard/pending");
+          reroute("/dashboard/posts");
         }
       })
       .catch((error) => {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import InstagramCard from "../../components/fragments/InstagramCard";
 import FacebookCard from "../../components/fragments/FacebookCard";
 import GeneralPost from "../../components/fragments/GeneralPost"; // Assuming GeneralPost is the card component you want to use
+import { Link } from "react-router-dom";
 
 export default function Pending() {
   const [searchPendingPost, setSearchPendingPost] = useState("");
@@ -91,13 +92,23 @@ export default function Pending() {
     setFilteredPosts(filtered); // Set filtered posts based on platform and search
   }, [showSocial, allPosts, searchPendingPost]);
 
+  function handleGeneratePost() {
+    fetch(
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/gpt/generate-stupid-posts`,
+      {
+        method: "POST",
+        credentials: "include",
+      }
+    );
+  }
+
   return (
     <div className="w-full flex flex-row justify-center items-center">
       <div className="navbarzone w-fit">
         <ResponsiveSidebar pagename={"Pending post"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full">
-        <div className="w-full flex justify-between">
+        <div className="w-full flex justify-between bg-background2 py-5 px-2 rounded-lg shadow-lg">
           <div className="flex items-center">
             <input
               type="text"
@@ -119,7 +130,7 @@ export default function Pending() {
           </div>
         </div>
 
-        <div className="pt-4 grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        <div className="pt-4 w-full grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {filteredPosts && filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <div key={post._id} className="mb-4">
@@ -131,7 +142,21 @@ export default function Pending() {
               </div>
             ))
           ) : (
-            <p>No posts available</p>
+            <div className="w-full gap-6 flex flex-col justify-center items-center">
+              <p>No posts available</p>
+              <Link to={"/dashboard/create/post"}>
+                <button className="bg-green-500 text-white w-fit p-2 rounded-lg hover:shadow-lg">
+                  create a post
+                </button>
+              </Link>
+
+              <button
+                onClick={handleGeneratePost}
+                className="bg-blue-500 text-white w-fit p-2 rounded-lg hover:shadow-lg"
+              >
+                generate post
+              </button>
+            </div>
           )}
         </div>
       </div>

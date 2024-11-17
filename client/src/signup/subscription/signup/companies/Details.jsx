@@ -46,26 +46,23 @@ const BusinessForm = () => {
     communication_style_other: "",
   });
 
-  const handleChange = async (e) => {
-    const { name, value, files } = e.target;
+  const handleChange = (e) => {
+    const { name, files, value } = e.target;
 
     if (name === "logo" && files && files[0]) {
       const logoFile = files[0];
-      const logoBinary = await convertToBinary(logoFile);
-
       setFormData((prev) => ({
         ...prev,
-        logo: logoBinary,
+        logo: logoFile,
         logoPreview: URL.createObjectURL(logoFile),
       }));
     } else if (name === "photos" && files) {
       const photoFiles = Array.from(files);
-      const photoBinaries = await Promise.all(photoFiles.map(convertToBinary));
       const photoPreviews = photoFiles.map((file) => URL.createObjectURL(file));
 
       setFormData((prev) => ({
         ...prev,
-        photos: photoBinaries,
+        photos: photoFiles, // Store actual file objects
         photosPreview: photoPreviews,
       }));
     } else {
@@ -76,15 +73,6 @@ const BusinessForm = () => {
     }
   };
 
-  const convertToBinary = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result); // Base64 encoded string
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file); // Use `readAsDataURL` to get binary data
-    });
-  };
-
   const handleFormSubmission = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -93,9 +81,13 @@ const BusinessForm = () => {
       const form = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
         if (key === "photos" && Array.isArray(value)) {
-          value.forEach((file) => form.append(key, file));
+          value.forEach((file) => form.append(key, file)); // Append files one by one
+        } else if (key === "logo" && value instanceof File) {
+          form.append(key, value); // Append the logo file
+        } else if (Array.isArray(value) || typeof value === "object") {
+          form.append(key, JSON.stringify(value)); // Convert arrays/objects to JSON
         } else {
-          form.append(key, value);
+          form.append(key, value); // Append other fields as-is
         }
       });
 

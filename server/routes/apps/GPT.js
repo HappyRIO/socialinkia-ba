@@ -1,6 +1,9 @@
 const express = require("express");
 const fetch = require("node-fetch");
 const router = express.Router();
+const axios = require("axios");
+const connectDB = require("../../data/db");
+const User = require("../../model/User");
 
 const CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
 const CHATGPT_API_KEY = "your-api-key";
@@ -155,6 +158,7 @@ function createPrompt(companyDetails) {
 
 // POST route to generate posts
 router.post("/generate-stupid-posts", isSessionValid, async (req, res) => {
+  console.log("generating stupid posts......");
   try {
     const user = req.user; // User is already validated by middleware
     const { companyDetails, subscription } = user;
@@ -189,6 +193,8 @@ router.post("/generate-stupid-posts", isSessionValid, async (req, res) => {
       const generatedText = await generateText(prompt);
       generatedPosts.push(generatedText); // Collect each generated post
     }
+
+    console.log("generated posts...........");
 
     res.json({ posts: generatedPosts }); // Return all generated posts
   } catch (error) {

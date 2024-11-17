@@ -6,7 +6,7 @@ import Login from "./login/page";
 import Signup from "./signup/page";
 import Contact from "./contact/page";
 import TemplatePage from "./dashboard/template/page";
-import Pending from "./dashboard/pending/page";
+import Pending from "./dashboard/posts/page";
 import PrivateRoute from "./components/security/Privatepage";
 import CreateDesign from "./dashboard/creat/design/page";
 import Tester from "./components/page/backup.test";
@@ -41,7 +41,7 @@ const router = createBrowserRouter([
   { path: "/dashboard", element: <PrivateRoute Component={Dashboard} /> },
   {
     path: "/dashboard/profile",
-    element: <PrivateRoute Component={Profile} />
+    element: <PrivateRoute Component={Profile} />,
     // element: <Profile />,
   },
   {
@@ -64,9 +64,9 @@ const router = createBrowserRouter([
     path: "/dashboard/templates",
     element: <PrivateRoute Component={TemplatePage} />,
   },
-  { path: "/dashboard/pending", element: <PrivateRoute Component={Pending} /> },
+  { path: "/dashboard/posts", element: <PrivateRoute Component={Pending} /> },
   {
-    path: "/dashboard/pending/edit/:postId",
+    path: "/dashboard/posts/edit/:postId",
     element: <PrivateRoute Component={Editpost} />,
   },
 

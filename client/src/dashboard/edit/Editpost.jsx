@@ -129,7 +129,7 @@ export default function Editpost() {
       .then((data) => {
         if (data.message === "Post updated successfully") {
           toast.success("Post updated successfully!");
-          navigate("/dashboard/pending");
+          navigate("/dashboard/posts");
         } else {
           toast.error("Failed to update post");
         }
@@ -152,7 +152,7 @@ export default function Editpost() {
       .then((data) => {
         if (data.message === "Post deleted successfully") {
           toast.success("Post deleted successfully!");
-          navigate("/dashboard/pending");
+          navigate("/dashboard/posts");
         } else {
           toast.error("Failed to delete post", {
             theme: "dark",
