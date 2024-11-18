@@ -9,7 +9,8 @@ export default function PostCreation() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [filePreviews, setFilePreviews] = useState([]);
   const [platform, setplatform] = useState({
-    both: true,
+    all: true,
+    google: false,
     insta: false,
     fbook: false,
   });
@@ -27,14 +28,22 @@ export default function PostCreation() {
       if (selectedValue === "fbook") {
         updatedState.fbook = true;
         updatedState.insta = false;
+        updatedState.google = false;
         updatedState.both = false;
       } else if (selectedValue === "insta") {
         updatedState.fbook = false;
+        updatedState.google = false;
         updatedState.insta = true;
+        updatedState.both = false;
+      } else if (selectedValue === "google") {
+        updatedState.google = true;
+        updatedState.fbook = false;
+        updatedState.insta = false;
         updatedState.both = false;
       } else {
         updatedState.fbook = false;
         updatedState.insta = false;
+        updatedState.google = false;
         updatedState.both = true;
       }
 
@@ -154,7 +163,7 @@ export default function PostCreation() {
         <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2 justify-center items-center">
           <div className="w-full flex flex-col gap-2 sm:flex-row">
             <div className="w-full flex justify-center items-center">
-              <div className="releasedate max-w-[250px] flex flex-col justify-center items-center">
+              <div className="releasedate max-w-[350px] flex flex-col justify-center items-center">
                 <label htmlFor="date">Upload date</label>
                 <input
                   className="bg-background p-2 rounded-lg w-full text-text"
@@ -179,6 +188,9 @@ export default function PostCreation() {
                 >
                   <option className="text-text" value="all">
                     All
+                  </option>
+                  <option className="text-text" value="google">
+                    google
                   </option>
                   <option className="text-text" value="fbook">
                     Facebook

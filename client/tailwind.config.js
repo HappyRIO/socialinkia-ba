@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+import lineClamp from "@tailwindcss/line-clamp";
+import aspectRatio from "@tailwindcss/aspect-ratio";
+
+export default {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -22,5 +25,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [lineClamp, aspectRatio],
 };

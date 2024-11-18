@@ -1,9 +1,13 @@
+// TemplatePage
+import { Link } from "react-router-dom";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 export default function TemplatePage() {
-  const [searchtemplate, setsearchtemplate] = useState("");
+  const [customSize, setCustomSize] = useState({
+    height: 0,
+    width: 0,
+  });
   const [imageData, setImageDate] = useState([]);
 
   const fakeImageData = [
@@ -301,50 +305,81 @@ export default function TemplatePage() {
     setImageDate(fakeImageData);
   }, []);
 
-  // Filter imageData based on search term
-  const filteredImageData = imageData.filter((data) => {
-    return (
-      data.platform.toLowerCase().includes(searchtemplate.toLowerCase()) ||
-      data.description.toLowerCase().includes(searchtemplate.toLowerCase())
-    );
-  });
+  function handleCustomSize(event) {
+    const { name, value } = event.target;
+    setCustomSize((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  }
 
-  function handleSearchTerm(event) {
-    setsearchtemplate(event.target.value);
+  function handleCustomSizeRedirect() {
+    if (customSize.height === 0 || customSize.width === 0) {
+      alert("Please add both dimensions.");
+    } else {
+      window.location.href = `/dashboard/create/design?height=${customSize.height}&width=${customSize.width}`;
+    }
   }
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
       <div className="navbarzone w-fit">
-        <ResponsiveSidebar pagename={"Template"} />
+        <ResponsiveSidebar pagename={"Create template"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full flex flex-col gap-3 justify-center items-center">
         <div
           id="createCustomCanvas"
-          className="w-full py-10 shadow-lg bg-background2 rounded-lg px-2 flex gap-2 flex-row justify-center items-center overflow-x-visible"
+          className="w-full py-3 shadow-lg bg-background2 rounded-lg px-2 flex gap-2 flex-row justify-center items-center overflow-x-visible"
         >
-          <div className="cutomeCanvasCreator flex flex-col gap-2">
-            <div className="inputZone flex flex-col sm:flex-row gap-2">
-              <div className="flex flex-col text-center">
-                <label htmlFor="searchterm" className="text-xl">search template</label>
-                <input
-                  className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
-                  onChange={handleSearchTerm}
-                  type="text"
-                  name="searchterm"
-                  id="searchterm"
-                  value={searchtemplate}
-                  placeholder="search template ...."
-                />
+          <div className="w-full gap-2 flex flex-col sm:flex-row">
+            <div className="cutomeCanvasCreator flex flex-col gap-2">
+              <div className="inputZone flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col text-center">
+                  <label htmlFor="height">height</label>
+                  <input
+                    className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
+                    onChange={handleCustomSize}
+                    type="number"
+                    name="height"
+                    id="height"
+                    value={customSize.height}
+                    placeholder="Height"
+                  />
+                </div>
+                <div className="flex flex-col text-center">
+                  <label htmlFor="width">width</label>
+                  <input
+                    className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
+                    onChange={handleCustomSize}
+                    type="number"
+                    name="width"
+                    id="width"
+                    value={customSize.width}
+                    placeholder="Width"
+                  />
+                </div>
               </div>
+              <button
+                className="px-4 bg-accent text-white hover:bg-primary rounded-lg"
+                onClick={handleCustomSizeRedirect}
+              >
+                <p>Create</p>
+              </button>
+            </div>
+            <div className="w-full flex justify-center items-center">
+              <Link to={"/dashboard/create/post"}>
+                <button className="p-5 text-white bg-accent rounded-lg">
+                  <p>make a post</p>
+                </button>
+              </Link>
             </div>
           </div>
         </div>
         <div className="samplecardsZone w-full columns-2 md:columns-4 gap-4">
-          {filteredImageData.map((data, index) => (
+          {imageData.map((data, index) => (
             <Link
               key={index}
-              to={`/dashboard/create/design/${data.height}/${data.width}`} // Use the height and width from the data
+              to={`/dashboard/create/design?height=${data.height}&width=${data.width}`} // Correct query parameter format
             >
               <img
                 className="rounded-lg mb-4 shadow-md w-full object-cover"

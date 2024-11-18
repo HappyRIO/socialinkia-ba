@@ -1,392 +1,270 @@
-import { Link } from "react-router-dom";
+// CreateTemplate
+import { useState, useEffect } from "react";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
-import { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 
-export default function CreateTemplate() {
-  const [customSize, setCustomSize] = useState({
-    height: 0,
-    width: 0,
+export default function PostCreation() {
+  const [postText, setPostText] = useState("");
+  const [aitext, setAitext] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [filePreviews, setFilePreviews] = useState([]);
+  const [platform, setplatform] = useState({
+    all: true,
+    gmb: false,
+    insta: false,
+    fbook: false,
   });
-  const [imageData, setImageDate] = useState([]);
 
-  const fakeImageData = [
-    {
-      height: 400,
-      width: 600,
-      id: 1,
-      platform: "Facebook",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/3b5998?font=roboto&text=Facebook",
-      description: "Connect with friends and the world around you.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 2,
-      platform: "Facebook",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/3b5998?font=roboto&text=Facebook",
-      description: "Connect with friends and the world around you.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 3,
-      platform: "Facebook",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/3b5998?font=roboto&text=Facebook",
-      description: "Connect with friends and the world around you.",
-    },
+  const handleChange = (event) => {
+    const selectedValue = event.target.value;
 
-    // Twitter (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 4,
-      platform: "Twitter",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/1da1f2?font=roboto&text=Twitter",
-      description: "See what’s happening in the world right now.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 5,
-      platform: "Twitter",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/1da1f2?font=roboto&text=Twitter",
-      description: "See what’s happening in the world right now.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 6,
-      platform: "Twitter",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/1da1f2?font=roboto&text=Twitter",
-      description: "See what’s happening in the world right now.",
-    },
+    // Update the state based on the selected value
+    setplatform((prevState) => {
+      // Start with the previous state to avoid overwriting other properties
+      const updatedState = { ...prevState };
 
-    // Instagram (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 7,
-      platform: "Instagram",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/e4405f?font=roboto&text=Instagram",
-      description: "Share photos and videos with friends.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 8,
-      platform: "Instagram",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/e4405f?font=roboto&text=Instagram",
-      description: "Share photos and videos with friends.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 9,
-      platform: "Instagram",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/e4405f?font=roboto&text=Instagram",
-      description: "Share photos and videos with friends.",
-    },
+      if (selectedValue === "fbook") {
+        updatedState.fbook = true;
+        updatedState.insta = false;
+        updatedState.gmb = false;
+        updatedState.both = false;
+      } else if (selectedValue === "insta") {
+        updatedState.fbook = false;
+        updatedState.gmb = false;
+        updatedState.insta = true;
+        updatedState.both = false;
+      } else if (selectedValue === "gmb") {
+        updatedState.gmb = true;
+        updatedState.fbook = false;
+        updatedState.insta = false;
+        updatedState.both = false;
+      } else {
+        updatedState.fbook = false;
+        updatedState.insta = false;
+        updatedState.gmb = false;
+        updatedState.both = true;
+      }
 
-    // LinkedIn (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 10,
-      platform: "LinkedIn",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/0077b5?font=roboto&text=LinkedIn",
-      description: "Manage your professional identity.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 11,
-      platform: "LinkedIn",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/0077b5?font=roboto&text=LinkedIn",
-      description: "Manage your professional identity.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 12,
-      platform: "LinkedIn",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/0077b5?font=roboto&text=LinkedIn",
-      description: "Manage your professional identity.",
-    },
+      return updatedState;
+    });
+  };
 
-    // TikTok (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 13,
-      platform: "TikTok",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/69c9d0?font=roboto&text=TikTok",
-      description: "Create and discover short, fun videos.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 14,
-      platform: "TikTok",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/69c9d0?font=roboto&text=TikTok",
-      description: "Create and discover short, fun videos.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 15,
-      platform: "TikTok",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/69c9d0?font=roboto&text=TikTok",
-      description: "Create and discover short, fun videos.",
-    },
+  const [uploaddata, setUploaddata] = useState({
+    date: "", // initial state for the upload date
+  });
 
-    // Snapchat (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 16,
-      platform: "Snapchat",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/fffc00?font=roboto&text=Snapchat",
-      description: "Send a Snap, share a Story.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 17,
-      platform: "Snapchat",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/fffc00?font=roboto&text=Snapchat",
-      description: "Send a Snap, share a Story.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 18,
-      platform: "Snapchat",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/fffc00?font=roboto&text=Snapchat",
-      description: "Send a Snap, share a Story.",
-    },
+  // Handle text input change for the main post text
+  const handleTextChange = (e) => {
+    setPostText(e.target.value);
+  };
 
-    // Pinterest (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 19,
-      platform: "Pinterest",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/e60023?font=roboto&text=Pinterest",
-      description: "Discover new ideas to try and share.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 20,
-      platform: "Pinterest",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/e60023?font=roboto&text=Pinterest",
-      description: "Discover new ideas to try and share.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 21,
-      platform: "Pinterest",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/e60023?font=roboto&text=Pinterest",
-      description: "Discover new ideas to try and share.",
-    },
+  // Handle text input change for AI-generated text
+  const handleAiTextChange = (e) => {
+    setAitext(e.target.value);
+  };
 
-    // YouTube (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 22,
-      platform: "YouTube",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/ff0000?font=roboto&text=YouTube",
-      description: "Watch, like, and share videos.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 23,
-      platform: "YouTube",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/ff0000?font=roboto&text=YouTube",
-      description: "Watch, like, and share videos.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 24,
-      platform: "YouTube",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/ff0000?font=roboto&text=YouTube",
-      description: "Watch, like, and share videos.",
-    },
+  // Handle file selection for images
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles([...selectedFiles, ...files]);
 
-    // Reddit (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 25,
-      platform: "Reddit",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/ff4500?font=roboto&text=Reddit",
-      description: "Dive into communities and discussions.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 26,
-      platform: "Reddit",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/ff4500?font=roboto&text=Reddit",
-      description: "Dive into communities and discussions.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 27,
-      platform: "Reddit",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/ff4500?font=roboto&text=Reddit",
-      description: "Dive into communities and discussions.",
-    },
+    // Generate file preview URLs
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setFilePreviews([...filePreviews, ...previews]);
+  };
 
-    // WhatsApp (varied sizes)
-    {
-      height: 400,
-      width: 600,
-      id: 28,
-      platform: "WhatsApp",
-      imageUrl:
-        "https://placehold.co/600x400/e7e2e1/25d366?font=roboto&text=WhatsApp",
-      description: "Send messages and make calls anywhere.",
-    },
-    {
-      height: 600,
-      width: 800,
-      id: 29,
-      platform: "WhatsApp",
-      imageUrl:
-        "https://placehold.co/800x600/e7e2e1/25d366?font=roboto&text=WhatsApp",
-      description: "Send messages and make calls anywhere.",
-    },
-    {
-      height: 300,
-      width: 400,
-      id: 30,
-      platform: "WhatsApp",
-      imageUrl:
-        "https://placehold.co/400x300/e7e2e1/25d366?font=roboto&text=WhatsApp",
-      description: "Send messages and make calls anywhere.",
-    },
-  ];
+  // Handle change for the upload date
+  const handleDateChange = (e) => {
+    const newDate = e.target.value; // Get the new date value from the event
+    setUploaddata({ date: newDate });
+  };
 
   useEffect(() => {
-    setImageDate(fakeImageData);
-  }, []);
+    console.log({ date: uploaddata.date });
+  }, [uploaddata.date]); // This will run whenever uploaddata.date changes
 
-  function handleCustomSize(event) {
-    const { name, value } = event.target;
-    setCustomSize((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  }
+  // Handle image removal
+  const handleImageRemove = (index) => {
+    const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
+    const newFilePreviews = filePreviews.filter((_, i) => i !== index);
+    setSelectedFiles(newSelectedFiles);
+    setFilePreviews(newFilePreviews);
+  };
 
-  function handleCustomSizeRedirect() {
-    if (customSize.height === 0 || customSize.width === 0) {
-      alert("Please add both dimensions.");
-    } else {
-      window.location.href = `/dashboard/create/design?height=${customSize.height}&width=${customSize.width}`;
-    }
-  }
+  // Handle form submission to post data to the backend
+  const handleSubmit = () => {
+    const formData = new FormData();
+    formData.append("text", postText);
+    formData.append("platform", JSON.stringify(platform)); // Stringify platform object
+    formData.append("uploadDate", uploaddata.date); // Add the upload date to the form data
+    selectedFiles.forEach((file) => {
+      formData.append("images", file); // Append images as an array of files
+    });
+
+    // Example API call to create the post
+    fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/create`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        if (data.message === "Post created successfully") {
+          toast(`Post created successfully!`, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+          });
+          console.log("Post created successfully:", data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error creating post:", error);
+      });
+  };
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
-      <div className="navbarzone w-fit">
-        <ResponsiveSidebar pagename={"Create template"} />
+      <ToastContainer
+        position="top-left"
+        autoClose={3000} // Optional: auto close after 3 seconds
+        hideProgressBar={false} // Optional: show progress bar
+        closeOnClick
+        pauseOnHover
+        draggable
+        pauseOnFocusLoss
+      />
+      <div className="navzone w-fit">
+        <ResponsiveSidebar pagename={"Create Post"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full flex flex-col gap-3 justify-center items-center">
-        <div
-          id="createCustomCanvas"
-          className="w-full py-3 shadow-lg bg-background2 rounded-lg px-2 flex gap-2 flex-row justify-center items-center overflow-x-visible"
-        >
-          <div className="w-full gap-2 flex flex-col sm:flex-row">
-            <div className="cutomeCanvasCreator flex flex-col gap-2">
-              <div className="inputZone flex flex-col sm:flex-row gap-2">
-                <div className="flex flex-col text-center">
-                  <label htmlFor="height">height</label>
-                  <input
-                    className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
-                    onChange={handleCustomSize}
-                    type="number"
-                    name="height"
-                    id="height"
-                    value={customSize.height}
-                    placeholder="Height"
-                  />
-                </div>
-                <div className="flex flex-col text-center">
-                  <label htmlFor="width">width</label>
-                  <input
-                    className="px-2 rounded-lg border-[2px] border-accent forced:border-primary"
-                    onChange={handleCustomSize}
-                    type="number"
-                    name="width"
-                    id="width"
-                    value={customSize.width}
-                    placeholder="Width"
-                  />
-                </div>
+        <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2 justify-center items-center">
+          <div className="w-full text-sm flex flex-col gap-2 sm:flex-row">
+            <div className="w-full flex justify-center items-center">
+              <div className="releasedate max-w-[350px] flex flex-col justify-center items-center">
+                <label htmlFor="date">Upload date</label>
+                <input
+                  className="bg-background p-2 rounded-lg w-full text-text"
+                  type="datetime-local"
+                  name="date"
+                  id="date"
+                  required
+                  value={uploaddata.date}
+                  onChange={handleDateChange}
+                />
               </div>
-              <button
-                className="px-4 bg-accent text-white hover:bg-primary rounded-lg"
-                onClick={handleCustomSizeRedirect}
-              >
-                <p>Create</p>
-              </button>
             </div>
             <div className="w-full flex justify-center items-center">
-              <Link to={"/dashboard/create/post"}>
-                <button className="p-5 text-white bg-accent rounded-lg">
-                  <p>make a post</p>
-                </button>
-              </Link>
+              <div className="selectionZone flex flex-col gap-2">
+                <label htmlFor="socialSelect">Select platform</label>
+                <select
+                  id="socialSelect"
+                  className="rounded-lg p-2 text-center text-accent"
+                  onChange={handleChange}
+                >
+                  <option className="text-text" value="all">
+                    All
+                  </option>
+                  <option className="text-text" value="gmb">
+                    google
+                  </option>
+                  <option className="text-text" value="fbook">
+                    Facebook
+                  </option>
+                  <option className="text-text" value="insta">
+                    Instagram
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="samplecardsZone w-full columns-2 md:columns-4 gap-4">
-          {imageData.map((data, index) => (
-            <Link
-              key={index}
-              to={`/dashboard/create/design?height=${data.height}&width=${data.width}`} // Correct query parameter format
-            >
-              <img
-                className="rounded-lg mb-4 shadow-md w-full object-cover"
-                src={data.imageUrl}
-                alt={data.description}
+          <div className="postText w-full flex flex-col gap-2">
+            <div className="promt-ai flex flex-col md:flex-row gap-2">
+              <div className="w-full">
+                <input
+                  onChange={handleAiTextChange}
+                  className="rounded-lg p-2 w-full"
+                  type="text"
+                  value={aitext}
+                  placeholder="Prompt AI assistant ..."
+                />
+              </div>
+              <div className="promt-space">
+                <button className="p-2 bg-accent rounded-lg">generate</button>
+              </div>
+            </div>
+            <textarea
+              className="w-full rounded-lg focus:border-accent p-2"
+              name="postText"
+              id="postText"
+              placeholder="you can generate post or Write your post..."
+              rows="10"
+              value={postText}
+              onChange={handleTextChange}
+            />
+          </div>
+          <div className="postImages columns-2 gap-2 sm:gap-4">
+            {/* Display image previews here */}
+            {filePreviews.length > 0 &&
+              filePreviews.map((preview, index) => (
+                <div key={index} className="relative w-full mb-2 sm:mb-4">
+                  <img
+                    className="w-full object-cover rounded-lg"
+                    src={preview}
+                    alt="Image Preview"
+                  />
+                  {/* Delete icon */}
+                  <button
+                    className="absolute top-1 right-1 text-red-500 font-bold"
+                    onClick={() => handleImageRemove(index)}
+                  >
+                    D
+                  </button>
+                </div>
+              ))}
+          </div>
+          <div className="w-full">
+            <div className="rounded-md w-full border border-accent p-4 shadow-md">
+              <label
+                htmlFor="upload"
+                className="flex flex-col items-center gap-2 cursor-pointer"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10 fill-white stroke-accent"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="text-text font-medium">Upload files</span>
+              </label>
+              <input
+                id="upload"
+                type="file"
+                className="hidden"
+                onChange={handleFileChange}
+                multiple
               />
-            </Link>
-          ))}
+            </div>
+          </div>
+          <button
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg"
+            onClick={handleSubmit}
+          >
+            Submit Post
+          </button>
         </div>
       </div>
     </div>
