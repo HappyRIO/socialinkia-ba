@@ -213,9 +213,21 @@ router.post(
   }
 );
 
+// Route to get all post
+router.get("/all", isSessionValid, async (req, res) => {
+  try {
+    console.log("getting all posts ...........");
+    const posts = req.user.posts;
+    res.status(200).json({ posts });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch scheduled posts" });
+  }
+});
+
 // Route to retrieve scheduled posts
 router.get("/scheduled", isSessionValid, async (req, res) => {
   try {
+    console.log("getting scheduled posts ...........");
     const posts = req.user.posts.filter((post) => post.status === "scheduled");
     res.status(200).json({ posts });
   } catch (error) {
@@ -226,7 +238,19 @@ router.get("/scheduled", isSessionValid, async (req, res) => {
 // Route to retrieve published posts
 router.get("/published", isSessionValid, async (req, res) => {
   try {
+    console.log("getting published posts ...........");
     const posts = req.user.posts.filter((post) => post.status === "published");
+    res.status(200).json({ posts });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch published posts" });
+  }
+});
+
+// Route to retrieve faild posts
+router.get("/failed", isSessionValid, async (req, res) => {
+  try {
+    console.log("getting failed posts ...........");
+    const posts = req.user.posts.filter((post) => post.status === "failed");
     res.status(200).json({ posts });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch published posts" });

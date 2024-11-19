@@ -102,7 +102,7 @@ export default function PostCreation() {
         // Check if the message confirms success
         if (data.message === "Post created and scheduled") {
           alert("posted");
-          toast.success("Post created successfully!", { theme: "dark" });
+          // toast.success("Post created successfully!", { theme: "dark" });
           setPostText("");
           setSelectedFiles([]);
           setFilePreviews([]);
@@ -113,9 +113,9 @@ export default function PostCreation() {
       })
       .catch((error) => {
         // Show error message in toast and log for debugging
-        toast.error(`Failed to create post: ${error.message}`, {
-          theme: "dark",
-        });
+        // toast.error(`Failed to create post: ${error.message}`, {
+        //   theme: "dark",
+        // });
         console.error("Error creating post:", error);
       });
   };
