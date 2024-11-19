@@ -59,8 +59,8 @@ const SubscriptionSchema = new Schema({
   active: { type: Boolean, default: false }, // Subscription status
   plan: {
     type: String,
-    enum: ["scheduled", "published", "failed"],
-    default: "scheduled",
+    enum: ["basic", "standard", "premium"],
+    default: "basic",
   }, // Plan type (e.g., 'basic', 'standard', 'premium')
   trialEnd: { type: Date }, // End date of trial period if any
   amount: { type: Number }, // Amount per billing period
