@@ -91,21 +91,11 @@ const uploadVideosToCloudinary = async (files) => {
   return urls;
 };
 
-// Helper function to delete media from Cloudinary
-const deleteMediaFromCloudinary = async (mediaUrls, resourceType = "image") => {
-  for (const url of mediaUrls) {
-    const publicId = url.split("/").pop().split(".")[0];
-    await cloudinary.uploader.destroy(`automedia/${publicId}`, {
-      resource_type: resourceType,
-    });
-  }
-};
-
 //helper function for deleting images
 async function deleteImagesFromCloudinary(imageUrls) {
   for (const url of imageUrls) {
     const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
-    await cloudinary.uploader.destroy(automedia / $, { publicId });
+    await cloudinary.uploader.destroy(`automedia / ${publicId}`);
   }
 }
 
@@ -293,12 +283,20 @@ router.put(
       const uploadedImageUrls = await uploadImagesToCloudinary(newImages);
       const uploadedVideoUrls = await uploadVideosToCloudinary(newVideos);
 
+      // Ensure existingImages and existingVideos are arrays
+      const existingImages = Array.isArray(req.body.images)
+        ? req.body.images
+        : [];
+      const existingVideos = Array.isArray(req.body.videos)
+        ? req.body.videos
+        : [];
+
       // Check for removed images and videos
       const removedImages = post.images.filter(
-        (url) => !req.body.existingImages.includes(url)
+        (url) => !existingImages.includes(url)
       );
       const removedVideos = post.videos.filter(
-        (url) => !req.body.existingVideos.includes(url)
+        (url) => !existingVideos.includes(url)
       );
 
       // Delete removed media from Cloudinary
@@ -311,18 +309,31 @@ router.put(
           (url) => url.split("/").pop().split(".")[0]
         );
         for (const publicId of videoPublicIds) {
-          await cloudinary.uploader.destroy(`automedia/videos/${publicId}`, {
+          await cloudinary.uploader.destroy(`automedia/${publicId}`, {
             resource_type: "video",
           });
         }
       }
 
+      function updateTime(uploadDate, post) {
+        const currentTime = new Date();
+        const newTime = new Date(currentTime.getTime() + 5 * 60000); // Add 5 minutes
+        const formattedNewTime = newTime.toISOString().slice(0, 16); // Format to "YYYY-MM-DDTHH:MM"
+
+        if (uploadDate === post.uploadDate) {
+          return formattedNewTime;
+        } else {
+          return uploadDate || post.uploadDate;
+        }
+      }
+
       // Update post fields
       post.text = text || post.text;
-      post.uploadDate = uploadDate || post.uploadDate;
+      post.status = "scheduled";
+      post.uploadDate = updateTime(uploadDate, post); // Call the function with arguments
       post.platform = platform ? JSON.parse(platform) : post.platform;
-      post.images = [...req.body.existingImages, ...uploadedImageUrls];
-      post.videos = [...req.body.existingVideos, ...uploadedVideoUrls];
+      post.images = [...existingImages, ...uploadedImageUrls];
+      post.videos = [...existingVideos, ...uploadedVideoUrls];
 
       await req.user.save();
 

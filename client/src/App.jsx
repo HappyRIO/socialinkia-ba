@@ -56,6 +56,11 @@ const router = createBrowserRouter([
     path: "/dashboard/create/post",
     element: <PrivateRoute Component={PostCreation} />,
   },
+  { path: "/dashboard/posts", element: <PrivateRoute Component={Pending} /> },
+  {
+    path: "/dashboard/posts/edit/:postId",
+    element: <PrivateRoute Component={Editpost} />,
+  },
   {
     path: "/dashboard/create/design",
     element: <PrivateRoute Component={CreateDesign} />,
@@ -63,11 +68,6 @@ const router = createBrowserRouter([
   {
     path: "/dashboard/templates",
     element: <PrivateRoute Component={TemplatePage} />,
-  },
-  { path: "/dashboard/posts", element: <PrivateRoute Component={Pending} /> },
-  {
-    path: "/dashboard/posts/edit/:postId",
-    element: <PrivateRoute Component={Editpost} />,
   },
 
   { path: "*", element: <Error /> },
