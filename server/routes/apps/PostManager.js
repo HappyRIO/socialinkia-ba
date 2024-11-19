@@ -24,6 +24,7 @@ const agenda = new Agenda({
 // Middleware for session validation
 const isSessionValid = async (req, res, next) => {
   try {
+    connectCloudinary();
     connectDB();
     const { sessionToken } = req.cookies;
 
@@ -45,14 +46,19 @@ const isSessionValid = async (req, res, next) => {
 
 // Cloudinary helpers
 const uploadImagesToCloudinary = async (files) => {
+  console.log("processing images");
   const urls = [];
   for (const file of files) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: "automedia" },
         (error, result) => {
-          if (error) reject(error);
-          resolve(result.secure_url);
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            resolve(result.secure_url);
+          }
         }
       );
       Readable.from(file.buffer).pipe(stream);
@@ -63,6 +69,7 @@ const uploadImagesToCloudinary = async (files) => {
 };
 
 const uploadVideosToCloudinary = async (files) => {
+  console.log("processing videos.......");
   const urls = [];
   for (const file of files) {
     const result = await new Promise((resolve, reject) => {
@@ -152,7 +159,7 @@ const schedulePost = async (postId, userId) => {
 
   // Schedule the job to run at the post's scheduled upload date
   await agenda.schedule(
-    new Date(post.posts[0].uploaddate), // Use the post's upload date as the scheduled time
+    new Date(post.posts[0].uploadDate), // Use the post's upload date as the scheduled time
     "publish post", // Define the job name
     { userId, postId } // Attach userId and postId as data for the job
   );
@@ -172,6 +179,8 @@ router.post(
       const images = req.files.images || [];
       const videos = req.files.videos || [];
 
+      console.log({ image: images, videso: videos });
+
       const imageUrls = await uploadImagesToCloudinary(images);
       const videoUrls = await uploadVideosToCloudinary(videos);
 
@@ -188,13 +197,15 @@ router.post(
 
       const newPost = savedUser.posts[savedUser.posts.length - 1];
       await schedulePost(newPost._id, req.user._id);
-
+      console.log("post sheduled sucessfully");
       res
         .status(201)
         .json({ message: "Post created and scheduled", post: newPost });
     } catch (error) {
       console.error("Error creating post:", error);
-      res.status(500).json({ error: "Failed to create post" });
+      // Provide detailed error messages based on the scenario
+      const errorMessage = error.message || "Failed to create post";
+      res.status(500).json({ error: errorMessage });
     }
   }
 );

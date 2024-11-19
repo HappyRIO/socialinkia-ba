@@ -73,7 +73,7 @@ const postSchema = new Schema({
     insta: { type: Boolean, default: false },
     fbook: { type: Boolean, default: false },
   },
-  uploaddate: { type: String }, // Use ISO 8601 format for consistency
+  uploadDate: { type: String }, // Use ISO 8601 format for consistency
   images: [String],
   videos: [String],
   status: {

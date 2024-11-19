@@ -1,5 +1,5 @@
 // CreateTemplate
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
 import { toast, ToastContainer } from "react-toastify";
 
@@ -8,180 +8,147 @@ export default function PostCreation() {
   const [aitext, setAitext] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [filePreviews, setFilePreviews] = useState([]);
-  const [platform, setplatform] = useState({
+  const [platform, setPlatform] = useState({
     all: true,
-    gmb: false,
-    insta: false,
-    fbook: false,
+    gmb: true,
+    insta: true,
+    fbook: true,
+  });
+
+  const [uploaddata, setUploaddata] = useState({
+    date: "",
   });
 
   const handleChange = (event) => {
     const selectedValue = event.target.value;
-
-    // Update the state based on the selected value
-    setplatform((prevState) => {
-      // Start with the previous state to avoid overwriting other properties
+    setPlatform((prevState) => {
       const updatedState = { ...prevState };
 
       if (selectedValue === "fbook") {
         updatedState.fbook = true;
         updatedState.insta = false;
         updatedState.gmb = false;
-        updatedState.both = false;
+        updatedState.all = false;
       } else if (selectedValue === "insta") {
         updatedState.fbook = false;
-        updatedState.gmb = false;
         updatedState.insta = true;
-        updatedState.both = false;
+        updatedState.gmb = false;
+        updatedState.all = false;
       } else if (selectedValue === "gmb") {
         updatedState.gmb = true;
         updatedState.fbook = false;
         updatedState.insta = false;
-        updatedState.both = false;
+        updatedState.all = false;
       } else {
-        updatedState.fbook = false;
-        updatedState.insta = false;
-        updatedState.gmb = false;
-        updatedState.both = true;
+        updatedState.fbook = true;
+        updatedState.insta = true;
+        updatedState.gmb = true;
+        updatedState.all = true;
       }
 
       return updatedState;
     });
   };
 
-  const [uploaddata, setUploaddata] = useState({
-    date: "", // initial state for the upload date
-  });
+  const handleTextChange = (e) => setPostText(e.target.value);
+  const handleAiTextChange = (e) => setAitext(e.target.value);
+  const handleDateChange = (e) => setUploaddata({ date: e.target.value });
 
-  // Handle text input change for the main post text
-  const handleTextChange = (e) => {
-    setPostText(e.target.value);
-  };
-
-  // Handle text input change for AI-generated text
-  const handleAiTextChange = (e) => {
-    setAitext(e.target.value);
-  };
-
-  // Handle file selection for images
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    setSelectedFiles([...selectedFiles, ...files]);
+    const previews = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      type: file.type.startsWith("video") ? "video" : "image",
+    }));
 
-    // Generate file preview URLs
-    const previews = files.map((file) => URL.createObjectURL(file));
-    setFilePreviews([...filePreviews, ...previews]);
+    setSelectedFiles((prev) => [...prev, ...files]);
+    setFilePreviews((prev) => [...prev, ...previews]);
   };
 
-  // Handle change for the upload date
-  const handleDateChange = (e) => {
-    const newDate = e.target.value; // Get the new date value from the event
-    setUploaddata({ date: newDate });
-  };
-
-  useEffect(() => {
-    console.log({ date: uploaddata.date });
-  }, [uploaddata.date]); // This will run whenever uploaddata.date changes
-
-  // Handle image removal
   const handleImageRemove = (index) => {
-    const newSelectedFiles = selectedFiles.filter((_, i) => i !== index);
-    const newFilePreviews = filePreviews.filter((_, i) => i !== index);
-    setSelectedFiles(newSelectedFiles);
-    setFilePreviews(newFilePreviews);
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setFilePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Handle form submission to post data to the backend
   const handleSubmit = () => {
     const formData = new FormData();
     formData.append("text", postText);
-    formData.append("platform", JSON.stringify(platform)); // Stringify platform object
-    formData.append("uploadDate", uploaddata.date); // Add the upload date to the form data
-    selectedFiles.forEach((file) => {
-      formData.append("images", file); // Append images as an array of files
-    });
+    formData.append("platform", JSON.stringify(platform));
+    formData.append("uploadDate", uploaddata.date);
 
-    // Example API call to create the post
+    selectedFiles.forEach((file) => {
+      formData.append(
+        file.type.startsWith("video") ? "videos" : "images",
+        file
+      );
+    });
     fetch(`${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/create`, {
       method: "POST",
       body: formData,
       credentials: "include",
     })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        if (data.message === "Post created successfully") {
-          toast(`Post created successfully!`, {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "dark",
-          });
-          console.log("Post created successfully:", data);
+      .then(async (response) => {
+        // Parse JSON and handle non-OK status codes
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Handle different HTTP error statuses
+          const errorMessage =
+            data.error || `Error ${response.status}: ${response.statusText}`;
+          throw new Error(errorMessage);
+        }
+
+        // Check if the message confirms success
+        if (data.message === "Post created and scheduled") {
+          alert("posted")
+          toast.success("Post created successfully!", { theme: "dark" });
+          setPostText("");
+          setSelectedFiles([]);
+          setFilePreviews([]);
+          setUploaddata({ date: "" });
+        } else {
+          throw new Error(data.error || "Unexpected response from server.");
         }
       })
       .catch((error) => {
+        // Show error message in toast and log for debugging
+        toast.error(`Failed to create post: ${error.message}`, {
+          theme: "dark",
+        });
         console.error("Error creating post:", error);
       });
   };
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
-      <ToastContainer
-        position="top-left"
-        autoClose={3000} // Optional: auto close after 3 seconds
-        hideProgressBar={false} // Optional: show progress bar
-        closeOnClick
-        pauseOnHover
-        draggable
-        pauseOnFocusLoss
-      />
+      <ToastContainer position="top-left" autoClose={3000} pauseOnFocusLoss />
       <div className="navzone w-fit">
         <ResponsiveSidebar pagename={"Create Post"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full flex flex-col gap-3 justify-center items-center">
-        <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2 justify-center items-center">
-          <div className="w-full text-sm flex flex-col gap-2 sm:flex-row">
-            <div className="w-full flex justify-center items-center">
-              <div className="releasedate max-w-[350px] flex flex-col justify-center items-center">
-                <label htmlFor="date">Upload date</label>
-                <input
-                  className="bg-background p-2 rounded-lg w-full text-text"
-                  type="datetime-local"
-                  name="date"
-                  id="date"
-                  required
-                  value={uploaddata.date}
-                  onChange={handleDateChange}
-                />
-              </div>
+        <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2">
+          <div className="w-full flex flex-col md:flex-row gap-2 justify-center items-center">
+            <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>Upload date</label>
+              <input
+                type="datetime-local"
+                value={uploaddata.date}
+                onChange={handleDateChange}
+                className="bg-background p-2 rounded-lg w-full"
+              />
             </div>
-            <div className="w-full flex justify-center items-center">
-              <div className="selectionZone flex flex-col gap-2">
-                <label htmlFor="socialSelect">Select platform</label>
-                <select
-                  id="socialSelect"
-                  className="rounded-lg p-2 text-center text-accent"
-                  onChange={handleChange}
-                >
-                  <option className="text-text" value="all">
-                    All
-                  </option>
-                  <option className="text-text" value="gmb">
-                    google
-                  </option>
-                  <option className="text-text" value="fbook">
-                    Facebook
-                  </option>
-                  <option className="text-text" value="insta">
-                    Instagram
-                  </option>
-                </select>
-              </div>
+            <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>Select platform</label>
+              <select
+                onChange={handleChange}
+                className="rounded-lg p-2 text-center"
+              >
+                <option value="all">All</option>
+                <option value="gmb">Google</option>
+                <option value="fbook">Facebook</option>
+                <option value="insta">Instagram</option>
+              </select>
             </div>
           </div>
           <div className="postText w-full flex flex-col gap-2">
@@ -204,30 +171,35 @@ export default function PostCreation() {
               name="postText"
               id="postText"
               placeholder="you can generate post or Write your post..."
-              rows="10"
+              rows="7"
               value={postText}
               onChange={handleTextChange}
             />
           </div>
-          <div className="postImages columns-2 gap-2 sm:gap-4">
-            {/* Display image previews here */}
-            {filePreviews.length > 0 &&
-              filePreviews.map((preview, index) => (
-                <div key={index} className="relative w-full mb-2 sm:mb-4">
+          <div className="postImages columns-2 lg:columns-3 gap-2 sm:gap-4">
+            {filePreviews.map(({ preview, type }, index) => (
+              <div key={index} className="relative py-2">
+                {type === "image" ? (
                   <img
-                    className="w-full object-cover rounded-lg"
                     src={preview}
-                    alt="Image Preview"
+                    alt="Preview"
+                    className="w-full object-cover rounded-lg"
                   />
-                  {/* Delete icon */}
-                  <button
-                    className="absolute top-1 right-1 text-red-500 font-bold"
-                    onClick={() => handleImageRemove(index)}
-                  >
-                    D
-                  </button>
-                </div>
-              ))}
+                ) : (
+                  <video
+                    src={preview}
+                    controls
+                    className="w-full object-cover rounded-lg"
+                  />
+                )}
+                <button
+                  className="absolute top-1 right-1 text-red-500 font-bold"
+                  onClick={() => handleImageRemove(index)}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
           <div className="w-full">
             <div className="rounded-md w-full border border-accent p-4 shadow-md">
@@ -260,8 +232,8 @@ export default function PostCreation() {
             </div>
           </div>
           <button
-            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg"
             onClick={handleSubmit}
+            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg"
           >
             Submit Post
           </button>

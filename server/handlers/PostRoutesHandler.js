@@ -2,7 +2,9 @@
 const axios = require("axios");
 
 const publishToInstagram = async (post, user) => {
-  const { caption, imageUrl } = post;
+  const { imageUrl, videos } = post;
+  const caption = post.text;
+  console.log("publishing to instagram......");
   const accessToken = user.instagramAccessToken;
 
   if (!caption || !imageUrl) {
@@ -42,7 +44,10 @@ const publishToInstagram = async (post, user) => {
 };
 
 const publishToFacebook = async (post, user) => {
-  const { message, images } = post;
+  const { images, videos } = post;
+  const message = post.text;
+  console.log("publishing to facebook......");
+
   const accessToken = user.facebookAccessToken;
 
   if (!message && (!images || images.length === 0)) {
@@ -84,7 +89,9 @@ const publishToFacebook = async (post, user) => {
 };
 
 const publishToGmb = async (post, user) => {
-  const { message, imageUrl } = post;
+  const { imageUrl, videos } = post;
+  const message = post.text;
+  console.log("publishing to google......");
   const accessToken = user.gmbAccessToken;
 
   if (!message || !imageUrl) {

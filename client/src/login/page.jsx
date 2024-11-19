@@ -54,6 +54,20 @@ export default function Login() {
   //   });
   // }, []);
 
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.redirectUrl) {
+        window.location.href = event.data.redirectUrl;
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
+
   const googlelogin = () => {
     const backendUrl = `${
       import.meta.env.VITE_SERVER_BASE_URL
