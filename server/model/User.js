@@ -57,7 +57,11 @@ const PaymentHistorySchema = new Schema({
 const SubscriptionSchema = new Schema({
   id: { type: String }, // Stripe subscription ID
   active: { type: Boolean, default: false }, // Subscription status
-  plan: { type: String }, // Plan type (e.g., 'basic', 'standard', 'premium')
+  plan: {
+    type: String,
+    enum: ["scheduled", "published", "failed"],
+    default: "scheduled",
+  }, // Plan type (e.g., 'basic', 'standard', 'premium')
   trialEnd: { type: Date }, // End date of trial period if any
   amount: { type: Number }, // Amount per billing period
   currency: { type: String, default: "usd" },
