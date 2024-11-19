@@ -81,11 +81,6 @@ const postSchema = new Schema({
     enum: ["scheduled", "published", "failed"],
     default: "scheduled",
   },
-  socialPlatformIds: {
-    gmb: { type: String, default: null },
-    insta: { type: String, default: null },
-    fbook: { type: String, default: null },
-  },
 });
 
 const UserSchema = new Schema({
