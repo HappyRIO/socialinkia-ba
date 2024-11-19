@@ -101,7 +101,7 @@ export default function PostCreation() {
 
         // Check if the message confirms success
         if (data.message === "Post created and scheduled") {
-          alert("posted")
+          alert("posted");
           toast.success("Post created successfully!", { theme: "dark" });
           setPostText("");
           setSelectedFiles([]);
@@ -159,7 +159,7 @@ export default function PostCreation() {
                   className="rounded-lg p-2 w-full"
                   type="text"
                   value={aitext}
-                  placeholder="Prompt AI assistant ..."
+                  placeholder="Prompt AI assistant ( optional )..."
                 />
               </div>
               <div className="promt-space">

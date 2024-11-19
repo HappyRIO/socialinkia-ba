@@ -76,8 +76,12 @@ const uploadVideosToCloudinary = async (files) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: "automedia", resource_type: "video" },
         (error, result) => {
-          if (error) reject(error);
-          resolve(result.secure_url);
+          if (error) {
+            console.error("Cloudinary upload error:", error);
+            reject(error);
+          } else {
+            resolve(result.secure_url);
+          }
         }
       );
       Readable.from(file.buffer).pipe(stream);
@@ -194,7 +198,6 @@ router.post(
 
       req.user.posts.push(post);
       const savedUser = await req.user.save();
-
       const newPost = savedUser.posts[savedUser.posts.length - 1];
       await schedulePost(newPost._id, req.user._id);
       console.log("post sheduled sucessfully");
