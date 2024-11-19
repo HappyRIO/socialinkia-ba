@@ -316,10 +316,15 @@ router.put(
       }
 
       function updateTime(uploadDate, post) {
+
         const currentTime = new Date();
+        console.log(currentTime.toLocaleString()); // Local time as a string
+        console.log(currentTime.toUTCString()); // UTC time as a string
+
         const newTime = new Date(currentTime.getTime() + 5 * 60000); // Add 5 minutes
         const formattedNewTime = newTime.toISOString().slice(0, 16); // Format to "YYYY-MM-DDTHH:MM"
 
+        console.log(currentTime);
         if (uploadDate === post.uploadDate) {
           return formattedNewTime;
         } else {
@@ -336,6 +341,7 @@ router.put(
       post.videos = [...existingVideos, ...uploadedVideoUrls];
 
       await req.user.save();
+      await schedulePost(post._id, req.user._id);
 
       res.status(200).json({ message: "Post updated successfully", post });
     } catch (error) {
