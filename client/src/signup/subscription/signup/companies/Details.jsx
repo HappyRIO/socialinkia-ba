@@ -806,6 +806,7 @@ const BusinessForm = () => {
                 "nearby",
                 "emotional",
                 "fun",
+                "friendly",
                 "inspirational",
                 "professional",
                 "narrative",

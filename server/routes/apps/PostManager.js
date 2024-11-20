@@ -99,6 +99,17 @@ async function deleteImagesFromCloudinary(imageUrls) {
   }
 }
 
+async function deleteVideosFromCloudinary(videoUrls) {
+  for (const url of videoUrls) {
+    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+    await cloudinary.uploader.destroy(`automedia / ${publicId}`);
+    cloudinary.v2.api.delete_resources([`automedia / ${publicId}`], {
+      type: "upload",
+      resource_type: "video",
+    });
+  }
+}
+
 // Schedule a post for publishing
 const schedulePost = async (postId, userId) => {
   // Define the publish post job in Agenda

@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Loader from "../components/fragments/Loader";
 import Header from "../components/navigation/Header";
 import Footer from "../components/navigation/Footer";
 
 export default function Login() {
-  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -17,9 +15,7 @@ export default function Login() {
     setFormData({ ...formData, [id]: value });
   };
 
-  const handleSubmit = async (e) => {
-    setLoading(true);
-    e.preventDefault();
+  const handleSubmit = async (e) => {    e.preventDefault();
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/login`,
@@ -34,16 +30,13 @@ export default function Login() {
       );
 
       if (response.ok) {
-        setLoading(false);
         navigate("/dashboard");
       } else {
-        setLoading(false);
         alert("Invalid credentials. Please try again.");
       }
     } catch (error) {
       console.error("Error:", error);
       alert("An error occurred. Please try again.");
-      setLoading(false);
     }
   };
 
@@ -77,14 +70,16 @@ export default function Login() {
       <div className="nav w-full">
         <Header />
       </div>
-      <div className="icon pt-[100px] w-fit h-fit">
-        <img className="scale-[10]" src="/icons/login.svg" alt="login svg" />
+      <div className="icon pt-[50px] w-fit min-w-[200px] h-fit">
+        <img src="/icons/login.svg" alt="login svg" />
       </div>
-      <div className="w-full py-32 flex flex-col justify-center items-center">
-        {loading && <Loader />}
+      <div className="w-full py-10 flex flex-col justify-center items-center">
+        <div className="title text-4xl font-bold">
+          <h1>Login</h1>
+        </div>
         <form onSubmit={handleSubmit} className="form space-y-4 p-4">
           <input
-            className="px-2 py-2 w-full rounded-lg border-secondary focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg border-2 border-accent focus:bg-secondary"
             type="email"
             id="email"
             autoComplete="off"
@@ -95,7 +90,7 @@ export default function Login() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg border-secondary focus:border-accent"
+            className="px-2 py-2 w-full rounded-lg border-2 border-accent focus:bg-secondary"
             type="password"
             id="password"
             autoComplete="off"

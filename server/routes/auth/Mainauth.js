@@ -48,6 +48,13 @@ const uploadImagesToCloudinary = async (files) => {
   return urls;
 };
 
+async function deleteImagesFromCloudinary(imageUrls) {
+  for (const url of imageUrls) {
+    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+    await cloudinary.uploader.destroy(`automedia / ${publicId}`);
+  }
+}
+
 // Check if session token is valid
 const isSessionValid = (req, res, next) => {
   connectDB();

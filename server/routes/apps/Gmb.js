@@ -57,7 +57,9 @@ router.get("/auth/gmb", (req, res) => {
     access_type: "offline",
     scope: [
       "https://www.googleapis.com/auth/business.manage",
-      "https://www.googleapis.com/auth/business.profile.performance",
+      // "https://www.googleapis.com/auth/business.manage.all",
+      // "https://www.googleapis.com/auth/business.manage.locations",
+      // "https://www.googleapis.com/auth/business.manage.reports",
     ],
   });
 

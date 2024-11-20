@@ -94,13 +94,16 @@ export default function SignupMain() {
       <div className="nav w-full">
         <Header />
       </div>
-      <div className="icon pt-[100px] w-fit h-fit">
-        <img className="scale-[10]" src="/icons/signup.svg" alt="signup svg" />
+      <div className="icon pt-[50px] w-fit min-w-[200px] h-fit">
+        <img src="/icons/signup.svg" alt="signup svg" />
       </div>
-      <div className="w-full py-32 flex flex-col justify-center items-center">
+      <div className="w-full py-10 flex flex-col justify-center items-center">
+        <div className="title text-4xl font-bold">
+          <h1>Signup</h1>
+        </div>
         <form onSubmit={handleSubmit} className="form space-y-4 p-4">
           <input
-            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
+            className="px-2 py-2 w-full rounded-lg border-2 border-accent focus:bg-secondary"
             type="email"
             id="email"
             autoComplete="off"
@@ -111,7 +114,7 @@ export default function SignupMain() {
           />
 
           <input
-            className="px-2 py-2 w-full rounded-lg border-accent focus:bg-secondary"
+            className="px-2 py-2 w-full rounded-lg border-2 border-accent focus:bg-secondary"
             type="password"
             id="password"
             autoComplete="off"
