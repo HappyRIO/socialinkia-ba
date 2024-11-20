@@ -79,12 +79,36 @@ export default function Profile() {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value, files, checked } = e.target;
+
     if (name === "photos") {
       setFormData((prev) => ({
         ...prev,
         photos: files ? Array.from(files) : [],
       }));
+    } else if (name === "business_definition") {
+      setFormData((prev) => {
+        const currentSelections = prev.business_definition || [];
+
+        if (checked) {
+          if (currentSelections.length < 3) {
+            return {
+              ...prev,
+              business_definition: [...currentSelections, value],
+            };
+          } else {
+            toast.error("You can select up to 3 options only.");
+            return prev;
+          }
+        } else {
+          return {
+            ...prev,
+            business_definition: currentSelections.filter(
+              (item) => item !== value
+            ),
+          };
+        }
+      });
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -171,9 +195,7 @@ export default function Profile() {
 
   function handleconnectGoogleMyBusiness() {
     openAuthPopup(
-      `${
-        import.meta.env.VITE_SERVER_BASE_URL
-      }/api/gmb/auth/gmb`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/gmb/auth/gmb`,
       () => {
         setconnectig(true);
         toast("Instagram connected", { theme: "dark" });
@@ -746,13 +768,13 @@ export default function Profile() {
               {["men", "women", "both", "companies", "all"].map((type) => (
                 <label key={type}>
                   <input
-                    type="checkbox"
-                    name="customer_type"
+                    type="radio" // Change from checkbox to radio
+                    name="customer_type" // Ensure all radio buttons have the same name
                     value={type}
                     className="mr-2"
                     onChange={handleChange}
-                    checked={formData.customer_type.includes(type)}
-                  />{" "}
+                    checked={formData.customer_type === type} // Check if the current value matches
+                  />
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </label>
               ))}

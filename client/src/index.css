@@ -8,22 +8,22 @@
 
 @layer base {
   :root {
-    --text: #100a09;
-    --background: #f7f3f2;
-    --background2: #e7e2e1;
+    --text: #000000;
+    --background: #ffffff;
+    --background2: #ececec;
     --primary: #563b34;
     --secondary: #bdb893;
-    --accent: #f88400;
-    --card: #ffffff;
+    --accent: #e96311;
+    --card: #242424;
   }
   .dark {
-    --text: #f6f0ef;
-    --background: #0d0908;
-    --background2: #291c19;
+    --text: #ffffff;
+    --background: #000000;
+    --background2: #242424;
     --primary: #cbb0a9;
     --secondary: #6c6742;
-    --accent: #f88400;
-    --card: #362521;
+    --accent: #e96311;
+    --card: #ececec;
   }
 }
 

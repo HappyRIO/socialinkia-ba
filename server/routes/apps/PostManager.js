@@ -316,7 +316,6 @@ router.put(
       }
 
       function updateTime(uploadDate, post) {
-
         const currentTime = new Date();
         console.log(currentTime.toLocaleString()); // Local time as a string
         console.log(currentTime.toUTCString()); // UTC time as a string

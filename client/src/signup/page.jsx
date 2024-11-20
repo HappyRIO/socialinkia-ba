@@ -9,6 +9,10 @@ export default function Signup() {
     password: "",
   });
 
+  useEffect(() => {
+    window.location.href = "/subscription";
+  }, []);
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -52,12 +56,12 @@ export default function Signup() {
     }
   };
 
-  useEffect(() => {
-    window.addEventListener("message", (event) => {
-      // console.log(event.data.redirectUrl);
-      window.location.href = event.data.redirectUrl;
-    });
-  }, []);
+  // useEffect(() => {
+  //   window.addEventListener("message", (event) => {
+  //     // console.log(event.data.redirectUrl);
+  //     window.location.href = event.data.redirectUrl;
+  //   });
+  // }, []);
 
   const googlesignup = () => {
     const backendUrl = `${
@@ -72,7 +76,7 @@ export default function Signup() {
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
-      <div className="nav w-full">
+      {/* <div className="nav w-full">
         <Header />
       </div>
       <div className="icon">
@@ -125,7 +129,7 @@ export default function Signup() {
       </div>
       <div className="foot w-full">
         <Footer />
-      </div>
+      </div> */}
     </div>
   );
 }

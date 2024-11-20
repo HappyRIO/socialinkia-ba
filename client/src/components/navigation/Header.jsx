@@ -10,7 +10,7 @@ export default function Header() {
   }
   useEffect(() => {});
   return (
-    <header className="w-full flex justify-between items-center px-6 py-4 bg-black shadow-md">
+    <header className="w-full z-10 flex justify-between items-center px-6 py-4 bg-black shadow-md">
       <div className="text-2xl font-bold text-white">
         <Link to={"/"}>
           <img
@@ -57,7 +57,7 @@ export default function Header() {
             to={"/subscription"}
             className="text-white bg-accent px-6 p-2 rounded-full animate-pulse font-bold hover:underline"
           >
-            signup
+            free trial
           </Link>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function Header() {
                 to={"/subscription"}
                 className="text-black bg-background px-6 p-2 rounded-full animate-pulse font-bold hover:underline"
               >
-                signup
+                free trial
               </Link>
             </div>
           </nav>

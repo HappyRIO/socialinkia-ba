@@ -46,8 +46,35 @@ const BusinessForm = () => {
     communication_style_other: "",
   });
 
+  // const handleChange = (e) => {
+  //   const { name, files, value } = e.target;
+
+  //   if (name === "logo" && files && files[0]) {
+  //     const logoFile = files[0];
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       logo: logoFile,
+  //       logoPreview: URL.createObjectURL(logoFile),
+  //     }));
+  //   } else if (name === "photos" && files) {
+  //     const photoFiles = Array.from(files);
+  //     const photoPreviews = photoFiles.map((file) => URL.createObjectURL(file));
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       photos: photoFiles, // Store actual file objects
+  //       photosPreview: photoPreviews,
+  //     }));
+  //   } else {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: value,
+  //     }));
+  //   }
+  // };
+
   const handleChange = (e) => {
-    const { name, files, value } = e.target;
+    const { name, files, value, checked } = e.target;
 
     if (name === "logo" && files && files[0]) {
       const logoFile = files[0];
@@ -62,9 +89,31 @@ const BusinessForm = () => {
 
       setFormData((prev) => ({
         ...prev,
-        photos: photoFiles, // Store actual file objects
+        photos: photoFiles,
         photosPreview: photoPreviews,
       }));
+    } else if (name === "business_definition") {
+      setFormData((prev) => {
+        const currentDefinitions = prev.business_definition;
+        if (checked) {
+          // Add the item if it's checked and the limit is not reached
+          if (currentDefinitions.length < 3) {
+            return {
+              ...prev,
+              business_definition: [...currentDefinitions, value],
+            };
+          }
+        } else {
+          // Remove the item if it's unchecked
+          return {
+            ...prev,
+            business_definition: currentDefinitions.filter(
+              (item) => item !== value
+            ),
+          };
+        }
+        return prev; // Return previous state if no changes are made
+      });
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -653,13 +702,13 @@ const BusinessForm = () => {
               {["men", "women", "both", "companies", "all"].map((type) => (
                 <label key={type}>
                   <input
-                    type="checkbox"
-                    name="customer_type"
+                    type="radio" // Change from checkbox to radio
+                    name="customer_type" // Ensure all radio buttons have the same name
                     value={type}
                     className="mr-2"
                     onChange={handleChange}
-                    checked={formData.customer_type.includes(type)}
-                  />{" "}
+                    checked={formData.customer_type === type} // Check if the current value matches
+                  />
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </label>
               ))}

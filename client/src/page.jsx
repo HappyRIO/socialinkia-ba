@@ -19,12 +19,12 @@ export default function Home() {
   return (
     <div className="w-full flex flex-col justify-center items-center">
       <div className="w-full bg-[url('/images/hero-bg-2.png')] bg-cover bg-no-repeat flex flex-col justify-center items-center">
-        <div className="w-full max-w-[1200px] flex flex-col justify-center items-center">
+        <div className="w-full flex flex-col justify-center items-center">
           <Header />
-          <div className="hero-section w-full max-w-[1300px] flex flex-col justify-center items-center md:flex-row md:px-2">
+          <div className="hero-section w-full max-w-[1500px] flex flex-col justify-center items-center md:flex-row md:px-2 py-9">
             <div className="text-content text-white w-full md:1/2">
-              <div className="txt-zone py-7 max-w-[600px]">
-                <h1 className="text-4xl sm:text-6xl md:text-8xl">
+              <div className="txt-zone py-7 max-w-[600px] px-2 md:px-0">
+                <h1 className="text-4xl md:text-7xl">
                   Automating your social networks effortlessly
                 </h1>
                 <br />
@@ -33,14 +33,14 @@ export default function Home() {
                   with our AI-driven platform.
                 </p>
               </div>
-              <div className="btn-zone gap-4 flex justify-between items-center">
-                <Link to={"/signup"}>
-                  <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+              <div className="btn-zone gap-4 flex justify-between items-center px-2">
+                <Link to={"/subscription"}>
+                  <button className="p-4 bg-accent rounded-full flex flex-row items-center animate-pulse">
                     Free trial <ArrowRight />
                   </button>
                 </Link>
                 <Link to={"/signup"}>
-                  <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+                  <button className="p-4 bg-accent rounded-full flex flex-row items-center animate-pulse">
                     See how it works <ArrowRight />
                   </button>
                 </Link>
@@ -61,7 +61,7 @@ export default function Home() {
           <h1>Everything you need to automate your social networks</h1>
         </div>
       </div>
-      <div className="w-full flex flex-col gap-6 py-10 justify-center items-center max-w-[1200px]">
+      <div className="w-full flex flex-col gap-6 py-10 justify-center items-center max-w-[1500px]">
         <div className="w-full grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <div className="every-card py-10 w-full flex flex-row gap-2">
             <div className="icon-zone scale-[1.2] text-accent aspect-square bg-white rounded-full w-[50px] h-[50px] flex justify-center items-center">
@@ -121,7 +121,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <div className="w-full flex flex-col md:flex-row gap-6 py-10 justify-center items-center max-w-[1200px]">
+      <div className="w-full flex flex-col md:flex-row gap-6 py-10 justify-center items-center max-w-[1500px]">
         <div className="image-zone w-full md:1/2">
           <img src="/images/mobile.png" alt="" />
         </div>
@@ -164,7 +164,7 @@ export default function Home() {
         </div>
       </div>
       <div className="w-full bg-[url('/images/hero-bg-2.png')] bg-cover bg-no-repeat py-10 text-white flex justify-center items-center">
-        <div className="w-full flex flex-col-reverse md:flex-row gap-6 py-10 justify-center items-center max-w-[1200px]">
+        <div className="w-full flex flex-col-reverse md:flex-row gap-6 py-10 justify-center items-center max-w-[1500px]">
           <div className="text-zone-content flex flex-col gap-4 w-full md:1/2 px-3">
             <div>
               <h1 className="text-4xl sm:text-7xl text-center">
@@ -176,21 +176,21 @@ export default function Home() {
               </p>
             </div>
             <div className="w-full">
-              <ul className="text-2xl font-medium">
-                <li className="flex flex-row gap-2 items-center">
+              <ul className="text-2xl font-medium flex flex-col gap-2">
+                <li className="flex flex-row gap-2 justify-start items-center h-fit">
                   <span className="text-accent">
                     <CircleDot />
                   </span>
                   {""}
                   Manage your Facebook and Instagram
                 </li>
-                <li className="flex flex-row gap-2 items-center">
+                <li className="flex flex-row gap-2 justify-start items-center h-fit">
                   <span className="text-accent">
                     <CircleDot />
                   </span>
                   {""} AI will publish content for you
                 </li>
-                <li className="flex flex-row gap-2 items-center">
+                <li className="flex flex-row gap-2 justify-start items-center h-fit">
                   <span className="text-accent">
                     <CircleDot />
                   </span>
@@ -199,8 +199,8 @@ export default function Home() {
               </ul>
             </div>
             <div className="btn-zone py-4">
-              <Link to={"/signup"}>
-                <button className="p-4 bg-accent rounded-full flex flex-row animate-pulse">
+              <Link to={"/subscription"}>
+                <button className="p-4 bg-accent rounded-full flex flex-row items-center animate-pulse">
                   Free trial <ArrowRight />
                 </button>
               </Link>
@@ -370,13 +370,15 @@ export default function Home() {
       </div>
       <footer className="text-white pt-32 bg-[url('/images/footer.png')] bg-cover bg-no-repeat w-full flex flex-col justify-center items-center px-2">
         <div className="top-foot-zone flex flex-col justify-center items-center gap-10 max-w-[1000px]">
-          <p className="text-3xl sm:text-6xl">
+          <p className="text-3xl sm:text-6xl text-center">
             Let's start and enjoy the power of AI
           </p>
           <br />
-          <Newsletter />
+          <div className="w-full flex justify-center items-center">
+            <Newsletter />
+          </div>
         </div>
-        <div className="foot-foot flex flex-col py-10 md:flex-row justify-between items-center max-w-[1000px]">
+        <div className="foot-foot flex flex-col py-10 md:flex-row justify-between items-center max-w-[1500px]">
           <img className="max-w-[300px]" src="/images/nav.png" alt="" />
           <p>Copyright 2024, All Rights Reserved by Socialinkia.com</p>
         </div>

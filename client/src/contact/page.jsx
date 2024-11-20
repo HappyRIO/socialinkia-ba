@@ -1,58 +1,35 @@
 import { useState } from "react";
-import { Bot, Facebook, Instagram, Youtube } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
-// import Whatsicon from "@/components/fragments/Whatsicon";
 import Header from "../components/navigation/Header";
 import Footer from "../components/navigation/Footer";
-import FAQSection from "../components/fragments/Faqsection";
 
 export default function Contact() {
-  const Whatsicon = "W";
   const [formData, setFormData] = useState({
     name: "",
-    socialLink: "",
     email: "",
+    company: "",
+    phone: "",
     message: "",
   });
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [working, setworking] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setworking(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_SERVER_BASE_URL
-        }/api/contact/send-contact-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to send email.");
-      }
-
-      const data = await response.json();
-      setSuccess(data.message);
-      setworking(false);
-    } catch (error) {
-      setError(error.message);
-    }
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    // Simulate form submission success
+    setIsSubmitted(true);
+    setFormData({
+      name: "",
+      email: "",
+      company: "",
+      phone: "",
+      message: "",
+    });
   };
 
   return (
@@ -60,7 +37,7 @@ export default function Contact() {
       <div className="nav w-full">
         <Header />
       </div>
-      <div className="maincontact px-2 py-8 gap-2 w-full max-w-[1300px] flex flex-col md:flex-row justify-center items-center">
+      <div className="maincontact px-2 py-8 gap-2 w-full max-w-[1500px] flex flex-col md:flex-row justify-center items-center">
         <div className="first-content text-center sm:text-left flex flex-col gap-6 w-full lg:w-1/2">
           <div className="">
             <h1 className="text-3lx sm:text-7xl font-bold">
@@ -75,11 +52,12 @@ export default function Contact() {
           <div className="flex flex-col gap-3">
             <strong>send use email</strong>
             <p>info.example.com</p>
+            {/* <p> info@socialinkia.com</p> */}
           </div>
-          <div className="flex flex-col gap-3">
+          {/* <div className="flex flex-col gap-3">
             <strong>Give us a call</strong>
             <p>(123)456-7890</p>
-          </div>
+          </div> */}
           <div className="flex flex-col gap-3">
             <strong>Follow us:</strong>
             <div className="social-links flex flex-row gap-2">
@@ -95,29 +73,25 @@ export default function Contact() {
               >
                 <Instagram />
               </Link>
-              <Link
-                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
-                to={"#"}
-              >
-                <Youtube />
-              </Link>
-              <Link
-                className="border-[2px] w-fit p-3 border-accent rounded-lg transition-all duration-1000 hover:rounded-full hover:bg-accent"
-                to={"#"}
-              >
-                <Bot />
-              </Link>
             </div>
           </div>
         </div>
         <div className="form-content px-2 flex flex-col gap-6 w-full lg:w-1/2">
-          <form className="rounded-lg flex flex-col gap-6 shadow-md bg-background w-full p-2">
+          <form
+            onSubmit={handleSubmit}
+            action="https://formsubmit.co/cuesitweb@hamham.uk"
+            method="POST"
+            className="rounded-lg flex flex-col gap-6 shadow-md bg-background w-full p-2"
+          >
             <div className="w-full flex flex-col lg:flex-row gap-3">
               <div className="w-full flex flex-col gap-3 text-left justify-center">
                 <label htmlFor="name" className="text-accent font-bold">
                   Enter your name
                 </label>
                 <input
+                  onChange={handleChange}
+                  required
+                  value={formData.name}
                   className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
                   placeholder=" Enter your name "
                   type="text"
@@ -130,6 +104,9 @@ export default function Contact() {
                   Email address
                 </label>
                 <input
+                  onChange={handleChange}
+                  required
+                  value={formData.email}
                   className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
                   placeholder="example@mail.com"
                   type="email"
@@ -144,6 +121,8 @@ export default function Contact() {
                   Phone number
                 </label>
                 <input
+                  onChange={handleChange}
+                  value={formData.phone}
                   className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
                   placeholder="Enter your email"
                   type="number"
@@ -156,6 +135,9 @@ export default function Contact() {
                   Company
                 </label>
                 <input
+                  onChange={handleChange}
+                  value={formData.company}
+                  required
                   className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700"
                   placeholder="Enter your email"
                   type="text"
@@ -166,17 +148,20 @@ export default function Contact() {
             </div>
             <div className="w-full text-left flex gap-3 flex-col justify-center">
               <label
-                htmlFor="email"
+                htmlFor="message"
                 className="text-accent text-left font-bold"
               >
                 Message
               </label>
               <textarea
+                onChange={handleChange}
+                value={formData.message}
                 rows={6}
+                required
                 className="p-4 rounded-lg border-neutral-700 font-bold text-neutral-700 w-full"
                 placeholder="Write your message here ..........."
                 type="email"
-                name="email"
+                name="message"
                 id="email"
               />
             </div>
@@ -188,6 +173,11 @@ export default function Contact() {
                 Send your message
               </button>
             </div>
+            {isSubmitted && (
+              <div className="submitsucsess text-sm border-[2px] border-green-500 rounded-lg px-2">
+                <p>Thank you for your message have been submitted</p>
+              </div>
+            )}
           </form>
         </div>
       </div>
