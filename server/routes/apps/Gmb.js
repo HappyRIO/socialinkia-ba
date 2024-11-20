@@ -53,7 +53,7 @@ const isSessionValid = (req, res, next) => {
 
 // Routes
 //google auth route
-router.get("/auth/gmb2", (req, res) => {
+router.get("/auth/gmb", (req, res) => {
   console.log("blasting gmb auth");
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
@@ -66,29 +66,6 @@ router.get("/auth/gmb2", (req, res) => {
 
   res.redirect(authUrl);
 });
-
-// const googleScopes = [
-//   "openid",
-//   "profile",
-//   "email",
-//   "https://www.googleapis.com/auth/business.manage",
-// ];
-// // Login route
-// router.get("/auth/gmb3", (req, res) => {
-//   const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth?";
-//   const queryParams = new URLSearchParams({
-//     client_id: CLIENT_ID,
-//     redirect_uri: REDIRECT_URI,
-//     response_type: "code",
-//     scope: googleScopes.join(" "),
-//     access_type: "offline",
-//     prompt: "consent",
-//     // state: JSON.stringify({ flow: "gmb" }),
-//   });
-
-//   console.log("Redirecting to Google OAuth for login with query:", queryParams);
-//   res.redirect(`${authEndpoint}${queryParams}`);
-// });
 
 // Step 2: Callback route to handle OAuth response
 router.get("/auth/google/gmb/callback", async (req, res) => {

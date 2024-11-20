@@ -101,7 +101,8 @@ export default function PostCreation() {
 
         // Check if the message confirms success
         if (data.message === "Post created and scheduled") {
-          alert("posted");
+          // alert("posted");
+          window.location.href = "/dashboard/posts";
           // toast.success("Post created successfully!", { theme: "dark" });
           setPostText("");
           setSelectedFiles([]);
