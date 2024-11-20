@@ -69,12 +69,13 @@ const uploadImagesToCloudinary = async (files) => {
 };
 
 const uploadVideosToCloudinary = async (files) => {
-  console.log("processing videos.......");
+  console.log("Processing videos...");
   const urls = [];
+
   for (const file of files) {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: "automedia", resource_type: "video" },
+        { folder: "automedia/videos", resource_type: "video" }, // Specify the folder path
         (error, result) => {
           if (error) {
             console.error("Cloudinary upload error:", error);
@@ -84,10 +85,14 @@ const uploadVideosToCloudinary = async (files) => {
           }
         }
       );
+
+      // Stream the file buffer to Cloudinary
       Readable.from(file.buffer).pipe(stream);
     });
+
     urls.push(result);
   }
+
   return urls;
 };
 
@@ -99,14 +104,26 @@ async function deleteImagesFromCloudinary(imageUrls) {
   }
 }
 
-async function deleteVideosFromCloudinary(videoUrls) {
-  for (const url of videoUrls) {
-    const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
-    await cloudinary.uploader.destroy(`automedia / ${publicId}`);
-    cloudinary.v2.api.delete_resources([`automedia / ${publicId}`], {
-      type: "upload",
-      resource_type: "video",
-    });
+async function deleteMedia(mediaUrls) {
+  try {
+    for (const url of mediaUrls) {
+      const publicId = url.split("/").pop().split(".")[0]; // Extract Cloudinary public ID
+      const resourceType = url.includes("/video/") ? "video" : "image"; // Determine resource type
+
+      if ((resourceType = "video")) {
+        console.log("video resourse deleting");
+      }
+
+      if ((resourceType = "image")) {
+        console.log("image resourse deleting");
+      }
+
+      await cloudinary.uploader.destroy(`automedia/${publicId}`, {
+        resource_type: resourceType,
+      });
+    }
+  } catch (error) {
+    console.error("Error deleting media from Cloudinary:", error);
   }
 }
 
@@ -311,19 +328,9 @@ router.put(
       );
 
       // Delete removed media from Cloudinary
-      if (removedImages.length > 0) {
-        await deleteImagesFromCloudinary(removedImages);
-      }
-
-      if (removedVideos.length > 0) {
-        const videoPublicIds = removedVideos.map(
-          (url) => url.split("/").pop().split(".")[0]
-        );
-        for (const publicId of videoPublicIds) {
-          await cloudinary.uploader.destroy(`automedia/${publicId}`, {
-            resource_type: "video",
-          });
-        }
+      const removedMedia = [...removedImages, ...removedVideos];
+      if (removedMedia.length > 0) {
+        await deleteMedia(removedMedia);
       }
 
       function updateTime(uploadDate, post) {
@@ -331,15 +338,21 @@ router.put(
         console.log(currentTime.toLocaleString()); // Local time as a string
         console.log(currentTime.toUTCString()); // UTC time as a string
 
-        const newTime = new Date(currentTime.getTime() + 5 * 60000); // Add 5 minutes
-        const formattedNewTime = newTime.toISOString().slice(0, 16); // Format to "YYYY-MM-DDTHH:MM"
+        // Only update the time if the post status is "failed"
+        if (post.status === "failed") {
+          const newTime = new Date(currentTime.getTime() + 5 * 60000); // Add 5 minutes
+          const formattedNewTime = newTime.toISOString().slice(0, 16); // Format to "YYYY-MM-DDTHH:MM"
 
-        console.log(currentTime);
-        if (uploadDate === post.uploadDate) {
-          return formattedNewTime;
-        } else {
-          return uploadDate || post.uploadDate;
+          console.log(currentTime);
+          if (uploadDate === post.uploadDate) {
+            return formattedNewTime;
+          } else {
+            return uploadDate || post.uploadDate;
+          }
         }
+
+        // If the post status is not "failed", return the existing uploadDate
+        return uploadDate || post.uploadDate;
       }
 
       // Update post fields
