@@ -47,13 +47,6 @@ export default function Login() {
     }
   };
 
-  // useEffect(() => {
-  //   window.addEventListener("message", (event) => {
-  //     // console.log(event.data.redirectUrl);
-  //     window.location.href = event.data.redirectUrl;
-  //   });
-  // }, []);
-
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data && event.data.redirectUrl) {
@@ -85,7 +78,7 @@ export default function Login() {
         <Header />
       </div>
       <div className="icon pt-[100px] w-fit h-fit">
-        <img className="scale-[10]" src="/Login-bro.svg" alt="login svg" />
+        <img className="scale-[10]" src="/icons/login.svg" alt="login svg" />
       </div>
       <div className="w-full py-32 flex flex-col justify-center items-center">
         {loading && <Loader />}

@@ -58,7 +58,7 @@ export default function SignupMain() {
   };
 
   useEffect(() => {
-    console.log({eventmanager: "loaded"})
+    console.log({ eventmanager: "loaded" });
     // In the parent window (opener window)
     window.addEventListener("message", (event) => {
       // Make sure the message is coming from a trusted source
@@ -95,7 +95,7 @@ export default function SignupMain() {
         <Header />
       </div>
       <div className="icon pt-[100px] w-fit h-fit">
-        <img className="scale-[10]" src="/Login-bro.svg" alt="login svg" />
+        <img className="scale-[10]" src="/icons/signup.svg" alt="signup svg" />
       </div>
       <div className="w-full py-32 flex flex-col justify-center items-center">
         <form onSubmit={handleSubmit} className="form space-y-4 p-4">
