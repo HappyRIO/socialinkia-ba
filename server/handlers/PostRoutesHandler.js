@@ -88,49 +88,78 @@ const publishToFacebook = async (post, user) => {
   }
 };
 
-const publishToGmb = async (post, user) => {
-  const { imageUrl, videos } = post;
-  const message = post.text;
-  console.log("publishing to google......");
+const publishToGmb = async (post, user, locationId) => {
+  const { imageUrl, text: summary, callToActionUrl } = post;
   const accessToken = user.gmbAccessToken;
 
-  if (!message || !imageUrl) {
-    throw new Error("Message and image URL are required.");
+  console.log("Publishing to Google My Business...");
+
+  if (!summary || !imageUrl) {
+    throw new Error("Message (summary) and image URL are required.");
   }
 
   try {
     // Step 1: Upload media
+    console.log("Uploading media...");
+    const mediaPayload = {
+      mediaFormat: "PHOTO",
+      sourceUrl: imageUrl,
+    };
+
     const mediaResponse = await axios.post(
-      `https://mybusiness.googleapis.com/v4/accounts/${process.env.GMB_ACCOUNT_ID}/locations/${process.env.GMB_LOCATION_ID}/media`,
+      `https://mybusiness.googleapis.com/v4/accounts/${process.env.GMB_ACCOUNT_ID}/locations/${locationId}/media`,
+      mediaPayload,
       {
-        media: {
-          sourceUrl: imageUrl,
-          mimeType: "image/jpeg", // adjust MIME type based on your image format
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
-        access_token: accessToken,
       }
     );
 
-    // Step 2: Create post
-    const createPostResponse = await axios.post(
-      `https://mybusiness.googleapis.com/v4/accounts/${process.env.GMB_ACCOUNT_ID}/locations/${process.env.GMB_LOCATION_ID}/localPosts`,
+    const uploadedMedia = mediaResponse.data;
+    console.log("Media uploaded successfully:", uploadedMedia);
+
+    // Step 2: Create the post
+    console.log("Creating post...");
+    const postPayload = {
+      summary,
+      media: [uploadedMedia],
+      callToAction: {
+        actionType: "LEARN_MORE", // Adjust as needed for other actions
+        url: callToActionUrl,
+      },
+    };
+
+    const postResponse = await axios.post(
+      `https://mybusiness.googleapis.com/v4/accounts/${process.env.GMB_ACCOUNT_ID}/locations/${locationId}/localPosts`,
+      postPayload,
       {
-        summary: message,
-        media: [mediaResponse.data],
-        access_token: accessToken,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       }
     );
+
+    const createdPost = postResponse.data;
+    console.log("Post created successfully:", createdPost);
 
     return {
       success: true,
-      postId: createPostResponse.data.name,
+      postId: createdPost.name,
     };
   } catch (error) {
     console.error(
-      "Error posting content on Google My Business:",
-      error.message
+      "Error posting content to Google My Business:",
+      error.response?.data || error.message
     );
-    throw new Error("Failed to post content on Google My Business.");
+
+    throw new Error(
+      `Failed to publish post: ${
+        error.response?.data?.error?.message || error.message
+      }`
+    );
   }
 };
 

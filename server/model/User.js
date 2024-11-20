@@ -94,11 +94,6 @@ const UserSchema = new Schema({
   deleted: { type: Boolean, default: false },
 
   gmbrefreshToken: { type: String },
-  gmbAccessToken: { type: String },
-  gmbRefreshToken: { type: String },
-  gmbTokenExpiresAt: { type: String },
-  gmbAccountId: { type: String },
-  gmbLocationId: { type: String },
 
   facebookAccessToken: { type: String },
   instagramAccessToken: { type: String },

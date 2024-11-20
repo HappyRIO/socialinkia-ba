@@ -50,6 +50,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [connectfb, setconnectfb] = useState(false);
   const [connectig, setconnectig] = useState(false);
+  const [connectgmb, setconnectgmb] = useState(null);
 
   useEffect(() => {
     async function fetchUserInfo() {
@@ -70,7 +71,7 @@ export default function Profile() {
           ...data.user.companyDetails,
           photos: data.user.companyDetails?.photos || [],
         });
-        console.log(formData);
+        setconnectgmb(data.user.gmbrefreshToken);
       } catch (error) {
         console.error("Error fetching user info:", error);
       }
@@ -198,7 +199,8 @@ export default function Profile() {
       `${import.meta.env.VITE_SERVER_BASE_URL}/api/gmb/auth/gmb`,
       () => {
         setconnectig(true);
-        toast("Instagram connected", { theme: "dark" });
+        toast("google connected", { theme: "dark" });
+        window.location.href = "/dashboard/profile";
       }
     );
   }
@@ -215,7 +217,7 @@ export default function Profile() {
             className="bg-red-500 w-full h-[100px] flex flex-col justify-center items-center text-white p-4 rounded-lg shadow-lg"
             onClick={handleconnectGoogleMyBusiness}
           >
-            connect gmb
+            {connectgmb ? "google connected" : "connect google"}
             <Store />
           </button>
           <button
