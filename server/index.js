@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 require("dotenv").config();
 
+const connectDB = require("./data/db");
 // Initialize express
 const app = express();
 
@@ -21,13 +22,10 @@ app.use(
   })
 );
 
-// List of allowed origins (add any trusted origins as needed)
-const allowedOrigins = [
-  process.env.CLIENT_BASE_URL,
-  "https://auto-social-mfr7.onrender.com",
-];
+connectDB();
 
-console.log(allowedOrigins);
+// List of allowed origins (add any trusted origins as needed)
+const allowedOrigins = [process.env.CLIENT_BASE_URL];
 
 app.use(
   cors({
@@ -58,7 +56,6 @@ const GptRoute = require("./routes/apps/GPT");
 
 // Test route
 app.get("/", (req, res) => {
-  console.log({ request: "get info" });
   res.json({ message: "hello world" });
 });
 

@@ -1,18 +1,18 @@
 const express = require("express");
 const { google } = require("googleapis");
 const connectDB = require("../../data/db");
+const axios = require("axios");
+const querystring = require("querystring");
 const User = require("../../model/User");
 const router = express.Router();
+
+// Ensure the database is connected when the server starts
+connectDB();
 
 // OAuth2 client setup
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const REDIRECT_URI = `${process.env.SERVER_BASE_URL}/api/gmb/auth/google/gmb/callback`;
-const oAuth2Client = new google.auth.OAuth2(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
 
 // Middleware: Check if session token is valid
 const isSessionValid = (req, res, next) => {
@@ -49,68 +49,96 @@ const isSessionValid = (req, res, next) => {
     });
 };
 
-// https://console.developers.google.com/apis/api/legacypeople.googleapis.com/overview?project=828421697309
+const googleScopes = [
+  "openid",
+  "profile",
+  "email",
+  "https://www.googleapis.com/auth/business.manage",
+];
 
-// Routes
-//google auth route
+// auth route for authetification
 router.get("/auth/gmb", (req, res) => {
-  console.log("blasting gmb auth");
-  const authUrl = oAuth2Client.generateAuthUrl({
+  const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth?";
+  const queryParams = new URLSearchParams({
+    client_id: CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: "code",
+    scope: googleScopes.join(" "),
     access_type: "offline",
-    scope: [
-      "https://www.googleapis.com/auth/business.manage",
-      "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/userinfo.email",
-    ],
+    prompt: "consent",
+    state: JSON.stringify({ flow: "gmbaccess" }),
   });
 
-  res.redirect(authUrl);
+  res.redirect(`${authEndpoint}${queryParams}`);
 });
 
-// Step 2: Callback route to handle OAuth response
+// Route to handle OAuth response and obtain refresh token
 router.get("/auth/google/gmb/callback", async (req, res) => {
+  console.log({ message: "Processing callback for refresh token..." });
   const { code } = req.query;
-  if (!code) {
-    return res.status(400).json({ error: "Authorization code missing" });
-  }
+
+  const tokenEndpoint = "https://oauth2.googleapis.com/token";
+
+  const requestBody = querystring.stringify({
+    code,
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    redirect_uri: REDIRECT_URI,
+    grant_type: "authorization_code",
+  });
 
   try {
-    const { tokens } = await oAuth2Client.getToken(code);
-    oAuth2Client.setCredentials(tokens);
+    const response = await axios.post(tokenEndpoint, requestBody, {
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    });
 
-    const plus = google.plus({ version: "v1", auth: oAuth2Client });
-    const userInfo = await plus.people.get({ userId: "me" });
+    console.log("Token exchange response:", response.data);
+    const { refresh_token } = response.data;
 
-    if (!userInfo.data.emails || userInfo.data.emails.length === 0) {
-      return res.status(400).json({ error: "No email found in user profile" });
+    if (!refresh_token) {
+      console.error("Refresh token not received.");
+      return res.status(500).json({ error: "Failed to obtain refresh token." });
     }
 
-    const userEmail = userInfo.data.emails[0].value;
+    const profileResponse = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      {
+        headers: { Authorization: `Bearer ${response.data.access_token}` },
+      }
+    );
+
+    const { email } = profileResponse.data;
 
     // Save user and tokens to database
     const user = await User.findOneAndUpdate(
-      { email: userEmail },
-      { gmbrefreshToken: tokens.refresh_token },
+      { email: email },
+      { gmbrefreshToken: refresh_token },
       { new: true, upsert: true }
     );
 
     if (!user) {
-      return res.status(500).json({ error: "Failed to save user information" });
+      console.error("Failed to save user information.");
+      return res
+        .status(500)
+        .json({ error: "Failed to save user information." });
     }
 
-    res.status(200).json({ message: "Login successful", user });
+    console.log("Refresh token successfully obtained and saved.");
+    res
+      .status(200)
+      .json({ message: "Refresh token obtained successfully", user });
   } catch (error) {
-    console.error("Error during OAuth callback:", error);
+    console.error("Error during OAuth callback:", error.response.data);
 
     if (error.response) {
-      // Handle errors from the Google API
+      console.error("Google API error:", error.response.data);
       res.status(error.response.status).json({ error: error.response.data });
     } else if (error.request) {
-      // Handle network errors
-      res.status(503).json({ error: "Network error, please try again later" });
+      console.error("Network error:", error.request);
+      res.status(503).json({ error: "Network error, please try again later." });
     } else {
-      // Handle other errors
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Internal error:", error.message);
+      res.status(500).json({ error: "Internal server error." });
     }
   }
 });

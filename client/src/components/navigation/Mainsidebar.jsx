@@ -252,7 +252,7 @@ export default function Mainsidebar({ menufunction, menustate, pagename }) {
         </div>
         <div className="flex items-center p-2 mt-12 space-x-4 justify-self-end">
           <img
-            src={UserData.logo || "https://placehold.co/400x400"}
+            src={UserData ? UserData.logo : "https://placehold.co/400x400"}
             alt="profile image"
             className="w-12 h-12 rounded-lg"
           />
