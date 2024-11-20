@@ -49,30 +49,53 @@ const isSessionValid = (req, res, next) => {
     });
 };
 
-// Routes
+// https://console.developers.google.com/apis/api/legacypeople.googleapis.com/overview?project=828421697309
 
-// Step 1: Login route to start OAuth process
-router.get("/auth/gmb", (req, res) => {
+// Routes
+//google auth route
+router.get("/auth/gmb2", (req, res) => {
+  console.log("blasting gmb auth");
   const authUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
     scope: [
       "https://www.googleapis.com/auth/business.manage",
-      // "https://www.googleapis.com/auth/business.manage.all",
-      // "https://www.googleapis.com/auth/business.manage.locations",
-      // "https://www.googleapis.com/auth/business.manage.reports",
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
     ],
   });
-
-  console.log(oAuth2Client.credentials.scope);
 
   res.redirect(authUrl);
 });
 
+// const googleScopes = [
+//   "openid",
+//   "profile",
+//   "email",
+//   "https://www.googleapis.com/auth/business.manage",
+// ];
+// // Login route
+// router.get("/auth/gmb3", (req, res) => {
+//   const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth?";
+//   const queryParams = new URLSearchParams({
+//     client_id: CLIENT_ID,
+//     redirect_uri: REDIRECT_URI,
+//     response_type: "code",
+//     scope: googleScopes.join(" "),
+//     access_type: "offline",
+//     prompt: "consent",
+//     // state: JSON.stringify({ flow: "gmb" }),
+//   });
+
+//   console.log("Redirecting to Google OAuth for login with query:", queryParams);
+//   res.redirect(`${authEndpoint}${queryParams}`);
+// });
+
 // Step 2: Callback route to handle OAuth response
 router.get("/auth/google/gmb/callback", async (req, res) => {
   const { code } = req.query;
-  if (!code)
+  if (!code) {
     return res.status(400).json({ error: "Authorization code missing" });
+  }
 
   try {
     const { tokens } = await oAuth2Client.getToken(code);
@@ -80,6 +103,10 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
 
     const plus = google.plus({ version: "v1", auth: oAuth2Client });
     const userInfo = await plus.people.get({ userId: "me" });
+
+    if (!userInfo.data.emails || userInfo.data.emails.length === 0) {
+      return res.status(400).json({ error: "No email found in user profile" });
+    }
 
     const userEmail = userInfo.data.emails[0].value;
 
@@ -90,10 +117,24 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       { new: true, upsert: true }
     );
 
+    if (!user) {
+      return res.status(500).json({ error: "Failed to save user information" });
+    }
+
     res.status(200).json({ message: "Login successful", user });
   } catch (error) {
     console.error("Error during OAuth callback:", error);
-    res.status(500).json({ error: "Failed to log in" });
+
+    if (error.response) {
+      // Handle errors from the Google API
+      res.status(error.response.status).json({ error: error.response.data });
+    } else if (error.request) {
+      // Handle network errors
+      res.status(503).json({ error: "Network error, please try again later" });
+    } else {
+      // Handle other errors
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 });
 
