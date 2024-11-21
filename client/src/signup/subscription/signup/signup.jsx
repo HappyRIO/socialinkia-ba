@@ -46,6 +46,8 @@ export default function SignupMain() {
           // Redirect to login page if email already exists
           alert("Email already exists. Redirecting to login...");
           navigate("/login");
+        } else if (data.message === "User registered successfully!") {
+          navigate("/subscription/signup/details"); // Use navigate for internal routing
         } else {
           // Show a general error alert for other cases
           alert("Signup failed. Please try again.");
