@@ -6,7 +6,7 @@ const connectDB = require("../../data/db");
 const User = require("../../model/User");
 
 const CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
-const CHATGPT_API_KEY = "your-api-key";
+const CHATGPT_API_KEY = "sk-proj-AkkZwK2-ScJvUiWiZUOv4pIE6nvnKspyw-MvlP5BaUq7C3tIZDPKhn7\_YrZpPOv-5rYw6Ki8f7T3BlbkFJwm-EAm1CEv3teFGXLaG1BKV0P59E2oOkUIhEDRABHDlWjS5ZeslsrdV\_dqcFZGbQvonRuD5F0A";
 
 // stupid gpt
 const API_TOKEN = "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";
