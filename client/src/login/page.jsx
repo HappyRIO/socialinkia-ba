@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/navigation/Header";
 import Footer from "../components/navigation/Footer";
+import Loader from "../components/fragments/Loader";
 
 export default function Login() {
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +17,9 @@ export default function Login() {
     setFormData({ ...formData, [id]: value });
   };
 
-  const handleSubmit = async (e) => {    e.preventDefault();
+  const handleSubmit = async (e) => {
+    setLoading(true);
+    e.preventDefault();
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SERVER_BASE_URL}/api/auth/login`,
@@ -30,11 +34,14 @@ export default function Login() {
       );
 
       if (response.ok) {
+        setLoading(false);
         navigate("/dashboard");
       } else {
-        alert("Invalid credentials. Please try again.");
+        setLoading(false);
+        // alert("Invalid credentials. Please try again.");
       }
     } catch (error) {
+      setLoading(false);
       console.error("Error:", error);
       alert("An error occurred. Please try again.");
     }
@@ -67,6 +74,7 @@ export default function Login() {
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
+      {loading ? <Loader /> : null}
       <div className="nav w-full">
         <Header />
       </div>
@@ -104,7 +112,7 @@ export default function Login() {
             type="submit"
             className="px-4 py-2 bg-accent text-white rounded-lg w-full hover:bg-secondary"
           >
-            Login
+            {loading ? "login in......" : "Login"}
           </button>
         </form>
         <div className="social">

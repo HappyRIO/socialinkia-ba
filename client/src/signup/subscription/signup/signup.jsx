@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import Header from "../../../components/navigation/Header";
 import Footer from "../../../components/navigation/Footer";
+import Loader from "../../../components/fragments/Loader";
 
 export default function SignupMain() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const plan = params.get("plan");
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -22,6 +24,7 @@ export default function SignupMain() {
   };
 
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
     try {
       const response = await fetch(
@@ -37,25 +40,30 @@ export default function SignupMain() {
       );
 
       if (response.ok) {
+        setLoading(false);
         // Successful registration, proceed to the next signup step
         navigate("/subscription/signup/details"); // Use navigate for internal routing
       } else {
         const data = await response.json();
 
         if (data.error === "Email already exists.") {
+          setLoading(false);
           // Redirect to login page if email already exists
-          alert("Email already exists. Redirecting to login...");
+          // alert("Email already exists. Redirecting to login...");
           navigate("/login");
         } else if (data.message === "User registered successfully!") {
+          setLoading(false);
           navigate("/subscription/signup/details"); // Use navigate for internal routing
         } else {
+          setLoading(false);
           // Show a general error alert for other cases
-          alert("Signup failed. Please try again.");
+          // alert("Signup failed. Please try again.");
         }
       }
     } catch (error) {
+      setLoading(false);
       console.error("Error:", error);
-      alert("An error occurred. Please try again.");
+      // alert("An error occurred. Please try again.");
     }
   };
 
@@ -93,6 +101,7 @@ export default function SignupMain() {
 
   return (
     <div className="w-full flex flex-col justify-center items-center">
+      {loading ? <Loader /> : null}
       <div className="nav w-full">
         <Header />
       </div>
@@ -130,7 +139,7 @@ export default function SignupMain() {
             type="submit"
             className="px-4 py-2 bg-accent text-white rounded-lg w-full hover:bg-secondary"
           >
-            Sign Up
+            {loading ? "signing up....." : " Sign Up"}
           </button>
         </form>
         <div className="social">

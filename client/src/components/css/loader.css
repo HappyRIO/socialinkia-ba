@@ -1,39 +1,23 @@
+/* HTML: <div class="loader"></div> */
 .loader {
-  width: 84px;
-  height: 84px;
-  position: relative;
+  width: fit-content;
+  font-weight: bold;
+  font-family: monospace;
+  white-space: pre;
+  font-size: 30px;
+  line-height: 1.2em;
+  height: 1.2em;
   overflow: hidden;
 }
-.loader:before,
-.loader:after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: rgba(var(--accent-rgb), 0.5); /* Example for 50% transparency */
-  transform: translate(-50%, 100%) scale(0);
-  animation: push 2s infinite ease-in;
+.loader:before {
+  content: "Loading...\A⌰oading...\A⌰⍜ading...\A⌰⍜⏃ding...\A⌰⍜⏃⎅ing...\A⌰⍜⏃⎅⟟ng...\A⌰⍜⏃⎅⟟⋏g...\A⌰⍜⏃⎅⟟⋏☌...\A⌰⍜⏃⎅⟟⋏☌⟒..\A⌰⍜⏃⎅⟟⋏☌⟒⏁.\A⌰⍜⏃⎅⟟⋏☌⟒⏁⋔";
+  white-space: pre;
+  display: inline-block;
+  animation: l39 1s infinite steps(11) alternate;
 }
-.loader:after {
-  animation-delay: 1s;
-}
-@keyframes push {
-  0% {
-    transform: translate(-50%, 100%) scale(1);
-  }
-  15%,
-  25% {
-    transform: translate(-50%, 50%) scale(1);
-  }
-  50%,
-  75% {
-    transform: translate(-50%, -30%) scale(0.5);
-  }
-  80%,
+
+@keyframes l39 {
   100% {
-    transform: translate(-50%, -50%) scale(0);
+    transform: translateY(-100%);
   }
 }
