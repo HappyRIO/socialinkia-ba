@@ -6,6 +6,7 @@ const session = require("express-session");
 require("dotenv").config();
 
 const connectDB = require("./data/db");
+const { connectCloudinary } = require("./data/file");
 // Initialize express
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(
   })
 );
 
+connectCloudinary();
 connectDB();
 
 // List of allowed origins (add any trusted origins as needed)

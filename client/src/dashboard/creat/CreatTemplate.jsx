@@ -121,6 +121,22 @@ export default function PostCreation() {
       });
   };
 
+  function handleGeneratePost() {
+    const response = fetch(
+      `${
+        import.meta.env.VITE_SERVER_BASE_URL
+      }/api/gpt/generate-posts?aitext=${aitext}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    const data = response.json();
+
+    console.log(data);
+  }
+
   return (
     <div className="w-full flex flex-row justify-center items-center">
       <ToastContainer position="top-left" autoClose={3000} pauseOnFocusLoss />
@@ -164,7 +180,12 @@ export default function PostCreation() {
                 />
               </div>
               <div className="promt-space">
-                <button className="p-2 bg-accent rounded-lg">generate</button>
+                <button
+                  onClick={handleGeneratePost}
+                  className="p-2 bg-accent rounded-lg"
+                >
+                  generate
+                </button>
               </div>
             </div>
             <textarea

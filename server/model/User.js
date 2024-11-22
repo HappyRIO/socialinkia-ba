@@ -90,18 +90,39 @@ const postSchema = new Schema({
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String },
+
+  // post manager
   posts: [postSchema],
+
+  // account deactivation manager
   deleted: { type: Boolean, default: false },
 
+  // google my biz
   gmbrefreshToken: { type: String },
+  gmbLoactions: [
+    {
+      location: { type: String },
+      lodationId: { type: String },
+    },
+  ],
 
+  // meta zone
   facebookAccessToken: { type: String },
   instagramAccessToken: { type: String },
 
+  // subscription manager
   subscription: SubscriptionSchema,
+
+  // free plan management
   createdAt: { type: Date, default: Date.now },
+  freePlan: { type: Boolean },
+  freePlanEnds: { type: Number },
+
+  // session manager
   sessionToken: { type: String },
   sessionExpiresAt: { type: Date },
+
+  // companies detail manager
   companyDetails: CompanyDetailsSchema,
 });
 
