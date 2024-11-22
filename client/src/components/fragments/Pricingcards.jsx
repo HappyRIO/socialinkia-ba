@@ -95,7 +95,7 @@ export default function Pricingcard() {
         <div className="w-full shadow-lg rounded-lg bg-background2 flex flex-col gap-4 p-3">
           <p className="font-bold text-2xl">ESSENCIAL</p>
           <br />
-          <p>Up to 50 members</p>
+          <p>Up to 20 members</p>
           <br />
           <p>
             <span className="text-6xl font-bold">$20</span> / month
@@ -213,7 +213,7 @@ export default function Pricingcard() {
               <BadgeCheck /> PRICE: €350 per year
             </li>
             <li className="font-bold text-sm flex flex-row items-center gap-2">
-              <BadgeCheck /> Monthly price: €35 per month
+              <BadgeCheck /> Monthly price: €40 per month
             </li>
           </ul>
           <div className="w-full flex justify-center items-center">

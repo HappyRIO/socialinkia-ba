@@ -2,9 +2,10 @@ import { Link } from "react-router-dom";
 import Newsletter from "../fragments/Newletter";
 
 export default function Footer() {
+  //border-t-[2px] border-t-gray-300
   return (
     <footer className="w-full px-2 bg-cover text-white bg-no-repeat bg-[url('/images/footer.png')] flex flex-col justify-center items-center">
-      <div className="w-full py-36 max-w-[1500px] grid grid-cols-1 md:grid-cols-2 border-t-[2px] border-t-gray-300 border-b-[2px] border-b-gray-300">
+      <div className="w-full py-36 max-w-[1500px] grid grid-cols-1 md:grid-cols-2 border-b-[2px] border-b-gray-300">
         <div className="logo-info flex flex-col gap-3 py-3">
           <img className="max-w-[300px]" src="/images/nav.png" alt="" />
           <div className="content-zone max-w-[500px]">
