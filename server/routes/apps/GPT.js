@@ -12,38 +12,75 @@ const API_TOKEN = "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";
 const MODEL_URL =
   "https://api-inference.huggingface.co/models/openai-community/gpt2";
 
-// POST generation route
-router.get("/generate-posts", isSessionValid, async (req, res) => {
+// testing endpoint
+// Test route
+router.get("/gen", async (req, res) => {
   try {
-    const user = req.user;
-    const { aitext } = req.params;
-    const subscriptionPlan = user.subscription?.plan || "basic";
-    const companyDetails = user.companiesdetails;
+    // Access the query parameter "aiText"
+    const aiText = req.query.aiText;
 
-    if (!companyDetails || !subscriptionPlan) {
+    if (!aiText) {
       return res
         .status(400)
-        .json({ error: "Missing company details or subscription plan" });
+        .json({ success: false, message: "aiText parameter is required" });
     }
 
-    const postLimit =
-      {
-        basic: 7,
-        standard: 20,
-        premium: 30,
-      }[subscriptionPlan] || 7;
+    // Example request body for OpenAI API
+    const requestBody = {
+      model: "gpt-3.5-turbo", // Update to the model you're using
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: aiText }, // Use the aiText parameter
+      ],
+      max_tokens: 50,
+    };
 
-    const posts = [];
+    // Make a POST request to the ChatGPT API
+    const response = await axios.post(CHATGPT_API_URL, requestBody, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${CHATGPT_API_KEY}`,
+      },
+    });
 
-    for (let i = 0; i < postLimit; i++) {
-      const generatedPost = await generatePost(companyDetails, aitext);
-      posts.push(generatedPost);
-    }
-
-    res.json(posts); // Send response to frontend
+    // Send the API response back to the client
+    res.status(200).json({
+      success: true,
+      data: response.data,
+    });
   } catch (error) {
-    console.error("Error generating posts:", error);
-    res.status(500).json({ error: "Failed to generate posts" });
+    console.error("Error interacting with ChatGPT API:", error.message);
+
+    // Handle errors and return an appropriate response
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// post generation url
+// POST generation route
+router.get("/generate-posts", isSessionValid, async (req, res) => {
+  console.log("processing ai text .....");
+  try {
+    const user = req.user;
+    const aitext = req.query.aitext; // Correct query parameter usage
+    const companyDetails = user.companyDetails;
+
+    console.log({ aitext: aitext });
+
+    if (!companyDetails) {
+      return res.status(400).json({ error: "Missing company details" });
+    }
+
+    // Generate a single post
+    const generatedPost = await generatePost(companyDetails, aitext);
+
+    res.json(generatedPost); // Send the single post to frontend
+  } catch (error) {
+    console.error("Error generating post:", error);
+    res.status(500).json({ error: "Failed to generate post" });
   }
 });
 
@@ -61,7 +98,7 @@ async function generatePost(companyDetails, aitext) {
         {
           role: "system",
           content:
-            "You are an AI that generates social media posts with JSON output. Each post should have a caption and Konva-compatible layout data.",
+            "You are an AI that generates social media posts with JSON output. Each post should have a caption and Konva-compatible layout data. Only return valid JSON.",
         },
         {
           role: "user",
@@ -79,8 +116,18 @@ async function generatePost(companyDetails, aitext) {
     }),
   });
 
-  const data = await response.json();
-  return JSON.parse(data.choices[0]?.message?.content);
+  const rawData = await response.json();
+  const messageContent = rawData.choices[0]?.message?.content;
+  // Attempt to parse the JSON output
+  try {
+    return JSON.parse(messageContent);
+  } catch (err) {
+    console.error("Invalid JSON received from OpenAI:", messageContent);
+    return {
+      caption: "Failed to generate post. Please try again.",
+      layout: {},
+    };
+  }
 }
 
 // stupid route

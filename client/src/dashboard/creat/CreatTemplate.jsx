@@ -121,20 +121,31 @@ export default function PostCreation() {
       });
   };
 
-  function handleGeneratePost() {
-    const response = fetch(
-      `${
-        import.meta.env.VITE_SERVER_BASE_URL
-      }/api/gpt/generate-posts?aitext=${aitext}`,
-      {
-        method: "GET",
-        credentials: "include",
+  async function handleGeneratePost() {
+    try {
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_SERVER_BASE_URL
+        }/api/gpt/generate-posts?aitext=${encodeURIComponent(aitext)}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
 
-    const data = response.json();
+      const posts = await response.json(); // Expect an array of posts
+      console.log("Generated Posts:", posts.caption);
 
-    console.log(data);
+      // Assuming `setPostText` can handle an array of posts
+      setPostText(posts.caption);
+    } catch (error) {
+      console.error("Error generating posts:", error);
+      setPostText(["Failed to generate posts."]); // Optional fallback
+    }
   }
 
   return (

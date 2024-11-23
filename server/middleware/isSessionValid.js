@@ -22,6 +22,8 @@ const isSessionValid = (req, res, next) => {
         return res.status(401).json({ error: "Session expired." });
       }
 
+      console.log("validating user....");
+
       req.user = user;
       next();
     })
