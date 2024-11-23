@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
+import { Facebook, Instagram, Store } from "lucide-react";
 
 export default function Editpost() {
   const { postId } = useParams();
@@ -49,29 +50,24 @@ export default function Editpost() {
 
   const handleChange = (event) => {
     const selectedValue = event.target.value;
+    const isChecked = event.target.checked;
+
     setplatform((prevState) => {
       const updatedState = { ...prevState };
+
+      // Update the corresponding platform state based on whether the checkbox is checked or unchecked
       if (selectedValue === "fbook") {
-        updatedState.fbook = true;
-        updatedState.insta = false;
-        updatedState.gmb = false;
-        updatedState.all = false;
+        updatedState.fbook = isChecked;
       } else if (selectedValue === "insta") {
-        updatedState.fbook = false;
-        updatedState.insta = true;
-        updatedState.gmb = false;
-        updatedState.all = false;
+        updatedState.insta = isChecked;
       } else if (selectedValue === "gmb") {
-        updatedState.gmb = true;
-        updatedState.fbook = false;
-        updatedState.insta = false;
-        updatedState.all = false;
-      } else {
-        updatedState.fbook = true;
-        updatedState.insta = true;
-        updatedState.gmb = true;
-        updatedState.all = true;
+        updatedState.gmb = isChecked;
       }
+
+      // Update "all" to be true if any platform is selected, false if none are selected
+      updatedState.all =
+        updatedState.fbook || updatedState.insta || updatedState.gmb;
+
       return updatedState;
     });
   };
@@ -194,55 +190,49 @@ export default function Editpost() {
           </button>
         </div>
         <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2 justify-center items-center">
-          <div className="w-full flex flex-col gap-2 sm:flex-row">
-            <div className="w-full flex justify-center items-center">
-              <div className="releasedate w-full flex flex-col justify-center items-center">
-                <label htmlFor="date">Upload date</label>
+          <div className="w-full flex flex-col justify-center items-center">
+            <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <h1>select platform</h1>
+            </div>
+            <div className="w-full flex flex-row gap-3 justify-center items-center">
+              <div className="fbook flex flex-col justify-center items-center">
+                <label htmlFor="facebook">
+                  <Facebook />
+                </label>
                 <input
-                  className="bg-background p-2 rounded-lg w-full text-text"
-                  type="datetime-local"
-                  name="date"
-                  id="date"
-                  required
-                  value={uploadDate.date}
-                  onChange={handleDateChange}
+                  onChange={handleChange}
+                  type="checkbox"
+                  name="platform"
+                  value="fbook" // Set the value to "fbook"
+                  id="facebook"
+                  checked={platform.fbook} // Check if fbook is true
                 />
               </div>
-            </div>
-            <div className="w-full flex justify-center items-center">
-              <div className="selectionZone flex flex-col gap-2">
-                <label htmlFor="socialSelect" className="text-xl">
-                  Select platform
+              <div className="insta flex flex-col justify-center items-center">
+                <label htmlFor="instagram">
+                  <Instagram />
                 </label>
-                <select
-                  id="socialSelect"
-                  className="rounded-lg p-2 text-center text-accent"
+                <input
                   onChange={handleChange}
-                  value={
-                    platform.all
-                      ? "all"
-                      : platform.insta
-                      ? "insta"
-                      : platform.fbook
-                      ? "fbook"
-                      : platform.gmb
-                      ? "gmb"
-                      : "all"
-                  }
-                >
-                  <option className="text-text" value="all">
-                    All
-                  </option>
-                  <option className="text-text" value="fbook">
-                    Facebook
-                  </option>
-                  <option className="text-text" value="insta">
-                    Instagram
-                  </option>
-                  <option className="text-text" value="gmb">
-                    Google
-                  </option>
-                </select>
+                  type="checkbox"
+                  name="platform"
+                  value="insta" // Set the value to "insta"
+                  id="instagram"
+                  checked={platform.insta} // Check if insta is true
+                />
+              </div>
+              <div className="googl flex flex-col justify-center items-center">
+                <label htmlFor="google">
+                  <Store />
+                </label>
+                <input
+                  onChange={handleChange}
+                  type="checkbox"
+                  name="platform"
+                  value="gmb" // Set the value to "gmb"
+                  id="google"
+                  checked={platform.gmb} // Check if gmb is true
+                />
               </div>
             </div>
           </div>
@@ -320,6 +310,29 @@ export default function Editpost() {
                 />
               </label>
             </div>
+          </div>
+          <div className="w-full py-10 flex flex-col md:flex-row gap-2 justify-center items-center">
+            <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>schedule date</label>
+              <input
+                type="datetime-local"
+                value={uploadDate.date}
+                onChange={handleDateChange}
+                className="bg-background p-2 rounded-lg w-full"
+              />
+            </div>
+            {/* <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>Select platform</label>
+              <select
+                onChange={handleChange}
+                className="rounded-lg p-2 text-center"
+              >
+                <option value="all">All</option>
+                <option value="gmb">Google</option>
+                <option value="fbook">Facebook</option>
+                <option value="insta">Instagram</option>
+              </select>
+            </div> */}
           </div>
           <div className="button-space w-full flex flex-col sm:flex-row gap-10 justify-center items-center">
             <button

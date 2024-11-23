@@ -1,7 +1,8 @@
 // CreateTemplate
 import { useState } from "react";
 import ResponsiveSidebar from "../../components/navigation/ResponsiveSidebar";
-import { toast, ToastContainer } from "react-toastify";
+// import { toast, ToastContainer } from "react-toastify";
+import { Facebook, Instagram, Store } from "lucide-react";
 
 export default function PostCreation() {
   const [postText, setPostText] = useState("");
@@ -21,30 +22,23 @@ export default function PostCreation() {
 
   const handleChange = (event) => {
     const selectedValue = event.target.value;
+    const isChecked = event.target.checked;
+
     setPlatform((prevState) => {
       const updatedState = { ...prevState };
 
+      // Update the corresponding platform state based on whether the checkbox is checked or unchecked
       if (selectedValue === "fbook") {
-        updatedState.fbook = true;
-        updatedState.insta = false;
-        updatedState.gmb = false;
-        updatedState.all = false;
+        updatedState.fbook = isChecked;
       } else if (selectedValue === "insta") {
-        updatedState.fbook = false;
-        updatedState.insta = true;
-        updatedState.gmb = false;
-        updatedState.all = false;
+        updatedState.insta = isChecked;
       } else if (selectedValue === "gmb") {
-        updatedState.gmb = true;
-        updatedState.fbook = false;
-        updatedState.insta = false;
-        updatedState.all = false;
-      } else {
-        updatedState.fbook = true;
-        updatedState.insta = true;
-        updatedState.gmb = true;
-        updatedState.all = true;
+        updatedState.gmb = isChecked;
       }
+
+      // Update "all" to be true if any platform is selected, false if none are selected
+      updatedState.all =
+        updatedState.fbook || updatedState.insta || updatedState.gmb;
 
       return updatedState;
     });
@@ -150,33 +144,56 @@ export default function PostCreation() {
 
   return (
     <div className="w-full flex flex-row justify-center items-center">
-      <ToastContainer position="top-left" autoClose={3000} pauseOnFocusLoss />
+      {/* <ToastContainer position="top-left" autoClose={3000} pauseOnFocusLoss /> */}
       <div className="navzone w-fit">
         <ResponsiveSidebar pagename={"Create Post"} />
       </div>
       <div className="contentzone pt-3 px-2 ml-0 sm:ml-64 w-full flex flex-col gap-3 justify-center items-center">
         <div className="editorpage p-2 bg-background2 rounded-lg w-full flex flex-col gap-2">
-          <div className="w-full flex flex-col md:flex-row gap-2 justify-center items-center">
+          <div className="w-full flex flex-col justify-center items-center">
             <div className="w-full flex flex-col gap-1 justify-center items-center">
-              <label>Upload date</label>
-              <input
-                type="datetime-local"
-                value={uploaddata.date}
-                onChange={handleDateChange}
-                className="bg-background p-2 rounded-lg w-full"
-              />
+              <h1>select platform</h1>
             </div>
-            <div className="w-full flex flex-col gap-1 justify-center items-center">
-              <label>Select platform</label>
-              <select
-                onChange={handleChange}
-                className="rounded-lg p-2 text-center"
-              >
-                <option value="all">All</option>
-                <option value="gmb">Google</option>
-                <option value="fbook">Facebook</option>
-                <option value="insta">Instagram</option>
-              </select>
+            <div className="w-full flex flex-row gap-3 justify-center items-center">
+              <div className="fbook flex flex-col justify-center items-center">
+                <label htmlFor="facebook">
+                  <Facebook />
+                </label>
+                <input
+                  onChange={handleChange}
+                  type="checkbox"
+                  name="platform"
+                  value="fbook" // Set the value to "fbook"
+                  id="facebook"
+                  checked={platform.fbook} // Check if fbook is true
+                />
+              </div>
+              <div className="insta flex flex-col justify-center items-center">
+                <label htmlFor="instagram">
+                  <Instagram />
+                </label>
+                <input
+                  onChange={handleChange}
+                  type="checkbox"
+                  name="platform"
+                  value="insta" // Set the value to "insta"
+                  id="instagram"
+                  checked={platform.insta} // Check if insta is true
+                />
+              </div>
+              <div className="googl flex flex-col justify-center items-center">
+                <label htmlFor="google">
+                  <Store />
+                </label>
+                <input
+                  onChange={handleChange}
+                  type="checkbox"
+                  name="platform"
+                  value="gmb" // Set the value to "gmb"
+                  id="google"
+                  checked={platform.gmb} // Check if gmb is true
+                />
+              </div>
             </div>
           </div>
           <div className="postText w-full flex flex-col gap-2">
@@ -263,6 +280,29 @@ export default function PostCreation() {
                 multiple
               />
             </div>
+          </div>
+          <div className="w-full py-10 flex flex-col md:flex-row gap-2 justify-center items-center">
+            <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>schedule date</label>
+              <input
+                type="datetime-local"
+                value={uploaddata.date}
+                onChange={handleDateChange}
+                className="bg-background p-2 rounded-lg w-full"
+              />
+            </div>
+            {/* <div className="w-full flex flex-col gap-1 justify-center items-center">
+              <label>Select platform</label>
+              <select
+                onChange={handleChange}
+                className="rounded-lg p-2 text-center"
+              >
+                <option value="all">All</option>
+                <option value="gmb">Google</option>
+                <option value="fbook">Facebook</option>
+                <option value="insta">Instagram</option>
+              </select>
+            </div> */}
           </div>
           <button
             onClick={handleSubmit}

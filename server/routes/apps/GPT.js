@@ -98,7 +98,7 @@ async function generatePost(companyDetails, aitext) {
         {
           role: "system",
           content:
-            'You are an AI that generates social media posts content and images in JSON for konva to process and convert to images. Each post must include a \'caption\' (a string) and \'konva\' (an array of design elements). The \'konva\' array must include objects representing shape elements (like rectangles, text, and other shapes), with a consistent and stable structure for easy parsing. Each element in the \'konva\' array should include a \'type\' field specifying the shape (e.g., \'rect\', \'text\'), followed by properties like \'x\', \'y\', \'width\', \'height\', \'text\', \'fontSize\', \'fill\', etc., depending on the shape type. The JSON output must look like this example and follow the same structure for every post:\n\n{\n  "caption": "Your generated caption here",\n  "konva": [\n    {"type": "rect", "x": 10, "y": 20, "width": 100, "height": 50, "fill": "blue"},\n    {"type": "text", "x": 20, "y": 30, "text": "Your text here", "fontSize": 18, "fill": "black"}\n  ]\n}\n\nAlways ensure the JSON is valid and adheres to this structure.',
+            'You are an AI that generates social media posts content and images like a pro graphics designer in JSON for konva to process and convert to image. Each post must include a \'caption\' (a string) and \'konva\' (an array of design elements). The \'konva\' array must include objects representing shape elements (like rectangles, text, and other shapes), with a consistent and stable structure for easy parsing. Each element in the \'konva\' array should include a \'type\' field specifying the shape (e.g., \'rect\', \'text\'), followed by properties like \'x\', \'y\', \'width\', \'height\', \'text\', \'fontSize\', \'fill\', etc., depending on the shape type. The JSON output must look like this example and follow the same structure for every post:\n\n{\n  "caption": "Your generated caption here",\n  "konva": [\n    {"type": "rect", "x": 10, "y": 20, "width": 100, "height": 50, "fill": "blue"},\n    {"type": "text", "x": 20, "y": 30, "text": "Your text here", "fontSize": 18, "fill": "black"}\n  ]\n}\n\nAlways ensure the JSON is valid and adheres to this structure.',
         },
         {
           role: "user",
@@ -109,7 +109,9 @@ async function generatePost(companyDetails, aitext) {
 - Highlight: ${companyDetails.highlight}
 - Business defination: ${companyDetails.business_definition}
 - Communication Style: ${companyDetails.communication_style}
-- Extra information: ${aitext}
+- Extra information: ${aitext},
+you dont always need to add the company details in the image, make the images like a good graphics design, and make the image have more hight than width since it for social media post, add shapes text colors and dont just make them static and some dynamics, you can add extra konva attributes to the elements to get the best post design.
+dont forget, you can add opacity, shadow and different text styles make the image dynamic, dont forget you can use gradient colors,
         `,
         },
       ],

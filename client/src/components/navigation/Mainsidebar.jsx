@@ -12,6 +12,7 @@ import {
   Podcast,
   UserRound,
 } from "lucide-react";
+import NormalHeadNoLinks from "./NormalHeadNoLinks";
 
 // eslint-disable-next-line react/prop-types
 export default function Mainsidebar({ menufunction, menustate, pagename }) {
@@ -145,6 +146,7 @@ export default function Mainsidebar({ menufunction, menustate, pagename }) {
     <div className="h-screen bg-background w-fit fixed left-0 top-0 shadow-xl">
       <div className="flex flex-col h-full p-3 w-60">
         <div className="space-y-3">
+          <NormalHeadNoLinks />
           <div className="flex items-center justify-between">
             <h2>{pagename}</h2>
             <div className="sm:hidden">

@@ -3,76 +3,76 @@ const fs = require("fs");
 
 // Konva-like data
 const data = [
-  { type: "rect", x: 10, y: 10, width: 650, height: 330, fill: "#ffd500" },
+  {
+    type: "rect",
+    x: 0,
+    y: 0,
+    width: 600,
+    height: 800,
+    fill: "black",
+  },
+  {
+    type: "rect",
+    x: 20,
+    y: 20,
+    width: 560,
+    height: 760,
+    fillLinearGradientStartPoint: {
+      x: 20,
+      y: 20,
+    },
+    fillLinearGradientEndPoint: {
+      x: 580,
+      y: 780,
+    },
+    fillLinearGradientColorStops: [0, "orange", 1, "black"],
+    shadowColor: "black",
+    shadowBlur: 10,
+  },
   {
     type: "text",
-    x: 20,
+    x: 100,
     y: 50,
-    text: "Razor Tech",
-    fontSize: 35,
+    text: "razor tech",
+    fontSize: 36,
+    fontFamily: "Calibri",
+    fill: "white",
+  },
+  {
+    type: "text",
+    x: 50,
+    y: 100,
+    text: "Making the best, fast and user-friendly",
+    fontSize: 32,
+    fontFamily: "Calibri",
+    fill: "white",
+  },
+  {
+    type: "text",
+    x: 200,
+    y: 200,
+    text: "Web Apps That Soar",
+    fontSize: 42,
+    fontFamily: "Calibri",
     fill: "black",
+    opacity: 0.8,
   },
   {
     type: "text",
-    x: 20,
-    y: 90,
-    text: "Sector: IT Services",
-    fontSize: 20,
-    fill: "black",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 130,
-    text: "Slogan: Making the best, that is fast and does not make client furious",
-    fontSize: 18,
-    fill: "black",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 170,
-    text: "Highlight: We make web apps that are fast and speedy",
-    fontSize: 18,
-    fill: "black",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 210,
-    text: "Our Definition: Creativity, Innovation, Technology",
-    fontSize: 18,
-    fill: "black",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 250,
-    text: "Style: Communicating in a friendly manner",
-    fontSize: 18,
-    fill: "black",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 290,
-    text: "Remember...",
-    fontSize: 24,
-    fill: "#ff0000",
-  },
-  {
-    type: "text",
-    x: 20,
-    y: 330,
-    text: "When you need it fast & reliable, think Razor Tech!",
-    fontSize: 24,
-    fill: "#ff0000",
+    x: 100,
+    y: 300,
+    text: "IT Services\nCreativity\nInnovation\nTechnology",
+    fontSize: 28,
+    lineHeight: 1.2,
+    fontFamily: "Calibri",
+    fill: "white",
+    align: "center",
   },
 ];
 
 // Create a canvas
-const width = 700; // Adjust based on content
-const height = 400; // Adjust based on content
+const width = 800; // Adjust based on content
+const height = 1200; // Adjust based on content
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext("2d");
 
