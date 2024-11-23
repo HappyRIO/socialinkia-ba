@@ -410,7 +410,7 @@ router.get(
 );
 
 // Get Locations for the User
-router.get("/gmb/locations", isSessionValid, async (req, res) => {
+router.get("/locations", isSessionValid, async (req, res) => {
   try {
     // Fetch the user's access token
     const user = await User.findById(req.user._id);
@@ -444,6 +444,8 @@ router.get("/gmb/locations", isSessionValid, async (req, res) => {
       );
       locations.push(...(locationResponse.data.locations || []));
     }
+
+    console.log({ locations: locations });
 
     res.status(200).json({ locations });
   } catch (error) {
