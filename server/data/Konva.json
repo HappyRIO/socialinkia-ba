@@ -1,0 +1,74 @@
+[
+  {
+    "type": "rect",
+    "x": 10,
+    "y": 10,
+    "width": 650,
+    "height": 330,
+    "fill": "#ffd500"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 50,
+    "text": "Razor Tech",
+    "fontSize": 35,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 90,
+    "text": "Sector: IT Services",
+    "fontSize": 20,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 130,
+    "text": "Slogan: Making the best, that is fast and does not make client furious",
+    "fontSize": 18,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 170,
+    "text": "Highlight: We make web apps that are fast and speedy",
+    "fontSize": 18,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 210,
+    "text": "Our Definition: Creativity, Innovation, Technology",
+    "fontSize": 18,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 250,
+    "text": "Style: Communicating in a friendly manner",
+    "fontSize": 18,
+    "fill": "black"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 290,
+    "text": "Remember...",
+    "fontSize": 24,
+    "fill": "#ff0000"
+  },
+  {
+    "type": "text",
+    "x": 20,
+    "y": 330,
+    "text": "When you need it fast & reliable, think Razor Tech!",
+    "fontSize": 24,
+    "fill": "#ff0000"
+  }
+]
