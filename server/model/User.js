@@ -98,7 +98,7 @@ const UserSchema = new Schema({
   deleted: { type: Boolean, default: false },
 
   // google my biz
-  gmbrefreshToken: { type: String },
+  gmbRefreshToken: { type: String },
   gmbLoactions: [
     {
       location: { type: String },
