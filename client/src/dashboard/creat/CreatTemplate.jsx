@@ -291,18 +291,6 @@ export default function PostCreation() {
                 className="bg-background p-2 rounded-lg w-full"
               />
             </div>
-            {/* <div className="w-full flex flex-col gap-1 justify-center items-center">
-              <label>Select platform</label>
-              <select
-                onChange={handleChange}
-                className="rounded-lg p-2 text-center"
-              >
-                <option value="all">All</option>
-                <option value="gmb">Google</option>
-                <option value="fbook">Facebook</option>
-                <option value="insta">Instagram</option>
-              </select>
-            </div> */}
           </div>
           <button
             onClick={handleSubmit}

@@ -237,13 +237,13 @@ export default function Editpost() {
             </div>
           </div>
           <div className="postText w-full flex flex-col gap-2">
-            <input
+            {/* <input
               onChange={handleAiTextChange}
               className="rounded-lg p-2 w-full"
               type="text"
               value={aitext}
               placeholder="Prompt AI assistant ..."
-            />
+            /> */}
             <textarea
               className="w-full rounded-lg focus:border-accent p-2"
               name="postText"
