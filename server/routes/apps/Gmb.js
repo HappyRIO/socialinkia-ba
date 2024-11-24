@@ -414,9 +414,84 @@ router.get(
 );
 
 // Get Locations for the User
+// router.get("/locations", isSessionValid, async (req, res) => {
+//   try {
+//     // Fetch the user's refresh token
+//     const user = await User.findById(req.user._id);
+//     if (!user || !user.gmbRefreshToken) {
+//       return res.status(401).json({ error: "No GMB account linked." });
+//     }
+
+//     const refreshToken = user.gmbRefreshToken;
+
+//     // Exchange refresh token for a new access token
+//     const tokenResponse = await axios.post(
+//       "https://oauth2.googleapis.com/token",
+//       null,
+//       {
+//         params: {
+//           client_id: process.env.GOOGLE_CLIENT_ID,
+//           client_secret: process.env.GOOGLE_CLIENT_SECRET,
+//           refresh_token: refreshToken,
+//           grant_type: "refresh_token",
+//         },
+//       }
+//     );
+
+//     const accessToken = tokenResponse.data.access_token;
+
+//     console.log(accessToken);
+
+//     // Fetch the user's GMB accounts
+//     const accountsResponse = await axios.get(
+//       "https://mybusiness.googleapis.com/v4/accounts",
+//       {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//         },
+//       }
+//     );
+//     const accounts = accountsResponse.data.accounts || [];
+//     console.log(`Fetching locations for account: ${accounts}`);
+
+//     console.log("getting business details.......");
+
+//     // Fetch all locations for each account
+//     const locations = user.gmbLoactions;
+//     for (const account of accounts) {
+//       const locationResponse = await axios.get(
+//         `https://mybusiness.googleapis.com/v4/${account.name}/locations`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${accessToken}`,
+//           },
+//         }
+//       );
+//       locations.push(...(locationResponse.data.locations || []));
+//     }
+//     console.log("getting locations details.......");
+
+//     console.log({ locations: locations });
+
+//     res.status(200).json({ locations });
+//   } catch (error) {
+//     console.error(
+//       "Error fetching GMB accounts:",
+//       error.response?.data || error.message
+//     );
+//     if (error.response) {
+//       console.error("Status Code:", error.response.status);
+//       console.error("Headers:", error.response.headers);
+//       console.error("Data:", error.response.data);
+//     }
+//     res
+//       .status(500)
+//       .json({ error: error.response?.data || "Internal server error." });
+//   }
+// });
+
 router.get("/locations", isSessionValid, async (req, res) => {
   try {
-    // Fetch the user's refresh token
     const user = await User.findById(req.user._id);
     if (!user || !user.gmbRefreshToken) {
       return res.status(401).json({ error: "No GMB account linked." });
@@ -440,7 +515,7 @@ router.get("/locations", isSessionValid, async (req, res) => {
 
     const accessToken = tokenResponse.data.access_token;
 
-    console.log(accessToken);
+    console.log("Access Token:", accessToken);
 
     // Fetch the user's GMB accounts
     const accountsResponse = await axios.get(
@@ -452,25 +527,27 @@ router.get("/locations", isSessionValid, async (req, res) => {
       }
     );
     const accounts = accountsResponse.data.accounts || [];
+    const locations = [];
 
-    console.log("getting business details.......");
-
-    // Fetch all locations for each account
-    const locations = user.gmbLoactions;
     for (const account of accounts) {
-      const locationResponse = await axios.get(
-        `https://mybusiness.googleapis.com/v4/${account.name}/locations`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
-      );
-      locations.push(...(locationResponse.data.locations || []));
+      try {
+        console.log(`Fetching locations for account: ${account.name}`);
+        const locationResponse = await axios.get(
+          `https://mybusiness.googleapis.com/v4/${account.name}/locations`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        locations.push(...(locationResponse.data.locations || []));
+      } catch (error) {
+        console.error(
+          `Error fetching locations for account ${account.name}:`,
+          error.response?.data || error.message
+        );
+      }
     }
-    console.log("getting locations details.......");
-
-    console.log({ locations: locations });
 
     res.status(200).json({ locations });
   } catch (error) {
@@ -478,11 +555,6 @@ router.get("/locations", isSessionValid, async (req, res) => {
       "Error fetching GMB accounts:",
       error.response?.data || error.message
     );
-    if (error.response) {
-      console.error("Status Code:", error.response.status);
-      console.error("Headers:", error.response.headers);
-      console.error("Data:", error.response.data);
-    }
     res
       .status(500)
       .json({ error: error.response?.data || "Internal server error." });

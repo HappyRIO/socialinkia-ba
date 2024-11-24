@@ -11,9 +11,9 @@ export default function Dashboard() {
       }
     );
 
-    const data = info.json()
+    // const data = info.json()
 
-    console.log(data);
+    console.log(info);
   }
   return (
     <div className="w-full gap-3 flex flex-row justify-center items-center">
