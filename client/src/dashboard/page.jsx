@@ -2,26 +2,26 @@ import { Facebook, Instagram, Store } from "lucide-react";
 import ResponsiveSidebar from "../components/navigation/ResponsiveSidebar";
 
 export default function Dashboard() {
-  function handlegetlocation() {
-    const info = fetch(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/gmb/locations`,
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    );
+  // function handlegetlocation() {
+  //   const info = fetch(
+  //     `${import.meta.env.VITE_SERVER_BASE_URL}/api/gmb/locations`,
+  //     {
+  //       method: "GET",
+  //       credentials: "include",
+  //     }
+  //   );
 
-    // const data = info.json()
+  //   // const data = info.json()
 
-    console.log(info);
-  }
+  //   console.log(info);
+  // }
   return (
     <div className="w-full gap-3 flex flex-row justify-center items-center">
       <div className="sidebar w-fit">
         <ResponsiveSidebar pagename={"Dashboard"} />
       </div>
       <div className="main m-0 sm:ml-60 w-full p-2">
-        <button className="py-10 bg-red-500" onClick={handlegetlocation}>get locations</button>
+        {/* <button className="py-10 bg-red-500" onClick={handlegetlocation}>get locations</button> */}
         <div className="grid gap-3 grid-cols-1 md:grid-cols-3">
           <div className="top-view-zone border-[2px] border-text py-10 bg-background2 w-full rounded-lg flex flex-col justify-center items-center">
             <div className="w-full flex flex-col justify-center items-center">
