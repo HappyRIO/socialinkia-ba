@@ -1,16 +1,16 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
+const qs = require("qs");
 require("dotenv").config();
 
 // ----------------- Instagram Authentication ------------------
 // Step 1: Redirect to Instagram for authorization
 router.get("/auth/instagram", (req, res) => {
   console.log("firing inst auth");
-  const teststring =
-    "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=3470054769957639&redirect_uri=https://auto-social-api.onrender.com/api/instagram/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
-  const instagramAuthUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish`;
-  res.redirect(instagramAuthUrl);
+  const testurl =
+    "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1103023324688943&redirect_uri=https://2410-105-119-4-170.ngrok-free.app/api/instagram/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
+  res.redirect(testurl);
 });
 // ----------------- Content Management Routes ------------------
 
@@ -18,53 +18,51 @@ router.get("/auth/instagram", (req, res) => {
 router.get("/auth/instagram/callback", async (req, res) => {
   console.log("ig call back");
   const { code } = req.query;
-  console.log(code);
+  console.log("Received code:", code);
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
   try {
-    const tokenResponse = await axios.post(
-      "https://api.instagram.com/oauth/access_token",
-      {
-        client_id: process.env.INSTAGRAM_CLIENT_ID,
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-        grant_type: "authorization_code",
-        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
-        code,
-      }
-    );
+    const payload = {
+      client_id: process.env.INSTAGRAM_CLIENT_ID,
+      client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+      grant_type: "authorization_code",
+      redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
+      code,
+    };
+
+    console.log("Request payload:", payload);
+
+   const tokenResponse = await axios.post(
+     "https://api.instagram.com/oauth/access_token",
+     qs.stringify({
+       client_id: process.env.INSTAGRAM_CLIENT_ID,
+       client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+       grant_type: "authorization_code",
+       redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
+       code,
+     }),
+     {
+       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+     }
+   );
 
     const { access_token, user_id } = tokenResponse.data;
 
-    // Fetch the long-lived access token
-    const longLivedTokenResponse = await axios.get(
-      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_id=${process.env.INSTAGRAM_CLIENT_ID}&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&short_lived_token=${access_token}`
-    );
+    console.log("Access token response:", tokenResponse.data);
 
-    const longLivedAccessToken = longLivedTokenResponse.data.access_token;
-
-    // Fetch user profile information
-    const userResponse = await axios.get(
-      `https://graph.instagram.com/${user_id}?fields=id,username,name,account_type,media_count&access_token=${longLivedAccessToken}`
-    );
-    const userProfile = userResponse.data;
-
-    req.session.accessToken = longLivedAccessToken;
-    req.session.instagramUser = userProfile;
-
-    console.log({
-      message: "Instagram account connected successfully!",
-      userProfile,
-    });
-    res.json({
-      message: "Instagram account connected successfully!",
-      userProfile,
-    });
+    res.status(201).json({ message: "access Granted" });
+    // Proceed with fetching long-lived token and user profile...
   } catch (error) {
-    console.error("Error exchanging code for token:", error.message);
-    res.status(500).send("OAuth Authentication failed");
+    console.error(
+      "Error exchanging code for token:",
+      error.response?.data || error.message
+    );
+    res
+      .status(500)
+      .json({ errorMessage: error.response?.data || error.message });
   }
 });
 

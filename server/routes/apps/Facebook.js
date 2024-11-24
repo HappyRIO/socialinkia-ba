@@ -1,4 +1,5 @@
 const express = require("express");
+const qs = require("qs");
 const axios = require("axios");
 const router = express.Router();
 
@@ -17,9 +18,16 @@ router.get("/auth/facebook", (req, res) => {
   const facebookAppId = process.env.FACEBOOK_APP_ID;
   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
+  if (!facebookAppId || !facebookRedirectUri) {
+    return res.status(500).send("Facebook App ID or Redirect URI not set.");
+  }
+
   const randomString = generateRandomString();
 
-  const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile`;
+  // Store the state in the session
+  req.session.state = randomString;
+
+  const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
 
   res.redirect(facebookAuthUrl);
 });
@@ -33,26 +41,39 @@ router.get("/auth/facebook/callback", async (req, res) => {
   }
 
   try {
-    const tokenResponse = await axios.get(
-      `https://graph.facebook.com/v17.0/oauth/access_token`,
+    // Format the payload as urlencoded
+    const payload = qs.stringify({
+      client_id: process.env.FACEBOOK_APP_ID,
+      client_secret: process.env.FACEBOOK_APP_SECRET,
+      redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+      code,
+    });
+
+    // Send the request to exchange the authorization code for an access token
+    const tokenResponse = await axios.post(
+      "https://graph.facebook.com/v17.0/oauth/access_token",
+      payload,
       {
-        params: {
-          client_id: process.env.FACEBOOK_APP_ID,
-          client_secret: process.env.FACEBOOK_APP_SECRET,
-          redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-          code,
-        },
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
       }
     );
 
     const { access_token, expires_in } = tokenResponse.data;
 
+    // Store the access token and expiration
     req.session.accessToken = access_token;
     req.session.tokenExpiry = Date.now() + expires_in * 1000;
 
+    console.log({
+      message: "Facebook account connected successfully!",
+    });
+
     res.json({ message: "Facebook account connected successfully!" });
   } catch (error) {
-    console.error("Error exchanging code for token:", error.message);
+    console.error(
+      "Error exchanging code for token:",
+      error.response?.data || error.message
+    );
     res.status(500).json({ error: "OAuth Authentication failed" });
   }
 });
