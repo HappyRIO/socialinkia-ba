@@ -38,10 +38,18 @@ router.get("/auth/facebook", (req, res) => {
 // Step 2: Handle Facebook OAuth callback
 router.get("/auth/facebook/callback", async (req, res) => {
   const { code } = req.query;
+  console.log({ code: code });
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
+
+  console.log({
+    client_id: process.env.FACEBOOK_APP_ID,
+    client_secret: process.env.FACEBOOK_APP_SECRET,
+    redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+    code,
+  });
 
   try {
     // Exchange code for access token
@@ -57,12 +65,15 @@ router.get("/auth/facebook/callback", async (req, res) => {
     );
 
     const { access_token, expires_in } = tokenResponse.data;
+    console.log({ tokenResponce: access_token, exp: expires_in });
 
     // Fetch user profile to get Facebook ID
     const profileResponse = await axios.get(
       `https://graph.facebook.com/me?access_token=${access_token}`
     );
     const profileData = profileResponse.data;
+
+    console.log("profile fetching");
 
     if (!profileData.id) {
       return res.status(500).send("Failed to obtain user profile.");
@@ -72,6 +83,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
     const pagesResponse = await axios.get(
       `https://graph.facebook.com/me/accounts?access_token=${access_token}`
     );
+    console.log("processing page list");
     const pagesData = pagesResponse.data;
 
     if (!pagesData.data || pagesData.data.length === 0) {
@@ -89,16 +101,22 @@ router.get("/auth/facebook/callback", async (req, res) => {
       { upsert: true, new: true }
     );
 
+    console.log(user);
+
     // Render a page selection interface
     res.json({ message: "Select a page to continue", pages: pagesData.data });
   } catch (error) {
-    console.error("Error during Facebook OAuth callback:", error);
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+    }
+    console.error("Error during Facebook OAuth callback:", error.message);
     res.status(500).send("An error occurred during authentication.");
   }
 });
 
 // Handle page selection
 router.post("/select-page", async (req, res) => {
+  console.log("page selection..........");
   const { userId, pageId, pageName, pageAccessToken } = req.body;
 
   if (!userId || !pageId) {
