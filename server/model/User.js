@@ -44,7 +44,7 @@ const CompanyDetailsSchema = new Schema({
 });
 
 const PaymentHistorySchema = new Schema({
-  amount: { type: Number, required: true },
+  amount: { type: Number },
   currency: { type: String, default: "usd" },
   date: { type: Date, default: Date.now },
   status: {
@@ -102,14 +102,14 @@ const UserSchema = new Schema({
   gmbLoactions: { type: String },
 
   // facebook zone
-  facebookId: { type: String, required: true, unique: true },
-  facebookAccessToken: { type: String, required: true },
-  facebookTokenExpiry: { type: Date, required: true },
+  facebookId: { type: String, unique: true },
+  facebookAccessToken: { type: String },
+  facebookTokenExpiry: { type: Date },
 
   // instagram zone
-  insagramId: { type: String, required: true, unique: true },
-  insagramAccessToken: { type: String, required: true },
-  insagramTokenExpiry: { type: Date, required: true },
+  insagramId: { type: String, unique: true },
+  insagramAccessToken: { type: String },
+  insagramTokenExpiry: { type: Date },
 
   // selected google business
   selectedFacebookBusinessPage: {
