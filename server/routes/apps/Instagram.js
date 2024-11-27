@@ -1,28 +1,40 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
+const crypto = require("crypto");
 const qs = require("qs");
 require("dotenv").config();
 
 // ----------------- Instagram Authentication ------------------
 // Step 1: Redirect to Instagram for authorization
 router.get("/auth/instagram", (req, res) => {
-  console.log("firing inst auth");
-  const testurl =
-    "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1103023324688943&redirect_uri=https://2410-105-119-4-170.ngrok-free.app/api/instagram/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
-  res.redirect(testurl);
+  console.log("Firing Instagram auth");
+
+  // Generate a unique state parameter
+  const state = crypto.randomBytes(16).toString("hex");
+  req.session.state = state; // Store the state in the session
+
+  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish&state=${state}`;
+
+  res.redirect(authUrl);
 });
-// ----------------- Content Management Routes ------------------
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
-  console.log("ig call back");
-  const { code } = req.query;
-  console.log("Received code:", code);
+  console.log("Instagram callback triggered");
+  const { code, state } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
+
+  // Check if the state matches the session
+  // if (state !== req.session.state) {
+  //   console.log({ state: state, sessionstate: req.session.state });
+  //   return res
+  //     .status(400)
+  //     .json({ error: "State mismatch. Potential CSRF attack." });
+  // }
 
   try {
     const payload = {
@@ -33,33 +45,38 @@ router.get("/auth/instagram/callback", async (req, res) => {
       code,
     };
 
-    console.log("Request payload:", payload);
-
-   const tokenResponse = await axios.post(
-     "https://api.instagram.com/oauth/access_token",
-     qs.stringify({
-       client_id: process.env.INSTAGRAM_CLIENT_ID,
-       client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-       grant_type: "authorization_code",
-       redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
-       code,
-     }),
-     {
-       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-     }
-   );
+    const tokenResponse = await axios.post(
+      "https://api.instagram.com/oauth/access_token",
+      qs.stringify(payload),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      }
+    );
 
     const { access_token, user_id } = tokenResponse.data;
 
-    console.log("Access token response:", tokenResponse.data);
+    // Store access_token and user_id securely (e.g., in a database)
+    // ...
 
-    res.status(201).json({ message: "access Granted" });
-    // Proceed with fetching long-lived token and user profile...
+    // Clear the state from the session after successful exchange
+    delete req.session.state;
+
+    res.status(201).json({ message: "Access Granted", access_token, user_id });
   } catch (error) {
     console.error(
       "Error exchanging code for token:",
       error.response?.data || error.message
     );
+
+    if (
+      error.response?.data?.error_message ===
+      "This authorization code has been used"
+    ) {
+      return res.status(400).json({
+        errorMessage: "Authorization code already used. Please try again.",
+      });
+    }
+
     res
       .status(500)
       .json({ errorMessage: error.response?.data || error.message });
@@ -96,6 +113,8 @@ const validateAndRefreshToken = async (req, res, next) => {
 
   next();
 };
+
+// ----------------- Content Management Routes ------------------
 
 router.get("/all", validateAndRefreshToken, async (req, res) => {
   res.json({ message: "res confirmed" });

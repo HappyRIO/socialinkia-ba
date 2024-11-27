@@ -33,49 +33,99 @@ router.get("/auth/facebook", (req, res) => {
 });
 
 // Step 2: Handle Facebook OAuth callback
-router.get("/auth/facebook/callback", async (req, res) => {
-  const { code } = req.query;
+// router.get("/auth/facebook/callback", async (req, res) => {
+//   const { code } = req.query;
 
-  if (!code) {
-    return res.status(400).json({ error: "Authorization code missing." });
+//   if (!code) {
+//     return res.status(400).json({ error: "Authorization code missing." });
+//   }
+
+//   try {
+//     // Format the payload as urlencoded
+//     const payload = qs.stringify({
+//       client_id: process.env.FACEBOOK_APP_ID,
+//       client_secret: process.env.FACEBOOK_APP_SECRET,
+//       redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+//       code,
+//     });
+
+//     // Send the request to exchange the authorization code for an access token
+//     const tokenResponse = await axios.post(
+//       "https://graph.facebook.com/v17.0/oauth/access_token",
+//       payload,
+//       {
+//         headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//       }
+//     );
+
+//     const { access_token, expires_in } = tokenResponse.data;
+
+//     // Store the access token and expiration
+//     req.session.accessToken = access_token;
+//     req.session.tokenExpiry = Date.now() + expires_in * 1000;
+
+//     console.log({
+//       message: "Facebook account connected successfully!",
+//     });
+
+//     res.json({ message: "Facebook account connected successfully!" });
+//   } catch (error) {
+//     console.error(
+//       "Error exchanging code for token:",
+//       error.response?.data || error.message
+//     );
+//     res.status(500).json({ error: "OAuth Authentication failed" });
+//   }
+// });
+
+router.get("/auth/facebook/callback", async (req, res) => {
+  const { code, state } = req.query;
+
+  if (state !== req.session.state) {
+    return res.status(403).send("Invalid state parameter.");
   }
 
   try {
-    // Format the payload as urlencoded
-    const payload = qs.stringify({
-      client_id: process.env.FACEBOOK_APP_ID,
-      client_secret: process.env.FACEBOOK_APP_SECRET,
-      redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-      code,
-    });
-
-    // Send the request to exchange the authorization code for an access token
-    const tokenResponse = await axios.post(
-      "https://graph.facebook.com/v17.0/oauth/access_token",
-      payload,
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
+    // Exchange code for access token
+    const tokenResponse = await fetch(
+      `https://graph.facebook.com/v17.0/oauth/access_token?client_id=${process.env.FACEBOOK_APP_ID}&redirect_uri=${process.env.FACEBOOK_REDIRECT_URI}&client_secret=${process.env.FACEBOOK_APP_SECRET}&code=${code}`
     );
+    const tokenData = await tokenResponse.json();
 
-    const { access_token, expires_in } = tokenResponse.data;
+    if (!tokenData.access_token) {
+      return res.status(500).send("Failed to obtain access token.");
+    }
 
-    // Store the access token and expiration
-    req.session.accessToken = access_token;
-    req.session.tokenExpiry = Date.now() + expires_in * 1000;
+    // Fetch user pages
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/me/accounts?access_token=${tokenData.access_token}`
+    );
+    const pagesData = await pagesResponse.json();
 
-    console.log({
-      message: "Facebook account connected successfully!",
-    });
+    if (!pagesData.data || pagesData.data.length === 0) {
+      return res.status(404).send("No pages found.");
+    }
 
-    res.json({ message: "Facebook account connected successfully!" });
+    // Render a page selection interface
+    res.render("selectPage", { pages: pagesData.data });
   } catch (error) {
-    console.error(
-      "Error exchanging code for token:",
-      error.response?.data || error.message
-    );
-    res.status(500).json({ error: "OAuth Authentication failed" });
+    console.error("Error during Facebook OAuth callback:", error);
+    res.status(500).send("An error occurred during authentication.");
   }
+});
+
+// Handle page selection
+router.post("/select-page", (req, res) => {
+  const selectedPageId = req.body.pageId;
+
+  if (!selectedPageId) {
+    return res.status(400).send("No page selected.");
+  }
+
+  // Store the selected page ID in the session or database
+  req.session.selectedPageId = selectedPageId;
+
+  res.send("Page selected successfully.");
 });
 
 // Middleware: Validate and refresh access token
