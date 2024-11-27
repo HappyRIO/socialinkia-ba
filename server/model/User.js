@@ -99,7 +99,7 @@ const UserSchema = new Schema({
 
   // google my biz
   gmbRefreshToken: { type: String },
-  gmbLoactions: { type: String },
+  // gmbLoactions: { type: String },
 
   // facebook zone
   facebookId: { type: String, unique: true },
