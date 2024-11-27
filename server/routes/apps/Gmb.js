@@ -4,6 +4,7 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const connectDB = require("../../data/db");
 const User = require("../../model/User");
+const isSessionValid = require("../../middleware/isSessionValid");
 const router = express.Router();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -375,40 +376,6 @@ router.get("/save-location", isSessionValid, async (req, res) => {
     `);
   }
 });
-
-// Check if session token is valid
-const isSessionValid = (req, res, next) => {
-  connectDB();
-  console.log("Validating session");
-  console.log("Cookies:", req.cookies); // Check all cookies received
-  const { sessionToken } = req.cookies;
-
-  if (!sessionToken) {
-    console.log("No session token provided");
-    return res.status(401).json({ error: "No session token provided." });
-  }
-
-  User.findOne({ sessionToken })
-    .then((user) => {
-      if (!user) {
-        console.log("Invalid session token.");
-        return res.status(401).json({ error: "Invalid session token." });
-      }
-
-      const expirationTime = new Date(user.sessionExpiresAt);
-      const currentTime = new Date();
-      if (expirationTime <= currentTime) {
-        return res.status(401).json({ error: "Session expired." });
-      }
-
-      req.user = user;
-      next();
-    })
-    .catch((error) => {
-      console.error("Error checking session validity:", error);
-      res.status(500).json({ error: "Server error" });
-    });
-};
 
 // Create a Post for a Location
 router.post(

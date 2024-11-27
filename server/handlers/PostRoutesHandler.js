@@ -2,9 +2,10 @@
 const axios = require("axios");
 const User = require("../model/User");
 
-const publishToInstagram = async (post, userId) => {
+const publishToInstagram = async (post, user) => {
   const { imageUrl, videos } = post;
   const caption = post.text;
+  const userId = user._id;
 
   console.log("Publishing to Instagram...");
 
@@ -83,10 +84,10 @@ const publishToInstagram = async (post, userId) => {
   }
 };
 
-const publishToFacebook = async (post, userId) => {
+const publishToFacebook = async (post, user) => {
   const { images, videos } = post;
   const message = post.text;
-
+  const userId = user._id;
   console.log("Publishing to Facebook...");
 
   if (!message && (!images || images.length === 0)) {
@@ -181,7 +182,12 @@ const publishToFacebook = async (post, userId) => {
 };
 
 const publishToGmb = async (post, user) => {
-  const { imageUrl, text: summary, callToActionUrl } = post;
+  const { imageUrl, text, callToActionUrl } = post;
+  const summary = text;
+
+  if(!user){
+    res.status(303).json({data: "user not found"})
+  }
 
   if (!user.selectedGoogleBusinessPage) {
     throw new Error("No Google Business location selected for the user.");
@@ -282,6 +288,5 @@ const publishToGmb = async (post, user) => {
     );
   }
 };
-
 
 module.exports = { publishToInstagram, publishToFacebook, publishToGmb };
