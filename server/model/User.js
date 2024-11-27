@@ -99,16 +99,38 @@ const UserSchema = new Schema({
 
   // google my biz
   gmbRefreshToken: { type: String },
-  gmbLoactions: [
-    {
-      location: { type: String },
-      lodationId: { type: String },
-    },
-  ],
+  gmbLoactions: { type: String },
 
-  // meta zone
-  facebookAccessToken: { type: String },
-  instagramAccessToken: { type: String },
+  // facebook zone
+  facebookId: { type: String, required: true, unique: true },
+  facebookAccessToken: { type: String, required: true },
+  facebookTokenExpiry: { type: Date, required: true },
+
+  // instagram zone
+  insagramId: { type: String, required: true, unique: true },
+  insagramAccessToken: { type: String, required: true },
+  insagramTokenExpiry: { type: Date, required: true },
+
+  // selected google business
+  selectedFacebookBusinessPage: {
+    id: { type: String }, // Store the page ID
+    name: { type: String }, // Optionally store the page name
+    accessToken: { type: String }, // Store page-specific access token if needed
+  },
+
+  // selected google business page
+  selectedGoogleBusinessPage: {
+    id: { type: String }, // Store the page ID
+    name: { type: String }, // Optionally store the page name
+    accessToken: { type: String }, // Store page-specific access token if needed
+  },
+
+  // selected instagram business page
+  selectedInstagramBusinessPage: {
+    id: { type: String }, // Store the page ID
+    name: { type: String }, // Optionally store the page name
+    accessToken: { type: String }, // Store page-specific access token if needed
+  },
 
   // subscription manager
   subscription: SubscriptionSchema,

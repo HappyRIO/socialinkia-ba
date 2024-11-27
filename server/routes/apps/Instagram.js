@@ -1,6 +1,7 @@
 const express = require("express");
 const axios = require("axios");
 const router = express.Router();
+const User = require("../../model/User.js");
 const crypto = require("crypto");
 const qs = require("qs");
 require("dotenv").config();
@@ -21,20 +22,11 @@ router.get("/auth/instagram", (req, res) => {
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
-  console.log("Instagram callback triggered");
   const { code, state } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
-
-  // Check if the state matches the session
-  // if (state !== req.session.state) {
-  //   console.log({ state: state, sessionstate: req.session.state });
-  //   return res
-  //     .status(400)
-  //     .json({ error: "State mismatch. Potential CSRF attack." });
-  // }
 
   try {
     const payload = {
@@ -48,82 +40,127 @@ router.get("/auth/instagram/callback", async (req, res) => {
     const tokenResponse = await axios.post(
       "https://api.instagram.com/oauth/access_token",
       qs.stringify(payload),
-      {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      }
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     const { access_token, user_id } = tokenResponse.data;
 
-    // Store access_token and user_id securely (e.g., in a database)
-    // ...
-
-    // Clear the state from the session after successful exchange
-    delete req.session.state;
-
-    res.status(201).json({ message: "Access Granted", access_token, user_id });
-  } catch (error) {
-    console.error(
-      "Error exchanging code for token:",
-      error.response?.data || error.message
+    // Save or update the user's Instagram credentials
+    const user = await User.findOneAndUpdate(
+      { email: req.session.userEmail }, // Assuming user email is stored in session
+      {
+        instagramId: user_id,
+        instagramAccessToken: access_token,
+        instagramTokenExpiry: new Date(Date.now() + 60 * 60 * 24 * 60 * 1000), // 60 days expiry
+      },
+      { upsert: true, new: true }
     );
 
-    if (
-      error.response?.data?.error_message ===
-      "This authorization code has been used"
-    ) {
-      return res.status(400).json({
-        errorMessage: "Authorization code already used. Please try again.",
-      });
+    // Fetch Instagram business accounts linked to the user
+    const accountsResponse = await axios.get(
+      `https://graph.facebook.com/v17.0/me/accounts?access_token=${access_token}`
+    );
+
+    res.json({
+      message: "Select an Instagram business account to continue",
+      accounts: accountsResponse.data.data,
+    });
+  } catch (error) {
+    console.error("Error during Instagram OAuth callback:", error);
+    res.status(500).send("An error occurred during authentication.");
+  }
+});
+
+// Step 3: Handle account selection
+router.post("/select-instagram-account", async (req, res) => {
+  const { userId, accountId, accountName, accountAccessToken } = req.body;
+
+  if (!userId || !accountId) {
+    return res.status(400).send("User ID and account ID are required.");
+  }
+
+  try {
+    // Update the user with the selected Instagram business account
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        selectedInstagramBusinessPage: {
+          id: accountId,
+          name: accountName,
+          accessToken: accountAccessToken,
+        },
+      },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).send("User not found.");
     }
 
-    res
-      .status(500)
-      .json({ errorMessage: error.response?.data || error.message });
+    res.json({
+      message: "Instagram business account selected successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error selecting Instagram account:", error);
+    res.status(500).send("An error occurred while selecting the account.");
   }
 });
 
 // Middleware to check token validity and refresh if necessary
 const validateAndRefreshToken = async (req, res, next) => {
-  if (!req.session.accessToken) {
-    return res.status(401).json({ error: "No access token found." });
+  const userId = req.userId; // Assuming userId is set in req after authentication middleware
+  if (!userId) {
+    return res.status(401).json({ error: "User ID is required." });
   }
 
-  const isTokenExpired = (expiry) => Date.now() > expiry;
-  if (isTokenExpired(req.session.tokenExpiry)) {
-    try {
+  try {
+    const user = await User.findById(userId);
+    if (!user || !user.instagramAccessToken) {
+      return res.status(401).json({ error: "No access token found." });
+    }
+
+    const isTokenExpired = (expiry) => Date.now() > new Date(expiry).getTime();
+    if (isTokenExpired(user.instagramTokenExpiry)) {
       const response = await axios.get(
         "https://graph.instagram.com/refresh_access_token",
         {
           params: {
             grant_type: "ig_refresh_token",
-            access_token: req.session.accessToken,
+            access_token: user.instagramAccessToken,
           },
         }
       );
 
-      req.session.accessToken = response.data.access_token;
-      req.session.tokenExpiry = Date.now() + response.data.expires_in * 1000; // Ensure this is correctly set when initializing
-      console.log("Access token refreshed successfully.");
-    } catch (error) {
-      console.error("Error refreshing access token:", error.message);
-      return res.status(500).json({ error: "Failed to refresh access token." });
-    }
-  }
+      user.instagramAccessToken = response.data.access_token;
+      user.instagramTokenExpiry = new Date(
+        Date.now() + response.data.expires_in * 1000
+      );
+      await user.save();
 
-  next();
+      console.log("Access token refreshed successfully.");
+    }
+
+    req.instagramAccessToken = user.instagramAccessToken; // Pass token for later use
+    next();
+  } catch (error) {
+    console.error("Error validating or refreshing token:", error.message);
+    res
+      .status(500)
+      .json({ error: "Failed to validate or refresh access token." });
+  }
 };
 
 // ----------------- Content Management Routes ------------------
 
+// Example route to confirm functionality
 router.get("/all", validateAndRefreshToken, async (req, res) => {
-  res.json({ message: "res confirmed" });
+  res.json({ message: "Token validated successfully." });
 });
 
 // Route to publish content on Instagram
 router.post("/post", validateAndRefreshToken, async (req, res) => {
-  const { caption, imageUrl } = req.body; // Accept caption and image URL as input
-
+  const { caption, imageUrl } = req.body;
   if (!caption || !imageUrl) {
     return res
       .status(400)
@@ -137,7 +174,7 @@ router.post("/post", validateAndRefreshToken, async (req, res) => {
       {
         image_url: imageUrl,
         caption: caption,
-        access_token: req.session.accessToken,
+        access_token: req.instagramAccessToken,
       }
     );
 
@@ -148,7 +185,7 @@ router.post("/post", validateAndRefreshToken, async (req, res) => {
       `https://graph.facebook.com/v17.0/${process.env.INSTAGRAM_USER_ID}/media_publish`,
       {
         creation_id: mediaContainerId,
-        access_token: req.session.accessToken,
+        access_token: req.instagramAccessToken,
       }
     );
 
@@ -162,7 +199,7 @@ router.post("/post", validateAndRefreshToken, async (req, res) => {
   }
 });
 
-// get posts
+// Get posts
 router.get("/user/media", validateAndRefreshToken, async (req, res) => {
   try {
     const mediaResponse = await axios.get(
@@ -171,7 +208,7 @@ router.get("/user/media", validateAndRefreshToken, async (req, res) => {
         params: {
           fields:
             "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
-          access_token: req.session.accessToken,
+          access_token: req.instagramAccessToken,
         },
       }
     );
@@ -186,6 +223,7 @@ router.get("/user/media", validateAndRefreshToken, async (req, res) => {
   }
 });
 
+// Get post insights
 router.get(
   "/post/:postId/insights",
   validateAndRefreshToken,
@@ -198,7 +236,7 @@ router.get(
         {
           params: {
             metric: "impressions,reach,engagement",
-            access_token: req.session.accessToken,
+            access_token: req.instagramAccessToken,
           },
         }
       );

@@ -36,6 +36,127 @@ router.get("/auth/gmb", (req, res) => {
 });
 
 // Handle GMB OAuth Callback
+// router.get("/auth/google/gmb/callback", async (req, res) => {
+//   const { code, state } = req.query;
+
+//   if (!code) {
+//     return res.status(400).json({ error: "Authorization code not provided." });
+//   }
+
+//   if (!state) {
+//     return res.status(400).json({ error: "State parameter missing." });
+//   }
+
+//   console.log("Received code and state:", { code, state });
+//   connectDB();
+
+//   try {
+//     // Exchange the authorization code for tokens
+//     const tokenEndpoint = "https://oauth2.googleapis.com/token";
+//     const tokenPayload = querystring.stringify({
+//       code,
+//       client_id: CLIENT_ID,
+//       client_secret: CLIENT_SECRET,
+//       redirect_uri: REDIRECT_URI,
+//       grant_type: "authorization_code",
+//     });
+
+//     const tokenResponse = await axios.post(tokenEndpoint, tokenPayload, {
+//       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//     });
+
+//     console.log("Token exchange response:", tokenResponse.data);
+//     const { access_token, refresh_token } = tokenResponse.data;
+
+//     if (!refresh_token) {
+//       throw new Error("No refresh token received from Google.");
+//     }
+
+//     // Retrieve user profile from Google
+//     const profileResponse = await axios.get(
+//       "https://www.googleapis.com/oauth2/v3/userinfo",
+//       {
+//         headers: { Authorization: `Bearer ${access_token}` },
+//       }
+//     );
+
+//     const { email, name, picture } = profileResponse.data;
+//     console.log("Retrieved user profile:", { email, name });
+
+//     // Save user and tokens to database
+//     let user = await User.findOne({ email });
+
+//     if (!user) {
+//       user = new User({
+//         email,
+//         name,
+//         picture,
+//         gmbRefreshToken: refresh_token,
+//       });
+//       await user.save();
+//       console.log("New GMB user saved:", user);
+//     } else {
+//       user.gmbRefreshToken = refresh_token;
+//       await user.save();
+//       console.log("Existing GMB user updated:", user);
+//     }
+
+//     // Generate session token
+//     const sessionToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
+//       expiresIn: "2h",
+//     });
+
+//     user.sessionToken = sessionToken;
+//     user.sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
+//     await user.save();
+
+//     // Set session cookie
+//     res.cookie("sessionToken", sessionToken, {
+//       httpOnly: true,
+//       secure: true,
+//       sameSite: "none",
+//       maxAge: 2 * 60 * 60 * 1000,
+//     });
+
+//     // Respond with success
+//     return res.status(200).send(`
+//       <!DOCTYPE html>
+//       <html lang="en">
+//       <head>
+//           <meta charset="UTF-8">
+//           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//           <title>Redirecting</title>
+//       </head>
+//       <body>
+//           <script>
+//           if (window.opener) {
+//               window.opener.postMessage(
+//                   { message: "Authentication successful" },
+//                   "${process.env.CLIENT_BASE_URL}"
+//               );
+//               window.close();
+//           } else {
+//               window.location.href = "${process.env.CLIENT_BASE_URL}/dashboard/profile";
+//               window.close();
+//           }
+//           </script>
+//       </body>
+//       </html>
+//     `);
+//   } catch (error) {
+//     console.error(
+//       "Error during GMB OAuth callback:",
+//       error.response?.data || error.message
+//     );
+
+//     return res.status(500).json({
+//       error: "Failed to authenticate with Google My Business.",
+//       details: error.response?.data || error.message,
+//     });
+//   }
+// });
+
+// Handle GMB OAuth Callback
 router.get("/auth/google/gmb/callback", async (req, res) => {
   const { code, state } = req.query;
 
@@ -43,11 +164,6 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
     return res.status(400).json({ error: "Authorization code not provided." });
   }
 
-  if (!state) {
-    return res.status(400).json({ error: "State parameter missing." });
-  }
-
-  console.log("Received code and state:", { code, state });
   connectDB();
 
   try {
@@ -65,7 +181,6 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    console.log("Token exchange response:", tokenResponse.data);
     const { access_token, refresh_token } = tokenResponse.data;
 
     if (!refresh_token) {
@@ -80,8 +195,7 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       }
     );
 
-    const { email, name, picture } = profileResponse.data;
-    console.log("Retrieved user profile:", { email, name });
+    const { email, name } = profileResponse.data;
 
     // Save user and tokens to database
     let user = await User.findOne({ email });
@@ -89,70 +203,176 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
     if (!user) {
       user = new User({
         email,
-        name,
-        picture,
         gmbRefreshToken: refresh_token,
       });
       await user.save();
-      console.log("New GMB user saved:", user);
     } else {
       user.gmbRefreshToken = refresh_token;
       await user.save();
-      console.log("Existing GMB user updated:", user);
     }
 
-    // Generate session token
-    const sessionToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
-      expiresIn: "2h",
-    });
+    // Exchange refresh token for access token
+    const accessTokenResponse = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      null,
+      {
+        params: {
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+          refresh_token,
+          grant_type: "refresh_token",
+        },
+      }
+    );
 
-    user.sessionToken = sessionToken;
-    user.sessionExpiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
-    await user.save();
+    const newAccessToken = accessTokenResponse.data.access_token;
 
-    // Set session cookie
-    res.cookie("sessionToken", sessionToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 2 * 60 * 60 * 1000,
-    });
+    // Fetch GMB locations for the user
+    const accountsResponse = await axios.get(
+      "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+      {
+        headers: { Authorization: `Bearer ${newAccessToken}` },
+      }
+    );
 
-    // Respond with success
-    return res.status(200).send(`
+    const accounts = accountsResponse.data.accounts || [];
+    const locations = [];
+
+    for (const account of accounts) {
+      try {
+        const locationResponse = await axios.get(
+          `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${account.name}/locations?readMask=storeCode,name,locationName`,
+          {
+            headers: { Authorization: `Bearer ${newAccessToken}` },
+          }
+        );
+
+        locations.push(...(locationResponse.data.locations || []));
+      } catch (error) {
+        console.error(
+          `Error fetching locations for account ${account.name}:`,
+          error.response?.data || error.message
+        );
+      }
+    }
+
+    // Render HTML page for location selection
+    if (locations.length > 0) {
+      let locationHtml = locations
+        .map(
+          (location) => `
+          <li>
+            ${location.locationName || location.name}
+            <a href="/api/gmb/save-location?locationId=${encodeURIComponent(
+              location.name
+            )}&locationName=${encodeURIComponent(
+            location.locationName || location.name
+          )}">
+              Select
+            </a>
+          </li>
+        `
+        )
+        .join("");
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Select Business Location</title>
+        </head>
+        <body>
+          <h1>Select a Business Location</h1>
+          <ul>${locationHtml}</ul>
+        </body>
+        </html>
+      `);
+    } else {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>No Locations Found</title>
+        </head>
+        <body>
+          <h1>No business locations found for your account.</h1>
+        </body>
+        </html>
+      `);
+    }
+  } catch (error) {
+    console.error("Error during GMB OAuth callback:", error.message);
+    return res.status(500).send(`
       <!DOCTYPE html>
       <html lang="en">
       <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Redirecting</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Error</title>
       </head>
       <body>
-          <script>
-          if (window.opener) {
-              window.opener.postMessage(
-                  { message: "Authentication successful" },
-                  "${process.env.CLIENT_BASE_URL}"
-              );
-              window.close();
-          } else {
-              window.location.href = "${process.env.CLIENT_BASE_URL}/dashboard/profile";
-              window.close();
-          }
-          </script>
+        <h1>Failed to authenticate with Google My Business.</h1>
+        <p>${error.message}</p>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// Save Location Route
+router.get("/save-location", isSessionValid, async (req, res) => {
+  const { locationId, locationName } = req.query;
+
+  if (!locationId || !locationName) {
+    return res.status(400).send(`
+      <h1>Error</h1>
+      <p>Location ID and name are required.</p>
+    `);
+  }
+
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).send(`
+        <h1>Error</h1>
+        <p>User not found.</p>
+      `);
+    }
+
+    user.selectedGoogleBusinessPage = {
+      id: locationId,
+      name: locationName,
+    };
+
+    await user.save();
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Location Saved</title>
+      </head>
+      <body>
+        <h1>Location Saved Successfully</h1>
+        <p>Selected location: ${locationName}</p>
+        <script>
+        window.close()
+        </script>
       </body>
       </html>
     `);
   } catch (error) {
-    console.error(
-      "Error during GMB OAuth callback:",
-      error.response?.data || error.message
-    );
-
-    return res.status(500).json({
-      error: "Failed to authenticate with Google My Business.",
-      details: error.response?.data || error.message,
-    });
+    console.error("Error saving selected location:", error.message);
+    res.status(500).send(`
+      <h1>Error</h1>
+      <p>Internal server error.</p>
+    `);
   }
 });
 
