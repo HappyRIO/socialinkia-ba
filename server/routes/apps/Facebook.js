@@ -147,15 +147,13 @@ router.get("/auth/facebook/callback", async (req, res) => {
       // Save new user's Facebook credentials to the database
       console.log("Saving new user to the database.");
 
-      // Avoid setting insagramId to null
       await User.findOneAndUpdate(
         { facebookId: profileData.id },
         {
           facebookId: profileData.id,
           facebookAccessToken: access_token,
           facebookTokenExpiry: tokenExpiryDate,
-          // Ensure instagramId is not set to null unless necessary
-          insagramId: null, // Make sure not to set this to null unintentionally
+          // Remove insagramId from the update object if not relevant
         },
         { upsert: true, new: true }
       );

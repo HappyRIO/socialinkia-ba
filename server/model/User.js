@@ -102,14 +102,12 @@ const UserSchema = new Schema({
   // gmbLoactions: { type: String },
 
   // facebook zone
-  // facebookId: { type: String, unique: true, sparse: true },
-  facebookId: { type: String },
+  facebookId: { type: String, unique: true, sparse: true },
   facebookAccessToken: { type: String },
   facebookTokenExpiry: { type: Date, default: null },
 
   // instagram zone
-  // insagramId: { type: String, unique: true, sparse: true },
-  insagramId: { type: String },
+  insagramId: { type: String, unique: true, sparse: true },
   insagramAccessToken: { type: String },
   insagramTokenExpiry: { type: Date, default: null },
 
