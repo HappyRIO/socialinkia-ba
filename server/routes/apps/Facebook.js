@@ -89,10 +89,18 @@ router.get("/auth/facebook/callback", async (req, res) => {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const { access_token, expires_in } = tokenResponse.data;
+    const { access_token, expires_in, token_type } = tokenResponse.data;
     console.log({ tokenResponse: access_token, exp: expires_in });
     console.log("Token response data:", tokenResponse.data);
 
+    // Determine token expiry date
+    let tokenExpiryDate = null;
+    if (expires_in) {
+      tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
+    } else if (token_type === "bearer") {
+      console.log("Long-lived token detected. Setting expiry to 60 days.");
+      tokenExpiryDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000); // 60 days
+    }
 
     // Fetch user profile to get Facebook ID
     const profileResponse = await axios.get(
@@ -143,7 +151,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
         {
           facebookId: profileData.id,
           facebookAccessToken: access_token,
-          facebookTokenExpiry: new Date(Date.now() + expires_in * 1000),
+          facebookTokenExpiry: tokenExpiryDate,
         },
         { upsert: true, new: true }
       );
@@ -178,6 +186,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
     res.status(500).send("An error occurred during authentication.");
   }
 });
+
 
 // Handle page selection
 router.post("/select-page", async (req, res) => {
