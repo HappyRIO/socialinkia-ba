@@ -146,9 +146,9 @@ router.get("/auth/facebook/callback", async (req, res) => {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
-  if (state !== req.session.state) {
-    return res.status(400).json({ error: "Invalid state parameter." });
-  }
+  // if (state !== req.session.state) {
+  //   return res.status(400).json({ error: "Invalid state parameter." });
+  // }
 
   console.log({
     client_id: process.env.FACEBOOK_APP_ID,
