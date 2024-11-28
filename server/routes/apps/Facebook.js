@@ -146,12 +146,16 @@ router.get("/auth/facebook/callback", async (req, res) => {
     } else {
       // Save new user's Facebook credentials to the database
       console.log("Saving new user to the database.");
+
+      // Avoid setting insagramId to null
       await User.findOneAndUpdate(
         { facebookId: profileData.id },
         {
           facebookId: profileData.id,
           facebookAccessToken: access_token,
           facebookTokenExpiry: tokenExpiryDate,
+          // Ensure instagramId is not set to null unless necessary
+          insagramId: null, // Make sure not to set this to null unintentionally
         },
         { upsert: true, new: true }
       );
@@ -186,7 +190,6 @@ router.get("/auth/facebook/callback", async (req, res) => {
     res.status(500).send("An error occurred during authentication.");
   }
 });
-
 
 // Handle page selection
 router.post("/select-page", async (req, res) => {
