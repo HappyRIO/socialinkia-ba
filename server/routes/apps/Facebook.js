@@ -62,93 +62,12 @@ router.get("/auth/facebook", async (req, res) => {
 });
 
 // Step 2: Handle Facebook OAuth callback
-// router.get("/auth/facebook/callback", async (req, res) => {
-//   const { code } = req.query;
-
-//   if (!code) {
-//     return res.status(400).json({ error: "Authorization code missing." });
-//   }
-
-//   console.log({
-//     client_id: process.env.FACEBOOK_APP_ID,
-//     client_secret: process.env.FACEBOOK_APP_SECRET,
-//     redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-//     code,
-//   });
-
-//   try {
-//     // Exchange code for access token
-//     const tokenResponse = await axios.post(
-//       "https://graph.facebook.com/v17.0/oauth/access_token",
-//       qs.stringify({
-//         client_id: process.env.FACEBOOK_APP_ID,
-//         client_secret: process.env.FACEBOOK_APP_SECRET,
-//         redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-//         code,
-//       }),
-//       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-//     );
-
-//     const { access_token, expires_in } = tokenResponse.data;
-//     console.log({ tokenResponce: access_token, exp: expires_in });
-
-//     // Fetch user profile to get Facebook ID
-//     const profileResponse = await axios.get(
-//       `https://graph.facebook.com/me?access_token=${access_token}`
-//     );
-//     const profileData = profileResponse.data;
-
-//     console.log("profile fetching");
-
-//     if (!profileData.id) {
-//       return res.status(500).send("Failed to obtain user profile.");
-//     }
-
-//     // Fetch user pages
-//     const pagesResponse = await axios.get(
-//       `https://graph.facebook.com/me/accounts?access_token=${access_token}`
-//     );
-//     console.log("processing page list");
-//     const pagesData = pagesResponse.data;
-
-//     if (!pagesData.data || pagesData.data.length === 0) {
-//       return res.status(404).send("No pages found.");
-//     }
-
-//     // Save Facebook credentials to the database
-//     const user = await User.findOneAndUpdate(
-//       { facebookId: profileData.id },
-//       {
-//         facebookId: profileData.id,
-//         facebookAccessToken: access_token,
-//         facebookTokenExpiry: new Date(Date.now() + expires_in * 1000),
-//       },
-//       { upsert: true, new: true }
-//     );
-
-//     console.log(user);
-
-//     // Render a page selection interface
-//     res.json({ message: "Select a page to continue", pages: pagesData.data });
-//   } catch (error) {
-//     if (error.response) {
-//       console.error("Error response data:", error.response.data);
-//     }
-//     console.error("Error during Facebook OAuth callback:", error.message);
-//     res.status(500).send("An error occurred during authentication.");
-//   }
-// });
-// Step 2: Handle Facebook OAuth callback
 router.get("/auth/facebook/callback", async (req, res) => {
-  const { code, state } = req.query;
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
-
-  // if (state !== req.session.state) {
-  //   return res.status(400).json({ error: "Invalid state parameter." });
-  // }
 
   console.log({
     client_id: process.env.FACEBOOK_APP_ID,
@@ -172,6 +91,8 @@ router.get("/auth/facebook/callback", async (req, res) => {
 
     const { access_token, expires_in } = tokenResponse.data;
     console.log({ tokenResponse: access_token, exp: expires_in });
+    console.log("Token response data:", tokenResponse.data);
+
 
     // Fetch user profile to get Facebook ID
     const profileResponse = await axios.get(
