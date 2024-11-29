@@ -114,6 +114,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
     });
   } catch (error) {
     console.error("Error during Instagram OAuth callback:", error.message);
+    console.error("Error during Instagram OAuth callback:", error);
 
     if (
       error.response?.data?.error?.message ===

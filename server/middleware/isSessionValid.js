@@ -1,6 +1,7 @@
 const User = require("../model/User");
 
 // Check if session token is valid
+
 const isSessionValid = (req, res, next) => {
   const { sessionToken } = req.cookies;
 
