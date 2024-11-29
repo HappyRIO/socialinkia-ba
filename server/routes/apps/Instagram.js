@@ -36,6 +36,8 @@ router.get("/auth/instagram/callback", async (req, res) => {
       code,
     };
 
+    console.log({ paylod: payload });
+
     const tokenResponse = await axios.post(
       "https://api.instagram.com/oauth/access_token",
       qs.stringify(payload),
@@ -43,6 +45,8 @@ router.get("/auth/instagram/callback", async (req, res) => {
     );
 
     const { access_token, user_id } = tokenResponse.data;
+
+    console.log({ tokken: tokenResponse.data });
 
     console.log("Access token received:", access_token);
 
@@ -63,6 +67,8 @@ router.get("/auth/instagram/callback", async (req, res) => {
         `https://graph.instagram.com/me?fields=id,username,email&access_token=${access_token}`
       );
       const userInfo = userInfoResponse.data;
+
+      console.log({ userinfo: userInfo });
 
       user = new User({
         instagramId: user_id,

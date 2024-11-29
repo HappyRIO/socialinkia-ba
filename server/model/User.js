@@ -109,9 +109,9 @@ const UserSchema = new Schema({
 
   // instagram zone
   // , unique: true, sparse: true
-  insagramId: { type: String },
-  insagramAccessToken: { type: String },
-  insagramTokenExpiry: { type: Date, default: null },
+  instagramId: { type: String },
+  instagramAccessToken: { type: String },
+  instagramTokenExpiry: { type: Date, default: null },
 
   // selected google business
   selectedFacebookBusinessPage: {
