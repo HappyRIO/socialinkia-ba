@@ -13,7 +13,7 @@ router.get("/auth/instagram", isSessionValid, (req, res) => {
 
   // Generate a unique state parameter
   const state = crypto.randomBytes(16).toString("hex");
-  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,ads_management,business_management&state=${state}`;
+  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,ads_management,business_management&state=${state}`;
 
   res.redirect(authUrl);
 });
