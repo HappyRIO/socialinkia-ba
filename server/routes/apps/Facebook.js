@@ -3,6 +3,7 @@ const qs = require("qs");
 const axios = require("axios");
 const router = express.Router();
 const User = require("../../model/User.js");
+const isSessionValid = require("../../middleware/isSessionValid.js");
 
 // Function to generate a random string (security purpose)
 const generateRandomString = (length = 32) => {
@@ -15,50 +16,30 @@ const generateRandomString = (length = 32) => {
 
 // ----------------- Facebook Authentication ------------------
 // Step 1: Redirect to Facebook for authorization
-// router.get("/auth/facebook", (req, res) => {
-//   const facebookAppId = process.env.FACEBOOK_APP_ID;
-//   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
-
-//   if (!facebookAppId || !facebookRedirectUri) {
-//     return res.status(500).send("Facebook App ID or Redirect URI not set.");
-//   }
-
-//   const randomString = generateRandomString();
-
-//   // Store the state in the session
-//   req.session.state = randomString;
-
-//   console.log(req.session.state);
-
-//   const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
-
-//   res.redirect(facebookAuthUrl);
-// });
-router.get("/auth/facebook", async (req, res) => {
+router.get("/auth/facebook", isSessionValid, async (req, res) => {
   const facebookAppId = process.env.FACEBOOK_APP_ID;
   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
+  console.log({ fbaccess: req.user.facebookAccessToken });
 
-  if (!facebookAppId || !facebookRedirectUri) {
-    return res.status(500).send("Facebook App ID or Redirect URI not set.");
-  }
-
-  const randomString = generateRandomString();
-  req.session.state = randomString;
-
-  console.log(req.session.state);
-
-  let authType = "";
-  if (req.session.userId) {
-    // Add auth_type=rerequest only for returning users
-    const user = await User.findById(req.session.userId);
-    if (user) {
-      authType = "&auth_type=rerequest";
+  if (req.user.facebookAccessToken === "") {
+    const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
+    if (!facebookAppId || !facebookRedirectUri) {
+      return res.status(500).send("Facebook App ID or Redirect URI not set.");
     }
+
+    const randomString = generateRandomString();
+
+    res.redirect(facebookAuthUrl);
+  } else {
+    const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata&auth_type=rerequest`;
+    if (!facebookAppId || !facebookRedirectUri) {
+      return res.status(500).send("Facebook App ID or Redirect URI not set.");
+    }
+
+    const randomString = generateRandomString();
+
+    res.redirect(facebookAuthUrl);
   }
-
-  const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata${authType}`;
-
-  res.redirect(facebookAuthUrl);
 });
 
 // Step 2: Handle Facebook OAuth callback
