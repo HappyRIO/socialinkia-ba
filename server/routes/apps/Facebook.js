@@ -74,14 +74,14 @@ router.get("/auth/facebook/callback", async (req, res) => {
       throw new Error("Failed to retrieve access token.");
     }
 
-    // Fetch Facebook user profile
+    // Fetch Facebook user profile with email
     const profileResponse = await axios.get(
-      `https://graph.facebook.com/me?access_token=${access_token}`
+      `https://graph.facebook.com/me?fields=id,email,name&access_token=${access_token}`
     );
     const profileData = profileResponse.data;
 
-    if (!profileData.id) {
-      throw new Error("Failed to retrieve Facebook user ID.");
+    if (!profileData.id || !profileData.email) {
+      throw new Error("Failed to retrieve Facebook user profile or email.");
     }
 
     // Check if the user exists in the database
@@ -95,6 +95,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
       console.log("New user detected. Creating user record...");
       user = new User({
         facebookId: profileData.id,
+        email: profileData.email,
         facebookAccessToken: access_token,
         facebookTokenExpiry: tokenExpiryDate,
       });
@@ -126,6 +127,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
     res.status(500).send("An error occurred during authentication.");
   }
 });
+
 
 // Handle page selection
 router.post("/select-page", async (req, res) => {
