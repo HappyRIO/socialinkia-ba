@@ -60,7 +60,15 @@ router.get("/auth/facebook/callback", async (req, res) => {
     );
 
     const { access_token, expires_in } = tokenResponse.data;
-    const tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
+
+    console.log("Access token response:", tokenResponse.data);
+
+    let tokenExpiryDate = null;
+    if (expires_in) {
+      tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
+    } else {
+      console.warn("Missing 'expires_in'. Defaulting expiry to null.");
+    }
 
     // Fetch Facebook user profile
     const profileResponse = await axios.get(
@@ -72,16 +80,20 @@ router.get("/auth/facebook/callback", async (req, res) => {
       return res.status(500).send("Failed to obtain user profile.");
     }
 
-    // Find existing user or register a new one
-    const user = await User.findOneAndUpdate(
-      { facebookId: profileData.id },
-      {
-        facebookId: profileData.id,
-        facebookAccessToken: access_token,
-        facebookTokenExpiry: tokenExpiryDate,
-      },
-      { upsert: true, new: true }
-    );
+    if (access_token && tokenExpiryDate) {
+      await User.findOneAndUpdate(
+        { facebookId: profileData.id },
+        {
+          facebookId: profileData.id,
+          facebookAccessToken: access_token,
+          facebookTokenExpiry: tokenExpiryDate,
+        },
+        { upsert: true, new: true }
+      );
+    } else {
+      console.error("Access token or expiry is invalid.");
+      return res.status(500).send("Failed to save user data.");
+    }
 
     // Fetch pages linked to the user
     const pagesResponse = await axios.get(
