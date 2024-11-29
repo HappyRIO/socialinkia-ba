@@ -4,31 +4,30 @@ const router = express.Router();
 const User = require("../../model/User.js");
 const crypto = require("crypto");
 const qs = require("qs");
+const isSessionValid = require("../../middleware/isSessionValid.js");
 require("dotenv").config();
 
-// ----------------- Instagram Authentication ------------------
 // Step 1: Redirect to Instagram for authorization
-router.get("/auth/instagram", (req, res) => {
+router.get("/auth/instagram", isSessionValid, (req, res) => {
   console.log("Firing Instagram auth");
 
   // Generate a unique state parameter
   const state = crypto.randomBytes(16).toString("hex");
-  req.session.state = state; // Store the state in the session
-
-  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_business_basic,instagram_business_manage_messages,instagram_business_manage_comments,instagram_business_content_publish&state=${state}`;
+  const authUrl = `https://www.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&response_type=code&scope=instagram_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,ads_management,business_management&state=${state}`;
 
   res.redirect(authUrl);
 });
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
-  const { code, state } = req.query;
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
   try {
+    // Exchange the code for an access token
     const payload = {
       client_id: process.env.INSTAGRAM_CLIENT_ID,
       client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
@@ -45,28 +44,65 @@ router.get("/auth/instagram/callback", async (req, res) => {
 
     const { access_token, user_id } = tokenResponse.data;
 
-    // Save or update the user's Instagram credentials
-    const user = await User.findOneAndUpdate(
-      { email: req.session.userEmail }, // Assuming user email is stored in session
-      {
+    console.log("Access token received:", access_token);
+
+    // Check if the user exists by Instagram ID
+    let user = await User.findOne({ instagramId: user_id });
+
+    if (user) {
+      console.log("Existing Instagram user detected. Updating access token...");
+      user.instagramAccessToken = access_token;
+      user.instagramTokenExpiry = new Date(
+        Date.now() + 60 * 24 * 60 * 60 * 1000
+      ); // 60 days
+    } else {
+      console.log("New Instagram user detected. Creating user record...");
+
+      // Fetch Instagram user info for email (if required)
+      const userInfoResponse = await axios.get(
+        `https://graph.instagram.com/me?fields=id,username,email&access_token=${access_token}`
+      );
+      const userInfo = userInfoResponse.data;
+
+      user = new User({
         instagramId: user_id,
         instagramAccessToken: access_token,
-        instagramTokenExpiry: new Date(Date.now() + 60 * 60 * 24 * 60 * 1000), // 60 days expiry
-      },
-      { upsert: true, new: true }
-    );
+        instagramTokenExpiry: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
+        email: userInfo.email || null, // Use the email from Instagram if available
+      });
+    }
+
+    await user.save();
 
     // Fetch Instagram business accounts linked to the user
     const accountsResponse = await axios.get(
-      `https://graph.facebook.com/v17.0/me/accounts?access_token=${access_token}`
+      `https://graph.facebook.com/v17.0/${user_id}/accounts?access_token=${access_token}`
     );
+    const accounts = accountsResponse.data.data;
+
+    if (!accounts || accounts.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No Instagram business accounts found." });
+    }
 
     res.json({
       message: "Select an Instagram business account to continue",
-      accounts: accountsResponse.data.data,
+      accounts,
     });
   } catch (error) {
-    console.error("Error during Instagram OAuth callback:", error);
+    console.error("Error during Instagram OAuth callback:", error.message);
+
+    if (
+      error.response?.data?.error?.message ===
+      "This authorization code has been used."
+    ) {
+      console.error(
+        "Authorization code already used. Redirecting to restart OAuth."
+      );
+      return res.redirect("/auth/instagram");
+    }
+
     res.status(500).send("An error occurred during authentication.");
   }
 });
