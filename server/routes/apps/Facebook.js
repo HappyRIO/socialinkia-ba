@@ -25,17 +25,19 @@ router.get("/auth/facebook", isSessionValid, async (req, res) => {
   }
 
   const randomString = generateRandomString();
-  const baseFacebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
+  const scope =
+    "email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata";
+  let facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=${scope}`;
 
-  if (!req.user || !req.user.facebookAccessToken) {
-    console.log({ message: "Authenticating a new user" });
-    return res.redirect(baseFacebookAuthUrl);
+  if (req.user?.facebookAccessToken) {
+    // Reauthenticate if user already has a token
+    console.log("Reauthenticating user...");
+    facebookAuthUrl += "&auth_type=rerequest&prompt=consent";
+  } else {
+    console.log("Authenticating new user...");
   }
 
-  // Check if the token needs reauthentication
-  console.log({ message: "Reauthenticating an existing user" });
-  const reauthUrl = `${baseFacebookAuthUrl}&auth_type=rerequest`;
-  res.redirect(reauthUrl);
+  res.redirect(facebookAuthUrl);
 });
 
 // Step 2: Handle Facebook OAuth callback
@@ -47,7 +49,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
   }
 
   try {
-    // Exchange code for access token
+    // Exchange the code for an access token
     const tokenResponse = await axios.post(
       "https://graph.facebook.com/v17.0/oauth/access_token",
       qs.stringify({
@@ -61,13 +63,15 @@ router.get("/auth/facebook/callback", async (req, res) => {
 
     const { access_token, expires_in } = tokenResponse.data;
 
-    console.log("Access token response:", tokenResponse.data);
+    console.log("Access token received:", access_token);
 
-    let tokenExpiryDate = null;
-    if (expires_in) {
-      tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
-    } else {
-      console.warn("Missing 'expires_in'. Defaulting expiry to null.");
+    // Calculate token expiry
+    const tokenExpiryDate = expires_in
+      ? new Date(Date.now() + expires_in * 1000)
+      : null;
+
+    if (!access_token) {
+      throw new Error("Failed to retrieve access token.");
     }
 
     // Fetch Facebook user profile
@@ -77,25 +81,28 @@ router.get("/auth/facebook/callback", async (req, res) => {
     const profileData = profileResponse.data;
 
     if (!profileData.id) {
-      return res.status(500).send("Failed to obtain user profile.");
+      throw new Error("Failed to retrieve Facebook user ID.");
     }
 
-    if (access_token && tokenExpiryDate) {
-      await User.findOneAndUpdate(
-        { facebookId: profileData.id },
-        {
-          facebookId: profileData.id,
-          facebookAccessToken: access_token,
-          facebookTokenExpiry: tokenExpiryDate,
-        },
-        { upsert: true, new: true }
-      );
+    // Check if the user exists in the database
+    let user = await User.findOne({ facebookId: profileData.id });
+
+    if (user) {
+      console.log("Existing user detected. Updating access token...");
+      user.facebookAccessToken = access_token;
+      user.facebookTokenExpiry = tokenExpiryDate;
     } else {
-      console.error("Access token or expiry is invalid.");
-      return res.status(500).send("Failed to save user data.");
+      console.log("New user detected. Creating user record...");
+      user = new User({
+        facebookId: profileData.id,
+        facebookAccessToken: access_token,
+        facebookTokenExpiry: tokenExpiryDate,
+      });
     }
 
-    // Fetch pages linked to the user
+    await user.save();
+
+    // Fetch user's Facebook pages
     const pagesResponse = await axios.get(
       `https://graph.facebook.com/me/accounts?access_token=${access_token}`
     );
@@ -108,15 +115,11 @@ router.get("/auth/facebook/callback", async (req, res) => {
     res.json({ message: "Select a page to continue", pages: pagesData.data });
   } catch (error) {
     console.error("Error during Facebook OAuth callback:", error.message);
-    if (error.response) {
-      console.error("Error details:", error.response.data);
-    }
 
-    if (
-      error.response?.data?.error?.code === 100 &&
-      error.response?.data?.error?.error_subcode === 36009
-    ) {
-      console.error("Authorization code already used. Redirecting.");
+    if (error.response?.data?.error?.error_subcode === 36009) {
+      console.error(
+        "Authorization code already used. Redirecting to restart OAuth."
+      );
       return res.redirect("/auth/facebook");
     }
 
