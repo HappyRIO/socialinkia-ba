@@ -84,7 +84,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
       throw new Error("Failed to retrieve Facebook user profile or email.");
     }
 
-    // Check if the user exists in the database
+    // Check if the user exists by Facebook ID
     let user = await User.findOne({ facebookId: profileData.id });
 
     if (user) {
@@ -92,13 +92,25 @@ router.get("/auth/facebook/callback", async (req, res) => {
       user.facebookAccessToken = access_token;
       user.facebookTokenExpiry = tokenExpiryDate;
     } else {
-      console.log("New user detected. Creating user record...");
-      user = new User({
-        facebookId: profileData.id,
-        email: profileData.email,
-        facebookAccessToken: access_token,
-        facebookTokenExpiry: tokenExpiryDate,
-      });
+      // Check if the user exists by email
+      user = await User.findOne({ email: profileData.email });
+
+      if (user) {
+        console.log(
+          "Existing user detected by email. Associating Facebook account..."
+        );
+        user.facebookId = profileData.id;
+        user.facebookAccessToken = access_token;
+        user.facebookTokenExpiry = tokenExpiryDate;
+      } else {
+        console.log("New user detected. Creating user record...");
+        user = new User({
+          facebookId: profileData.id,
+          email: profileData.email,
+          facebookAccessToken: access_token,
+          facebookTokenExpiry: tokenExpiryDate,
+        });
+      }
     }
 
     await user.save();
@@ -127,7 +139,6 @@ router.get("/auth/facebook/callback", async (req, res) => {
     res.status(500).send("An error occurred during authentication.");
   }
 });
-
 
 // Handle page selection
 router.post("/select-page", async (req, res) => {
