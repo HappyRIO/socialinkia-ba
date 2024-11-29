@@ -19,6 +19,7 @@ const generateRandomString = (length = 32) => {
 router.get("/auth/facebook", isSessionValid, async (req, res) => {
   const facebookAppId = process.env.FACEBOOK_APP_ID;
   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
+
   console.log({ fbaccess: req.user.facebookAccessToken });
 
   if (req.user.facebookAccessToken === "") {
@@ -32,7 +33,9 @@ router.get("/auth/facebook", isSessionValid, async (req, res) => {
 
     res.redirect(facebookAuthUrl);
   } else {
+
     console.log({ message: "reautheticating  user" });
+    
     const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata&auth_type=rerequest`;
     if (!facebookAppId || !facebookRedirectUri) {
       return res.status(500).send("Facebook App ID or Redirect URI not set.");
