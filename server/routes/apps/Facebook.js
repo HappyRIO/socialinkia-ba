@@ -17,34 +17,25 @@ const generateRandomString = (length = 32) => {
 // ----------------- Facebook Authentication ------------------
 // Step 1: Redirect to Facebook for authorization
 router.get("/auth/facebook", isSessionValid, async (req, res) => {
-  console.log(req.user._id);
   const facebookAppId = process.env.FACEBOOK_APP_ID;
   const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
-  console.log({ fbaccess: req.user.facebookAccessToken });
-
-  if (req.user.facebookAccessToken === "") {
-    console.log({ message: "autheticating new user" });
-    if (!facebookAppId || !facebookRedirectUri) {
-      return res.status(500).send("Facebook App ID or Redirect URI not set.");
-    }
-
-    const randomString = generateRandomString();
-    const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
-
-    res.redirect(facebookAuthUrl);
-  } else {
-    console.log({ message: "reautheticating  user" });
-
-    if (!facebookAppId || !facebookRedirectUri) {
-      return res.status(500).send("Facebook App ID or Redirect URI not set.");
-    }
-
-    const randomString = generateRandomString();
-    const facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata&auth_type=rerequest`;
-
-    res.redirect(facebookAuthUrl);
+  if (!facebookAppId || !facebookRedirectUri) {
+    return res.status(500).send("Facebook App ID or Redirect URI not set.");
   }
+
+  const randomString = generateRandomString();
+  const baseFacebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata`;
+
+  if (!req.user || !req.user.facebookAccessToken) {
+    console.log({ message: "Authenticating a new user" });
+    return res.redirect(baseFacebookAuthUrl);
+  }
+
+  // Check if the token needs reauthentication
+  console.log({ message: "Reauthenticating an existing user" });
+  const reauthUrl = `${baseFacebookAuthUrl}&auth_type=rerequest`;
+  res.redirect(reauthUrl);
 });
 
 // Step 2: Handle Facebook OAuth callback
@@ -54,13 +45,6 @@ router.get("/auth/facebook/callback", async (req, res) => {
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
-
-  console.log({
-    client_id: process.env.FACEBOOK_APP_ID,
-    client_secret: process.env.FACEBOOK_APP_SECRET,
-    redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-    code,
-  });
 
   try {
     // Exchange code for access token
@@ -75,81 +59,34 @@ router.get("/auth/facebook/callback", async (req, res) => {
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const { access_token, expires_in, token_type } = tokenResponse.data;
-    console.log({ tokenResponse: access_token, exp: expires_in });
-    console.log("Token response data:", tokenResponse.data);
+    const { access_token, expires_in } = tokenResponse.data;
+    const tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
 
-    // Determine token expiry date
-    let tokenExpiryDate = null;
-    if (expires_in) {
-      tokenExpiryDate = new Date(Date.now() + expires_in * 1000);
-    } else if (token_type === "bearer") {
-      console.log("Long-lived token detected. Setting expiry to 60 days.");
-      tokenExpiryDate = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000); // 60 days
-    }
-
-    // Fetch user profile to get Facebook ID
+    // Fetch Facebook user profile
     const profileResponse = await axios.get(
       `https://graph.facebook.com/me?access_token=${access_token}`
     );
     const profileData = profileResponse.data;
 
-    console.log("profile fetching");
-
     if (!profileData.id) {
       return res.status(500).send("Failed to obtain user profile.");
     }
 
-    // Refresh or validate token for returning users
-    const user = await User.findOne({ facebookId: profileData.id });
+    // Find existing user or register a new one
+    const user = await User.findOneAndUpdate(
+      { facebookId: profileData.id },
+      {
+        facebookId: profileData.id,
+        facebookAccessToken: access_token,
+        facebookTokenExpiry: tokenExpiryDate,
+      },
+      { upsert: true, new: true }
+    );
 
-    if (user) {
-      const isTokenExpired =
-        Date.now() > new Date(user.facebookTokenExpiry).getTime();
-
-      if (isTokenExpired) {
-        console.log("Refreshing token for returning user.");
-        const refreshResponse = await axios.get(
-          `https://graph.facebook.com/v17.0/oauth/access_token`,
-          {
-            params: {
-              grant_type: "fb_exchange_token",
-              client_id: process.env.FACEBOOK_APP_ID,
-              client_secret: process.env.FACEBOOK_APP_SECRET,
-              fb_exchange_token: user.facebookAccessToken,
-            },
-          }
-        );
-
-        user.facebookAccessToken = refreshResponse.data.access_token;
-        user.facebookTokenExpiry = new Date(
-          Date.now() + refreshResponse.data.expires_in * 1000
-        );
-        await user.save();
-      } else {
-        console.log("Token is valid for returning user.");
-      }
-    } else {
-      // Save new user's Facebook credentials to the database
-      console.log("Saving new user to the database.");
-
-      await User.findOneAndUpdate(
-        { facebookId: profileData.id },
-        {
-          facebookId: profileData.id,
-          facebookAccessToken: access_token,
-          facebookTokenExpiry: tokenExpiryDate,
-          // Remove insagramId from the update object if not relevant
-        },
-        { upsert: true, new: true }
-      );
-    }
-
-    // Fetch user pages
+    // Fetch pages linked to the user
     const pagesResponse = await axios.get(
       `https://graph.facebook.com/me/accounts?access_token=${access_token}`
     );
-    console.log("processing page list");
     const pagesData = pagesResponse.data;
 
     if (!pagesData.data || pagesData.data.length === 0) {
@@ -158,19 +95,19 @@ router.get("/auth/facebook/callback", async (req, res) => {
 
     res.json({ message: "Select a page to continue", pages: pagesData.data });
   } catch (error) {
+    console.error("Error during Facebook OAuth callback:", error.message);
+    if (error.response) {
+      console.error("Error details:", error.response.data);
+    }
+
     if (
       error.response?.data?.error?.code === 100 &&
       error.response?.data?.error?.error_subcode === 36009
     ) {
-      console.error(
-        "Authorization code already used. Prompting re-authentication."
-      );
+      console.error("Authorization code already used. Redirecting.");
       return res.redirect("/auth/facebook");
     }
-    if (error.response) {
-      console.error("Error response data:", error.response.data);
-    }
-    console.error("Error during Facebook OAuth callback:", error.message);
+
     res.status(500).send("An error occurred during authentication.");
   }
 });
