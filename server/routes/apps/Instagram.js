@@ -35,8 +35,9 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
   const randomState = generateRandomString();
   const scope = `instagram_business_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,pages_read_engagement,pages_manage_posts,business_management`;
 
-  let instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&scope=${scope}`;
-
+  // let instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&scope=${scope}`;
+  let instagramAuthUrl =
+    "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=1103023324688943&redirect_uri=https://auto-social-api.onrender.com/api/instagram/auth/instagram/callback&response_type=code&scope=instagram_business_basic%2Cinstagram_business_manage_messages%2Cinstagram_business_manage_comments%2Cinstagram_business_content_publish";
   if (req.user?.instagramAccessToken) {
     // Reauthenticate if user already has a token
     console.log("Reauthenticating Instagram user...");
