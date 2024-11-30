@@ -23,6 +23,11 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
   const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
   const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
 
+  console.log({
+    instagramClientId: instagramClientId,
+    instagramRedirectUri: instagramRedirectUri,
+  });
+
   if (!instagramClientId || !instagramRedirectUri) {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
   }
