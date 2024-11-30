@@ -7,18 +7,18 @@ const qs = require("qs");
 const isSessionValid = require("../../middleware/isSessionValid.js");
 require("dotenv").config();
 
-// Function to generate a random string (security purpose)
-const generateRandomString = (length = 32) => {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length }, () =>
-    characters.charAt(Math.floor(Math.random() * characters.length))
-  ).join("");
-};
-
 // Step 1: Redirect to Instagram for authorization
 router.get("/auth/instagram", isSessionValid, async (req, res) => {
   console.log("Firing Instagram auth");
+
+  // Function to generate a random string (security purpose)
+  const generateRandomString = (length = 32) => {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    return Array.from({ length }, () =>
+      characters.charAt(Math.floor(Math.random() * characters.length))
+    ).join("");
+  };
 
   const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
   const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
@@ -95,7 +95,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
         instagramId: user_id,
         instagramAccessToken: access_token,
         instagramTokenExpiry: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
-        email: userInfo.email || null,
+        // email: userInfo.email || null,
       });
     }
 
