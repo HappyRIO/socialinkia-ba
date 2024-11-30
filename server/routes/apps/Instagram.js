@@ -33,7 +33,7 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
   }
 
   const randomState = generateRandomString();
-  const scope = `instagram_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,pages_read_engagement,pages_manage_posts,business_management`;
+  const scope = `instagram_business_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,pages_read_engagement,pages_manage_posts,business_management`;
 
   let instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&scope=${scope}`;
 
