@@ -20,8 +20,11 @@ const generateRandomString = (length = 32) => {
 router.get("/auth/instagram", isSessionValid, async (req, res) => {
   console.log("Firing Instagram auth");
 
-  const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
-  const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
+  // const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
+  // const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
+  // fbook test
+  const instagramClientId = process.env.FACEBOOK_APP_ID;
+  const instagramRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
   if (!instagramClientId || !instagramRedirectUri) {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
