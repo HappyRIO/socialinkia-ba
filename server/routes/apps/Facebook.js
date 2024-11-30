@@ -7,123 +7,135 @@ const qs = require("qs");
 const isSessionValid = require("../../middleware/isSessionValid.js");
 require("dotenv").config();
 
-// Utility function to generate random strings
-const generateRandomString = (length = 16) =>
-  crypto.randomBytes(length).toString("hex");
+// Function to generate a random string (security purpose)
+const generateRandomString = (length = 32) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  return Array.from({ length }, () =>
+    characters.charAt(Math.floor(Math.random() * characters.length))
+  ).join("");
+};
 
-// Step 1: Redirect to Instagram for authorization
-router.get("/auth/instagram", isSessionValid, async (req, res) => {
-  console.log("Firing Instagram auth");
+// ----------------- Facebook Authentication ------------------
+// Step 1: Redirect to Facebook for authorization
+router.get("/auth/facebook", isSessionValid, async (req, res) => {
+  const facebookAppId = process.env.FACEBOOK_APP_ID;
+  const facebookRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
-  const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
-  const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
-
-  if (!instagramClientId || !instagramRedirectUri) {
-    return res.status(500).send("Instagram Client ID or Redirect URI not set.");
+  if (!facebookAppId || !facebookRedirectUri) {
+    return res.status(500).send("Facebook App ID or Redirect URI not set.");
   }
 
-  const randomState = generateRandomString();
-  const scope = `instagram_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,pages_read_engagement,pages_manage_posts,business_management`;
+  const randomString = generateRandomString();
+  const scope =
+    "email,public_profile,pages_manage_posts,pages_read_engagement,pages_manage_metadata";
+  let facebookAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${facebookAppId}&redirect_uri=${facebookRedirectUri}&state=${randomString}&scope=${scope}`;
 
-  let instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&scope=${scope}`;
-
-  if (req.user?.instagramAccessToken) {
+  if (req.user?.facebookAccessToken) {
     // Reauthenticate if user already has a token
-    console.log("Reauthenticating Instagram user...");
-    instagramAuthUrl += "&auth_type=rerequest&prompt=consent";
+    console.log("Reauthenticating user...");
+    facebookAuthUrl += "&auth_type=rerequest&prompt=consent";
   } else {
-    console.log("Authenticating new Instagram user...");
+    console.log("Authenticating new user...");
   }
 
-  res.redirect(instagramAuthUrl);
+  res.redirect(facebookAuthUrl);
 });
 
-// Step 2: Handle Instagram OAuth callback
-router.get("/auth/instagram/callback", async (req, res) => {
-  const { code, state } = req.query;
+// Step 2: Handle Facebook OAuth callback
+router.get("/auth/facebook/callback", async (req, res) => {
+  const { code } = req.query;
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
   try {
-    const payload = {
-      client_id: process.env.INSTAGRAM_CLIENT_ID,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-      grant_type: "authorization_code",
-      redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
-      code,
-    };
-
-    console.log("Payload for token exchange:", payload);
-
-    // Exchange authorization code for access token
+    // Exchange the code for an access token
     const tokenResponse = await axios.post(
-      "https://api.instagram.com/oauth/access_token",
-      qs.stringify(payload),
+      "https://graph.facebook.com/v17.0/oauth/access_token",
+      qs.stringify({
+        client_id: process.env.FACEBOOK_APP_ID,
+        client_secret: process.env.FACEBOOK_APP_SECRET,
+        redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+        code,
+      }),
       { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const { access_token, user_id } = tokenResponse.data;
+    const { access_token, expires_in } = tokenResponse.data;
+
     console.log("Access token received:", access_token);
 
-    // Check if the user exists in the database
-    let user = await User.findOne({ instagramId: user_id });
+    // Calculate token expiry
+    const tokenExpiryDate = expires_in
+      ? new Date(Date.now() + expires_in * 1000)
+      : null;
+
+    if (!access_token) {
+      throw new Error("Failed to retrieve access token.");
+    }
+
+    // Fetch Facebook user profile with email
+    const profileResponse = await axios.get(
+      `https://graph.facebook.com/me?fields=id,email,name&access_token=${access_token}`
+    );
+    const profileData = profileResponse.data;
+
+    if (!profileData.id || !profileData.email) {
+      throw new Error("Failed to retrieve Facebook user profile or email.");
+    }
+
+    // Check if the user exists by Facebook ID
+    let user = await User.findOne({ facebookId: profileData.id });
 
     if (user) {
-      console.log("Existing Instagram user detected. Updating access token...");
-      user.instagramAccessToken = access_token;
-      user.instagramTokenExpiry = new Date(
-        Date.now() + 60 * 24 * 60 * 60 * 1000 // 60 days
-      );
+      console.log("Existing user detected. Updating access token...");
+      user.facebookAccessToken = access_token;
+      user.facebookTokenExpiry = tokenExpiryDate;
     } else {
-      console.log("New Instagram user detected. Creating user record...");
+      // Check if the user exists by email
+      user = await User.findOne({ email: profileData.email });
 
-      // Fetch Instagram user info
-      const userInfoResponse = await axios.get(
-        `https://graph.instagram.com/me?fields=id,username,email&access_token=${access_token}`
-      );
-      const userInfo = userInfoResponse.data;
-      console.log("User info:", userInfo);
-
-      user = new User({
-        instagramId: user_id,
-        instagramAccessToken: access_token,
-        instagramTokenExpiry: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
-        email: userInfo.email || null,
-      });
+      if (user) {
+        console.log(
+          "Existing user detected by email. Associating Facebook account..."
+        );
+        user.facebookId = profileData.id;
+        user.facebookAccessToken = access_token;
+        user.facebookTokenExpiry = tokenExpiryDate;
+      } else {
+        console.log("New user detected. Creating user record...");
+        user = new User({
+          facebookId: profileData.id,
+          email: profileData.email,
+          facebookAccessToken: access_token,
+          facebookTokenExpiry: tokenExpiryDate,
+        });
+      }
     }
 
     await user.save();
 
-    // Fetch Instagram business accounts
-    const accountsResponse = await axios.get(
-      `https://graph.facebook.com/v17.0/${user_id}/accounts?access_token=${access_token}`
+    // Fetch user's Facebook pages
+    const pagesResponse = await axios.get(
+      `https://graph.facebook.com/me/accounts?access_token=${access_token}`
     );
-    const accounts = accountsResponse.data.data;
+    const pagesData = pagesResponse.data;
 
-    if (!accounts || accounts.length === 0) {
-      return res.status(404).json({
-        message: "No Instagram business accounts found.",
-      });
+    if (!pagesData.data || pagesData.data.length === 0) {
+      return res.status(404).send("No pages found.");
     }
 
-    res.json({
-      message: "Select an Instagram business account to continue",
-      accounts,
-    });
+    res.json({ message: "Select a page to continue", pages: pagesData.data });
   } catch (error) {
-    console.error("Error during Instagram OAuth callback:", error.message);
-    console.error("Error during Instagram OAuth callback:", error);
+    console.error("Error during Facebook OAuth callback:", error.message);
 
-    if (
-      error.response?.data?.error?.message ===
-      "This authorization code has been used."
-    ) {
+    if (error.response?.data?.error?.error_subcode === 36009) {
       console.error(
         "Authorization code already used. Redirecting to restart OAuth."
       );
-      return res.redirect("/auth/instagram");
+      return res.redirect("/auth/facebook");
     }
 
     res.status(500).send("An error occurred during authentication.");

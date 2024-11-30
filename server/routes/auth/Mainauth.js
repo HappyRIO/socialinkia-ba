@@ -13,11 +13,6 @@ const multer = require("multer");
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-router.get("/test", (req, res) => {
-  connectDB();
-  console.log("connected t db");
-});
-
 const uploadImagesToCloudinary = async (files) => {
   if (!files || (!Array.isArray(files) && !files.buffer)) {
     console.error("No valid files to upload.");
