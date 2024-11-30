@@ -106,7 +106,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
 
     res.json({
       message: "Select an Instagram business account to continue",
-      user,
+      user: user._id,
       accounts,
     });
   } catch (error) {

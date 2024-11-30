@@ -127,7 +127,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
       return res.status(404).send("No pages found.");
     }
 
-    res.json({ message: "Select a page to continue", pages: pagesData.data });
+    res.json({ message: "Select a page to continue", pages: pagesData.data, user: user._id });
   } catch (error) {
     console.error("Error during Facebook OAuth callback:", error.message);
 
