@@ -18,7 +18,7 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
   }
 
-  const scope = `instagram_business_basic,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,instagram_content_publish,pages_read_engagement,pages_manage_posts,business_management`;
+  const scope = `instagram_business_basic,instagram_business_content_publish,email,public_profile,Business Asset User Profile Access`;
 
   let instagramAuthUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&response_type=code&scope=${scope}`;
 
