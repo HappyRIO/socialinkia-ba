@@ -5,29 +5,26 @@ const User = require("../model/User");
 const publishToInstagram = async (post, user) => {
   const { imageUrl, videos } = post;
   const caption = post.text;
-  const userId = user._id;
-
-  console.log("Publishing to Instagram...");
 
   if (!caption || !imageUrl) {
     throw new Error("Caption and image URL are required.");
   }
 
+  console.log("Publishing to Instagram...");
+
   try {
     // Fetch user details from the database
-    const user = await User.findById(userId);
+    const dbUser = await User.findById(user._id);
 
-    if (!user || !user.instagramAccessToken) {
+    if (!dbUser || !dbUser.instagramAccessToken) {
       throw new Error("User Instagram credentials not found.");
     }
 
-    let accessToken = user.instagramAccessToken;
+    let accessToken = dbUser.instagramAccessToken;
 
-    // Refresh the token if it is expired
-    const isTokenExpired = (expiry) => Date.now() > new Date(expiry).getTime();
-    if (isTokenExpired(user.instagramTokenExpiry)) {
+    // Refresh token if expired
+    if (Date.now() > new Date(dbUser.instagramTokenExpiry).getTime()) {
       console.log("Refreshing Instagram access token...");
-
       const response = await axios.get(
         "https://graph.instagram.com/refresh_access_token",
         {
@@ -39,21 +36,20 @@ const publishToInstagram = async (post, user) => {
       );
 
       accessToken = response.data.access_token;
-      user.instagramAccessToken = accessToken;
-      user.instagramTokenExpiry = new Date(
+      dbUser.instagramAccessToken = accessToken;
+      dbUser.instagramTokenExpiry = new Date(
         Date.now() + response.data.expires_in * 1000
       );
-      await user.save();
-
+      await dbUser.save();
       console.log("Instagram access token refreshed successfully.");
     }
 
     // Step 1: Create media container
     const mediaContainerResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${user.selectedInstagramBusinessPage.id}/media`,
+      `https://graph.facebook.com/v17.0/${dbUser.selectedInstagramBusinessPage.id}/media`,
       {
         image_url: imageUrl,
-        caption: caption,
+        caption,
         access_token: accessToken,
       }
     );
@@ -62,7 +58,7 @@ const publishToInstagram = async (post, user) => {
 
     // Step 2: Publish media
     const publishResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${user.selectedInstagramBusinessPage.id}/media_publish`,
+      `https://graph.facebook.com/v17.0/${dbUser.selectedInstagramBusinessPage.id}/media_publish`,
       {
         creation_id: mediaContainerId,
         access_token: accessToken,
@@ -87,31 +83,28 @@ const publishToInstagram = async (post, user) => {
 const publishToFacebook = async (post, user) => {
   const { images, videos } = post;
   const message = post.text;
-  const userId = user._id;
-  console.log("Publishing to Facebook...");
 
   if (!message && (!images || images.length === 0)) {
     throw new Error("Message or at least one image URL is required.");
   }
 
+  console.log("Publishing to Facebook...");
+
   try {
     // Fetch user from the database
-    const user = await User.findById(userId);
+    const dbUser = await User.findById(user._id);
 
-    if (!user || !user.facebookAccessToken) {
+    if (!dbUser || !dbUser.facebookAccessToken) {
       throw new Error("User not found or Facebook access token is missing.");
     }
 
-    let accessToken = user.facebookAccessToken;
+    let accessToken = dbUser.facebookAccessToken;
 
-    // Check if the token is expired
-    const isTokenExpired =
-      Date.now() > new Date(user.facebookTokenExpiry).getTime();
-
-    if (isTokenExpired) {
+    // Check if the token is expired and refresh if necessary
+    if (Date.now() > new Date(dbUser.facebookTokenExpiry).getTime()) {
       console.log("Refreshing Facebook access token...");
       const refreshResponse = await axios.get(
-        `https://graph.facebook.com/v17.0/oauth/access_token`,
+        "https://graph.facebook.com/v17.0/oauth/access_token",
         {
           params: {
             grant_type: "fb_exchange_token",
@@ -123,52 +116,36 @@ const publishToFacebook = async (post, user) => {
       );
 
       accessToken = refreshResponse.data.access_token;
-
-      // Update the user's token in the database
-      user.facebookAccessToken = accessToken;
-      user.facebookTokenExpiry = new Date(
+      dbUser.facebookAccessToken = accessToken;
+      dbUser.facebookTokenExpiry = new Date(
         Date.now() + refreshResponse.data.expires_in * 1000
       );
-
-      await user.save();
+      await dbUser.save();
     }
 
-    // Publish message to Facebook
+    // Create and publish the post
     const postResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/me/feed`,
+      `https://graph.facebook.com/v17.0/${dbUser.selectedFacebookPageId}/feed`,
       {
         access_token: accessToken,
         message,
       }
     );
 
+    console.log("Post published successfully on Facebook!");
     const postId = postResponse.data.id;
 
-    // If there are images, upload them
+    // Handle image uploads
     if (images && images.length > 0) {
-      const imageUploadPromises = images.map((imageUrl) =>
-        axios.post(`https://graph.facebook.com/v17.0/${postId}/photos`, {
-          access_token: accessToken,
-          url: imageUrl,
-          published: false,
-        })
+      await Promise.all(
+        images.map((imageUrl) =>
+          axios.post(`https://graph.facebook.com/v17.0/${postId}/photos`, {
+            access_token: accessToken,
+            url: imageUrl,
+            published: true,
+          })
+        )
       );
-
-      await Promise.all(imageUploadPromises);
-    }
-
-    // If there are videos (optional), upload them
-    if (videos && videos.length > 0) {
-      const videoUploadPromises = videos.map((videoUrl) =>
-        axios.post(`https://graph.facebook.com/v17.0/me/videos`, {
-          access_token: accessToken,
-          file_url: videoUrl,
-          description: message,
-          published: true,
-        })
-      );
-
-      await Promise.all(videoUploadPromises);
     }
 
     return {
@@ -176,17 +153,21 @@ const publishToFacebook = async (post, user) => {
       postId,
     };
   } catch (error) {
-    console.error("Error posting content on Facebook:", error.message);
+    console.error(
+      "Error posting content on Facebook:",
+      error.response?.data || error.message
+    );
     throw new Error("Failed to post content on Facebook.");
   }
 };
+
 
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
   const summary = text;
 
-  if(!user){
-    res.status(303).json({data: "user not found"})
+  if (!user) {
+    res.status(303).json({ data: "user not found" });
   }
 
   if (!user.selectedGoogleBusinessPage) {

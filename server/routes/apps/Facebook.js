@@ -134,10 +134,12 @@ router.get("/auth/facebook/callback", async (req, res) => {
     // });
 
     const data = {
-      message: "Select an Instagram business account to continue",
+      message: "Select an facebook business account to continue",
       user: user._id,
       pages: pagesData.data,
     };
+
+    console.log({ message: data.message });
 
     const html = `
     <!DOCTYPE html>
@@ -156,12 +158,12 @@ router.get("/auth/facebook/callback", async (req, res) => {
               data.message
             }</h1>
         </div>
-        <ul class="w-full max-w-[300px] flex flex-col gap-3 justify-center items-center">
+        <ul class="w-full flex flex-col gap-3 justify-center items-center">
             ${data.pages
               .map(
                 (page) => `
                 <a href="https://auto-social-api.onrender.com/api/facebook/select-facebook-account?userId=${data.user}&accountId=${page.id}&accountAccessToken=${page.access_token}&accountName=${page.name}" 
-                   class="w-full flex flex-col gap-1 p-2 rounded-lg text-red-500 font-bold bg-slate-200">
+                   class="w-full flex flex-col gap-1 p-2 rounded-lg text-blue-500 font-bold bg-slate-200">
                     <li class="w-full flex flex-col gap-1">
                         <div class="icon">
                             <p>${page.name}</p>
@@ -236,9 +238,9 @@ router.get("/select-facebook-account", async (req, res) => {
 </head>
 
 <body class="w-full h-screen bg-orange-100 flex justify-center items-center">
-    <div
+   <div
         class="rounded-full animate-bounce border-[5px] border-green-500 aspect-square w-[200px] flex justify-center items-center">
-        <p class="text-green-500 animate-pulse font-bold text-3xl ">connected</p>
+        <p class="text-green-500 animate-pulse font-bold md:text-3xl">connected</p>
     </div>
 </body>
 

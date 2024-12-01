@@ -21,10 +21,10 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
   console.log("Firing Instagram auth");
 
   // const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
-  // const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
+  const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
   // fbook test
   const instagramClientId = process.env.FACEBOOK_APP_ID;
-  const instagramRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
+  // const instagramRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
 
   if (!instagramClientId || !instagramRedirectUri) {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
@@ -60,7 +60,7 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
   const { code } = req.query;
-
+  console.log("/auth/instagram/callback");
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
@@ -139,6 +139,8 @@ router.get("/auth/instagram/callback", async (req, res) => {
       accounts,
     };
 
+    console.log({ message: data.message });
+
     const html = `
     <!DOCTYPE html>
     <html lang="en">
@@ -156,7 +158,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
               data.message
             }</h1>
         </div>
-        <ul class="w-full max-w-[300px] flex flex-col gap-3 justify-center items-center">
+        <ul class="w-full flex flex-col gap-3 justify-center items-center">
             ${data.pages
               .map(
                 (page) => `
@@ -242,7 +244,7 @@ router.get("/select-instagram-account", async (req, res) => {
 <body class="w-full h-screen bg-orange-100 flex justify-center items-center">
     <div
         class="rounded-full animate-bounce border-[5px] border-green-500 aspect-square w-[200px] flex justify-center items-center">
-        <p class="text-green-500 animate-pulse font-bold text-3xl ">connected</p>
+        <p class="text-green-500 animate-pulse font-bold md:text-3xl">connected</p>
     </div>
 </body>
 
