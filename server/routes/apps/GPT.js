@@ -7,12 +7,6 @@ const isSessionValid = require("../../middleware/isSessionValid");
 const CHATGPT_API_URL = "https://api.openai.com/v1/chat/completions";
 const CHATGPT_API_KEY = process.env.GPT_API_KEY;
 
-// stupid gpt
-const API_TOKEN = "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";
-const MODEL_URL =
-  "https://api-inference.huggingface.co/models/openai-community/gpt2";
-
-// testing endpoint
 // Test route
 router.get("/gen", async (req, res) => {
   try {
@@ -131,92 +125,5 @@ dont forget, you can add opacity, shadow and different text styles make the imag
     };
   }
 }
-
-// stupid route
-// Function to generate text
-async function generateText(prompt) {
-  try {
-    const response = await axios.post(
-      MODEL_URL,
-      { inputs: prompt },
-      {
-        headers: { Authorization: `Bearer ${API_TOKEN}` },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error generating text:", error);
-    throw error;
-  }
-}
-
-// Function to create a prompt from CompanyDetails
-function createPrompt(companyDetails) {
-  const {
-    userName,
-    companyTradeName,
-    businessSector,
-    motto,
-    star_product,
-    contactInfo,
-  } = companyDetails;
-
-  return `
-  Create a compelling social media post for ${userName || "a business"}.
-  Business Name: ${companyTradeName || "N/A"}
-  Sector: ${businessSector || "N/A"}
-  Motto: ${motto || "N/A"}
-  Star Product: ${star_product || "N/A"}
-  Contact Info: ${contactInfo || "N/A"}
-  Highlight key benefits and call to action for the audience.
-  `;
-}
-
-// POST route to generate posts
-router.post("/generate-stupid-posts", isSessionValid, async (req, res) => {
-  console.log("generating stupid posts......");
-  try {
-    const user = req.user; // User is already validated by middleware
-    const { companyDetails, subscription } = user;
-
-    if (!companyDetails) {
-      return res.status(400).json({ error: "Company details are required." });
-    }
-
-    if (!subscription || !subscription.active) {
-      return res
-        .status(400)
-        .json({ error: "User does not have an active subscription." });
-    }
-
-    // Determine the number of posts based on the subscription plan
-    const postsToGenerate =
-      {
-        basic: 7,
-        standard: 20,
-        premium: 30,
-      }[subscription.plan.toLowerCase()] || 0;
-
-    if (postsToGenerate === 0) {
-      return res.status(400).json({ error: "Invalid subscription plan." });
-    }
-
-    // Generate posts
-    const prompt = createPrompt(companyDetails);
-    const generatedPosts = [];
-
-    for (let i = 0; i < postsToGenerate; i++) {
-      const generatedText = await generateText(prompt);
-      generatedPosts.push(generatedText); // Collect each generated post
-    }
-
-    console.log("generated posts...........");
-
-    res.json({ posts: generatedPosts }); // Return all generated posts
-  } catch (error) {
-    console.error("Error in generate-posts route:", error);
-    res.status(500).json({ error: "Failed to generate posts." });
-  }
-});
 
 module.exports = router;

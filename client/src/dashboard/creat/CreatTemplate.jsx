@@ -215,7 +215,7 @@ export default function PostCreation() {
                   onClick={handleGeneratePost}
                   className="p-2 bg-accent rounded-lg"
                 >
-                  {generate ? "generate....." : "generate"}
+                  {generate ? "generating....." : "generate"}
                 </button>
               </div>
             </div>

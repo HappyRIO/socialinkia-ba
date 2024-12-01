@@ -16,11 +16,13 @@ const publishToInstagram = async (post, user) => {
     // Fetch user details from the database
     const dbUser = await User.findById(user._id);
 
-    if (!dbUser || !dbUser.instagramAccessToken) {
+    console.log(dbUser);
+
+    if (!dbUser || !dbUser.selectedInstagramBusinessPage) {
       throw new Error("User Instagram credentials not found.");
     }
 
-    let accessToken = dbUser.instagramAccessToken;
+    let accessToken = dbUser.selectedInstagramBusinessPage.accessToken;
 
     // Refresh token if expired
     if (Date.now() > new Date(dbUser.instagramTokenExpiry).getTime()) {
@@ -94,11 +96,11 @@ const publishToFacebook = async (post, user) => {
     // Fetch user from the database
     const dbUser = await User.findById(user._id);
 
-    if (!dbUser || !dbUser.facebookAccessToken) {
+    if (!dbUser || !dbUser.selectedFacebookBusinessPage) {
       throw new Error("User not found or Facebook access token is missing.");
     }
 
-    let accessToken = dbUser.facebookAccessToken;
+    let accessToken = dbUser.selectedFacebookBusinessPage.accessToken;
 
     // Check if the token is expired and refresh if necessary
     if (Date.now() > new Date(dbUser.facebookTokenExpiry).getTime()) {
@@ -116,10 +118,10 @@ const publishToFacebook = async (post, user) => {
       );
 
       accessToken = refreshResponse.data.access_token;
-      dbUser.facebookAccessToken = accessToken;
-      dbUser.facebookTokenExpiry = new Date(
-        Date.now() + refreshResponse.data.expires_in * 1000
-      );
+      dbUser.selectedFacebookBusinessPage.accessToken = accessToken;
+      // dbUser.facebookTokenExpiry = new Date(
+      //   Date.now() + refreshResponse.data.expires_in * 1000
+      // );
       await dbUser.save();
     }
 
@@ -160,7 +162,6 @@ const publishToFacebook = async (post, user) => {
     throw new Error("Failed to post content on Facebook.");
   }
 };
-
 
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
