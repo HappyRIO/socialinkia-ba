@@ -127,7 +127,59 @@ router.get("/auth/facebook/callback", async (req, res) => {
       return res.status(404).send("No pages found.");
     }
 
-    res.json({ message: "Select a page to continue", pages: pagesData.data, user: user._id });
+    // res.json({
+    //   message: "Select a page to continue",
+    //   pages: pagesData.data,
+    //   user: user._id,
+    // });
+
+    const data = {
+      message: "Select an Instagram business account to continue",
+      user: user._id,
+      pages: pagesData.data,
+    };
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="shortcut icon" href="./image/nav.png" type="image/x-icon">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Instagram Auth</title>
+    </head>
+    <body class="w-full p-2 flex flex-col gap-4">
+        <div class="w-full flex flex-col items-center justify-center gap-5">
+            <img class="bg-black rounded-lg" src="../../images/nav.png" alt="">
+            <h1 class="w-full text-center text-2xl font-bold">${
+              data.message
+            }</h1>
+        </div>
+        <ul class="w-full max-w-[300px] flex flex-col gap-3 justify-center items-center">
+            ${data.pages
+              .map(
+                (page) => `
+                <a href="https://auto-social-api.onrender.com/api/facebook/select-facebook-account?userId=${data.user}&accountId=${page.id}&accountAccessToken=${page.access_token}&accountName=${page.name}" 
+                   class="w-full flex flex-col gap-1 p-2 rounded-lg text-red-500 font-bold bg-slate-200">
+                    <li class="w-full flex flex-col gap-1">
+                        <div class="icon">
+                            <p>${page.name}</p>
+                        </div>
+                        <div class="page text-sm font-normal">
+                            <p>${page.id}</p>
+                        </div>
+                    </li>
+                </a>
+              `
+              )
+              .join("")}
+        </ul>
+    </body>
+    </html>
+  `;
+
+    res.send(html);
   } catch (error) {
     console.error("Error during Facebook OAuth callback:", error.message);
 
@@ -142,24 +194,23 @@ router.get("/auth/facebook/callback", async (req, res) => {
   }
 });
 
-// Handle page selection
-router.post("/select-page", async (req, res) => {
-  console.log("page selection..........");
-  const { userId, pageId, pageName, pageAccessToken } = req.body;
+// Step 3: Handle account selection
+router.post("/select-facebook-account", async (req, res) => {
+  const { userId, accountId, accountName, accountAccessToken } = req.query; // Use req.query to access query parameters
 
-  if (!userId || !pageId) {
-    return res.status(400).send("User ID and page ID are required.");
+  if (!userId || !accountId) {
+    return res.status(400).send("User ID and account ID are required.");
   }
 
   try {
-    // Update the user with the selected page
+    // Update the user with the selected Instagram business account
     const user = await User.findByIdAndUpdate(
       userId,
       {
         selectedFacebookBusinessPage: {
-          id: pageId,
-          name: pageName,
-          accessToken: pageAccessToken,
+          id: accountId,
+          name: accountName,
+          accessToken: accountAccessToken,
         },
       },
       { new: true }
@@ -169,10 +220,13 @@ router.post("/select-page", async (req, res) => {
       return res.status(404).send("User not found.");
     }
 
-    res.json({ message: "Page selected successfully", user });
+    res.json({
+      message: "Instagram business account selected successfully",
+      user,
+    });
   } catch (error) {
-    console.error("Error selecting page:", error);
-    res.status(500).send("An error occurred while selecting the page.");
+    console.error("Error selecting Instagram account:", error);
+    res.status(500).send("An error occurred while selecting the account.");
   }
 });
 
