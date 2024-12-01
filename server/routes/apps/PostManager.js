@@ -147,18 +147,28 @@ const schedulePost = async (postId, userId) => {
     try {
       // Publish to platforms based on the post's platform flags
       if (post.platform.fbook) {
+        console.log({ message: `posted ${post._id} to fbook for ${user._id}` });
         const fbResult = await publishToFacebook(post, user);
-        post.socialPlatformIds.fbook = fbResult.postId; // Store the FB post ID
+        // post.socialPlatformIds.fbook = fbResult.postId;
+        console.log(fbResult);
       }
 
       if (post.platform.insta) {
+        console.log({
+          message: `posted ${post._id} to insta for ${user._id}`,
+        });
         const instaResult = await publishToInstagram(post, user);
-        post.socialPlatformIds.insta = instaResult.postId; // Store the Instagram post ID
+        // post.socialPlatformIds.insta = instaResult.postId;
+        console.log(instaResult);
       }
 
       if (post.platform.gmb) {
+        console.log({
+          message: `posted ${post._id} to gmb for ${user._id}`,
+        });
         const gmbResult = await publishToGmb(post, user);
-        post.socialPlatformIds.gmb = gmbResult.postId; // Store the GMB post ID
+        // post.socialPlatformIds.gmb = gmbResult.postId;
+        console.log(gmbResult);
       }
 
       // Update post status to "published"

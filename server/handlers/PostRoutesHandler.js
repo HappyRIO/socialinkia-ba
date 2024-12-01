@@ -103,31 +103,31 @@ const publishToFacebook = async (post, user) => {
     let accessToken = dbUser.selectedFacebookBusinessPage.accessToken;
 
     // Check if the token is expired and refresh if necessary
-    if (Date.now() > new Date(dbUser.facebookTokenExpiry).getTime()) {
-      console.log("Refreshing Facebook access token...");
-      const refreshResponse = await axios.get(
-        "https://graph.facebook.com/v17.0/oauth/access_token",
-        {
-          params: {
-            grant_type: "fb_exchange_token",
-            client_id: process.env.FACEBOOK_APP_ID,
-            client_secret: process.env.FACEBOOK_APP_SECRET,
-            fb_exchange_token: accessToken,
-          },
-        }
-      );
+    // if (Date.now() > new Date(dbUser.facebookTokenExpiry).getTime()) {
+    //   console.log("Refreshing Facebook access token...");
+    //   const refreshResponse = await axios.get(
+    //     "https://graph.facebook.com/v17.0/oauth/access_token",
+    //     {
+    //       params: {
+    //         grant_type: "fb_exchange_token",
+    //         client_id: process.env.FACEBOOK_APP_ID,
+    //         client_secret: process.env.FACEBOOK_APP_SECRET,
+    //         fb_exchange_token: accessToken,
+    //       },
+    //     }
+    //   );
 
-      accessToken = refreshResponse.data.access_token;
-      dbUser.selectedFacebookBusinessPage.accessToken = accessToken;
-      // dbUser.facebookTokenExpiry = new Date(
-      //   Date.now() + refreshResponse.data.expires_in * 1000
-      // );
-      await dbUser.save();
-    }
+    //   accessToken = refreshResponse.data.access_token;
+    //   dbUser.selectedFacebookBusinessPage.accessToken = accessToken;
+    //   // dbUser.facebookTokenExpiry = new Date(
+    //   //   Date.now() + refreshResponse.data.expires_in * 1000
+    //   // );
+    //   await dbUser.save();
+    // }
 
     // Create and publish the post
     const postResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${dbUser.selectedFacebookPageId}/feed`,
+      `https://graph.facebook.com/v17.0/${dbUser.selectedFacebookBusinessPage.id}/feed`,
       {
         access_token: accessToken,
         message,
