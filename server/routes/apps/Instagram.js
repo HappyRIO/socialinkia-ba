@@ -137,11 +137,11 @@ router.get("/select-instagram-account", async (req, res) => {
   if (!accountId || !accountName) {
     return res.status(400).send("Account ID and Name are required.");
   }
-
+  const userid = user;
   try {
     // Save selected account (example: linking to the logged-in user)
     const user = await User.findByIdAndUpdate(
-      user,
+      userid,
       {
         selectedInstagramBusinessPage: {
           id: accountId,
