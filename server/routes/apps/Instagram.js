@@ -38,14 +38,18 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
   const randomState = generateRandomString();
   console.log({ randomState });
 
-  const instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&response_type=code&scope=${scope}`;
+  const instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${req.user._id}&response_type=code&scope=${scope}`;
 
   res.redirect(instagramAuthUrl);
 });
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
-  const { code } = req.query;
+  const { code, state } = req.query;
+
+  if (!state) {
+    return res.status(400).json({ error: "Authorization state missing." });
+  }
 
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
@@ -100,7 +104,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
               .map(
                 (account) => `
                 <li class="border rounded-lg p-4 shadow">
-                    <a href="/api/instagram/select-instagram-account?accountId=${account.id}&accountName=${account.name}&accessToken=${access_token}" 
+                    <a href="/api/instagram/select-instagram-account?accountId=${account.id}&accountName=${account.name}&accessToken=${access_token}&user=${state}" 
                       class="text-blue-600 hover:underline font-bold">${account.name}</a>
                 </li>`
               )
@@ -128,7 +132,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
 
 // Step 3: Handle account selection
 router.get("/select-instagram-account", async (req, res) => {
-  const { accountId, accountName, accessToken } = req.query;
+  const { accountId, accountName, accessToken, user } = req.query;
 
   if (!accountId || !accountName) {
     return res.status(400).send("Account ID and Name are required.");
@@ -137,7 +141,7 @@ router.get("/select-instagram-account", async (req, res) => {
   try {
     // Save selected account (example: linking to the logged-in user)
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      user,
       {
         selectedInstagramBusinessPage: {
           id: accountId,
