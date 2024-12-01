@@ -148,7 +148,7 @@ export default function Editpost() {
 
   function handledeletepost() {
     fetch(
-      `${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/delete/${postId}`,
+      `${import.meta.env.VITE_SERVER_BASE_URL}/api/posts/${postId}`,
       {
         method: "DELETE",
         credentials: "include",

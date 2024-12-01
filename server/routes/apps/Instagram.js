@@ -7,7 +7,7 @@ const qs = require("qs");
 const isSessionValid = require("../../middleware/isSessionValid.js");
 require("dotenv").config();
 
-// Function to generate a random string (security purpose)
+// Utility function to generate random string
 const generateRandomString = (length = 32) => {
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -20,39 +20,25 @@ const generateRandomString = (length = 32) => {
 router.get("/auth/instagram", isSessionValid, async (req, res) => {
   console.log("Firing Instagram auth");
 
-  // const instagramClientId = process.env.INSTAGRAM_CLIENT_ID;
   const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
-  // fbook test
-  const instagramClientId = process.env.FACEBOOK_APP_ID;
-  // const instagramRedirectUri = process.env.FACEBOOK_REDIRECT_URI;
+  const instagramClientId = process.env.FACEBOOK_APP_ID; // Shared with Facebook OAuth flow
 
   if (!instagramClientId || !instagramRedirectUri) {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
   }
 
-  // const scope = `instagram_business_basic,instagram_business_content_publish,email,public_profile`;
   const scope = [
     "instagram_basic",
-    // "instagram_business_basic",
     "instagram_content_publish",
     "instagram_manage_insights",
     "pages_show_list",
     "business_management",
   ].join(",");
 
-  let randomState = generateRandomString();
-  console.log({ randomState: randomState });
+  const randomState = generateRandomString();
+  console.log({ randomState });
 
-  // let instagramAuthUrl = `https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1&client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&response_type=code&scope=${scope}`;
   const instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${randomState}&response_type=code&scope=${scope}`;
-
-  if (req.user?.instagramAccessToken) {
-    // Reauthenticate if user already has a token
-    console.log("Reauthenticating Instagram user...");
-    instagramAuthUrl += "&auth_type=rerequest&prompt=consent";
-  } else {
-    console.log("Authenticating new Instagram user...");
-  }
 
   res.redirect(instagramAuthUrl);
 });
@@ -60,139 +46,79 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
   const { code } = req.query;
-  console.log("/auth/instagram/callback");
+
   if (!code) {
     return res.status(400).json({ error: "Authorization code missing." });
   }
 
   try {
-    const payload = {
-      client_id: process.env.INSTAGRAM_CLIENT_ID,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+    const tokenPayload = {
+      client_id: process.env.FACEBOOK_APP_ID,
+      client_secret: process.env.FACEBOOK_APP_SECRET,
       grant_type: "authorization_code",
       redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
       code,
     };
 
-    console.log("Payload for token exchange:", payload);
+    console.log("Payload for token exchange:", tokenPayload);
 
     // Exchange authorization code for access token
     const tokenResponse = await axios.post(
-      "https://api.instagram.com/oauth/access_token",
-      qs.stringify(payload),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+      "https://graph.facebook.com/v17.0/oauth/access_token",
+      null,
+      { params: tokenPayload }
     );
 
-    const { access_token, user_id } = tokenResponse.data;
+    const { access_token } = tokenResponse.data;
     console.log("Access token received:", access_token);
 
-    // Check if the user exists in the database
-    let user = await User.findOne({ instagramId: user_id });
-
-    if (user) {
-      console.log("Existing Instagram user detected. Updating access token...");
-      user.instagramAccessToken = access_token;
-      user.instagramTokenExpiry = new Date(
-        Date.now() + 60 * 24 * 60 * 60 * 1000 // 60 days
-      );
-    } else {
-      console.log("New Instagram user detected. Creating user record...");
-
-      // Fetch Instagram user info
-      const userInfoResponse = await axios.get(
-        `https://graph.instagram.com/me?fields=id,username,email&access_token=${access_token}`
-      );
-      const userInfo = userInfoResponse.data;
-      console.log("User info:", userInfo);
-
-      user = new User({
-        instagramId: user_id,
-        instagramAccessToken: access_token,
-        instagramTokenExpiry: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), // 60 days
-        // email: userInfo.email || null,
-      });
-    }
-
-    await user.save();
-
-    // Fetch Instagram business accounts
+    // Fetch user account information
     const accountsResponse = await axios.get(
-      `https://graph.facebook.com/v17.0/${user_id}/accounts?access_token=${access_token}`
+      `https://graph.facebook.com/v17.0/me/accounts?access_token=${access_token}`
     );
+
     const accounts = accountsResponse.data.data;
 
     if (!accounts || accounts.length === 0) {
-      return res.status(404).json({
-        message: "No Instagram business accounts found.",
-      });
+      return res.status(404).json({ message: "No business accounts found." });
     }
 
-    // res.json({
-    //   message: "Select an Instagram business account to continue",
-    //   user: user._id,
-    //   accounts,
-    // });
-
-    const data = {
-      message: "Select an Instagram business account to continue",
-      user: user._id,
-      accounts,
-    };
-
-    console.log({ message: data.message });
-
+    // Prepare HTML for account selection
     const html = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="shortcut icon" href="./image/nav.png" type="image/x-icon">
         <script src="https://cdn.tailwindcss.com"></script>
-        <title>Instagram Auth</title>
+        <title>Select Instagram Business Account</title>
     </head>
-    <body cclass="w-full p-2 flex flex-col gap-4">
-        <div class="w-full flex flex-col items-center justify-center gap-5">
-            <img class="bg-black rounded-lg" src="../../images/nav.png" alt="">
-            <h1 class="w-full text-center text-2xl font-bold">${
-              data.message
-            }</h1>
-        </div>
-        <ul class="w-full flex flex-col gap-3 justify-center items-center">
-            ${data.pages
+    <body class="w-full p-4 flex flex-col items-center">
+        <h1 class="text-2xl font-bold mb-4">Select an Instagram Business Account</h1>
+        <ul class="w-full max-w-md flex flex-col gap-4">
+            ${accounts
               .map(
-                (page) => `
-                <a href="https://auto-social-api.onrender.com/api/instagram/select-instagram-account?userId=${data.user}&accountId=${page.id}&accountAccessToken=${page.access_token}&accountName=${page.name}" 
-                  class="w-full flex max-w-[300px] flex-col gap-1 p-2 rounded-lg text-red-500 font-bold bg-slate-200">
-                    <li class="w-full flex flex-col gap-1">
-                        <div class="icon">
-                            <p>${page.name}</p>
-                        </div>
-                        <div class="page text-sm font-normal">
-                            <p>${page.id}</p>
-                        </div>
-                    </li>
-                </a>
-              `
+                (account) => `
+                <li class="border rounded-lg p-4 shadow">
+                    <a href="/api/instagram/select-instagram-account?accountId=${account.id}&accountName=${account.name}&accessToken=${access_token}" 
+                      class="text-blue-600 hover:underline font-bold">${account.name}</a>
+                </li>`
               )
               .join("")}
         </ul>
     </body>
     </html>
-  `;
+    `;
 
     res.send(html);
   } catch (error) {
     console.error("Error during Instagram OAuth callback:", error.message);
-    console.error("Error during Instagram OAuth callback:", error);
 
     if (
       error.response?.data?.error?.message ===
       "This authorization code has been used."
     ) {
-      console.error(
-        "Authorization code already used. Redirecting to restart OAuth."
-      );
+      console.error("Authorization code already used. Restarting OAuth.");
       return res.redirect("/auth/instagram");
     }
 
@@ -202,21 +128,21 @@ router.get("/auth/instagram/callback", async (req, res) => {
 
 // Step 3: Handle account selection
 router.get("/select-instagram-account", async (req, res) => {
-  const { userId, accountId, accountName, accountAccessToken } = req.query; // Use req.query to access query parameters
+  const { accountId, accountName, accessToken } = req.query;
 
-  if (!userId || !accountId) {
-    return res.status(400).send("User ID and account ID are required.");
+  if (!accountId || !accountName) {
+    return res.status(400).send("Account ID and Name are required.");
   }
 
   try {
-    // Update the user with the selected Instagram business account
+    // Save selected account (example: linking to the logged-in user)
     const user = await User.findByIdAndUpdate(
-      userId,
+      req.user._id,
       {
         selectedInstagramBusinessPage: {
           id: accountId,
           name: accountName,
-          accessToken: accountAccessToken,
+          accessToken,
         },
       },
       { new: true }
@@ -226,31 +152,24 @@ router.get("/select-instagram-account", async (req, res) => {
       return res.status(404).send("User not found.");
     }
 
-    // res.json({
-    //   message: "Instagram business account selected successfully",
-    //   user,
-    // });
+    // Confirmation page
     const html = `
     <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>connected</title>
-</head>
-
-<body class="w-full h-screen bg-orange-100 flex justify-center items-center">
-    <div
-        class="rounded-full animate-bounce border-[5px] border-green-500 aspect-square w-[200px] flex justify-center items-center">
-        <p class="text-green-500 animate-pulse font-bold md:text-3xl">connected</p>
-    </div>
-</body>
-
-</html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Connected</title>
+    </head>
+    <body class="flex justify-center items-center h-screen bg-green-100">
+        <div class="text-center">
+            <h1 class="text-2xl font-bold text-green-600">Connected Successfully</h1>
+            <p>Account Name: ${accountName}</p>
+        </div>
+    </body>
+    </html>
     `;
-
     res.status(201).send(html);
   } catch (error) {
     console.error("Error selecting Instagram account:", error);
