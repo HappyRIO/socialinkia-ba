@@ -195,7 +195,7 @@ router.get("/auth/facebook/callback", async (req, res) => {
 });
 
 // Step 3: Handle account selection
-router.post("/select-facebook-account", async (req, res) => {
+router.get("/select-facebook-account", async (req, res) => {
   const { userId, accountId, accountName, accountAccessToken } = req.query; // Use req.query to access query parameters
 
   if (!userId || !accountId) {
@@ -220,10 +220,32 @@ router.post("/select-facebook-account", async (req, res) => {
       return res.status(404).send("User not found.");
     }
 
-    res.json({
-      message: "Instagram business account selected successfully",
-      user,
-    });
+    // res.json({
+    //   message: "Instagram business account selected successfully",
+    //   user,
+    // });
+    const html = `
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>connected</title>
+</head>
+
+<body class="w-full h-screen bg-orange-100 flex justify-center items-center">
+    <div
+        class="rounded-full animate-bounce border-[5px] border-green-500 aspect-square w-[200px] flex justify-center items-center">
+        <p class="text-green-500 animate-pulse font-bold text-3xl ">connected</p>
+    </div>
+</body>
+
+</html>
+    `;
+
+    res.status(201).send(html);
   } catch (error) {
     console.error("Error selecting Instagram account:", error);
     res.status(500).send("An error occurred while selecting the account.");
