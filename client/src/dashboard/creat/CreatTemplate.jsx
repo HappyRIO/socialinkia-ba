@@ -8,6 +8,7 @@ export default function PostCreation() {
   const [postText, setPostText] = useState("");
   const [aitext, setAitext] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [generate, setgenerate] = useState(false);
   const [filePreviews, setFilePreviews] = useState([]);
   const [platform, setPlatform] = useState({
     all: true,
@@ -116,6 +117,7 @@ export default function PostCreation() {
   };
 
   async function handleGeneratePost() {
+    setgenerate(true);
     try {
       const response = await fetch(
         `${
@@ -133,11 +135,12 @@ export default function PostCreation() {
 
       const posts = await response.json(); // Expect an array of posts
       console.log("Generated Posts:", posts.caption);
-
+      setgenerate(false);
       // Assuming `setPostText` can handle an array of posts
       setPostText(posts.caption);
     } catch (error) {
       console.error("Error generating posts:", error);
+      setgenerate(false);
       setPostText(["Failed to generate posts."]); // Optional fallback
     }
   }
@@ -212,7 +215,7 @@ export default function PostCreation() {
                   onClick={handleGeneratePost}
                   className="p-2 bg-accent rounded-lg"
                 >
-                  generate
+                  {generate ? "generate....." : "generate"}
                 </button>
               </div>
             </div>
