@@ -3,10 +3,12 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  const { imageUrls, videoUrls } = post; // Arrays of images and videos
+  const { images, videos } = post; // Arrays of images and videos
   const caption = post.text;
 
-  if (!caption || (!imageUrls && !videoUrls)) {
+  console.log({ images: image });
+
+  if (!caption || (!images && !videos)) {
     throw new Error("Caption, image URLs, or video URLs are required.");
   }
 
@@ -25,13 +27,13 @@ const publishToInstagram = async (post, user) => {
     const postResults = []; // Store results of each post
 
     // Publish videos
-    if (videoUrls && videoUrls.length > 0) {
-      for (const videoUrl of videoUrls) {
-        console.log(`Uploading video: ${videoUrl}`);
+    if (videos && videos.length > 0) {
+      for (const video of videos) {
+        console.log(`Uploading video: ${video}`);
         const videoResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${id}/media`,
           {
-            video_url: videoUrl,
+            video_url: video,
             caption,
             access_token: accessToken,
           }
@@ -58,13 +60,13 @@ const publishToInstagram = async (post, user) => {
     }
 
     // Publish images
-    if (imageUrls && imageUrls.length > 0) {
-      for (const imageUrl of imageUrls) {
-        console.log(`Uploading image: ${imageUrl}`);
+    if (images && images.length > 0) {
+      for (const image of images) {
+        console.log(`Uploading image: ${image}`);
         const imageResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${id}/media`,
           {
-            image_url: imageUrl,
+            image_url: image,
             caption,
             access_token: accessToken,
           }
