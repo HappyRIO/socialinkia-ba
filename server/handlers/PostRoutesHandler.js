@@ -37,105 +37,75 @@ const publishToInstagram = async (post, user) => {
 
     const postResults = []; // Store results of each published post
 
-    // // Process and publish images one by one
-    // if (images && images.length > 0) {
-    //   for (const imageUrl of images) {
-    //     console.log(`Uploading image: ${imageUrl}`);
+    // Process and publish images one by one
+    if (images && images.length > 0) {
+      for (const imageUrl of images) {
+        console.log(`Uploading image: ${imageUrl}`);
 
-    //     // Create a media container for the current image
-    //     const imageResponse = await axios.post(
-    //       `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
-    //       {
-    //         image_url: imageUrl,
-    //         caption,
-    //         access_token: accessToken,
-    //       }
-    //     );
+        // Create a media container for the current image
+        const imageResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
+          {
+            image_url: imageUrl,
+            caption,
+            access_token: accessToken,
+          }
+        );
 
-    //     const mediaContainerId = imageResponse.data.id;
-    //     console.log("Image container created:", mediaContainerId);
+        const mediaContainerId = imageResponse.data.id;
+        console.log("Image container created:", mediaContainerId);
 
-    //     // Publish the image from the media container
-    //     const publishResponse = await axios.post(
-    //       `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
-    //       {
-    //         creation_id: mediaContainerId,
-    //         access_token: accessToken,
-    //       }
-    //     );
+        // Publish the image from the media container
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
+          {
+            creation_id: mediaContainerId,
+            access_token: accessToken,
+          }
+        );
 
-    //     console.log("Image published successfully:", publishResponse.data);
-    //     postResults.push({
-    //       type: "image",
-    //       postId: publishResponse.data.id,
-    //     });
-    //   }
-    // }
-
-    // // Process and publish videos one by one
-    // if (videos && videos.length > 0) {
-    //   for (const videoUrl of videos) {
-    //     console.log(`Uploading video: ${videoUrl}`);
-
-    //     // Create a media container for the current video
-    //     const videoResponse = await axios.post(
-    //       `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
-    //       {
-    //         video_url: videoUrl,
-    //         caption,
-    //         access_token: accessToken,
-    //       }
-    //     );
-
-    //     const mediaContainerId = videoResponse.data.id;
-    //     console.log("Video container created:", mediaContainerId);
-
-    //     // Publish the video from the media container
-    //     const publishResponse = await axios.post(
-    //       `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
-    //       {
-    //         creation_id: mediaContainerId,
-    //         access_token: accessToken,
-    //       }
-    //     );
-
-    //     console.log("Video published successfully:", publishResponse.data);
-    //     postResults.push({
-    //       type: "video",
-    //       postId: publishResponse.data.id,
-    //     });
-    //   }
-    // }
-
-    const imageUrl = images[0];
-
-    // Create a media container for the current image
-    const imageResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
-      {
-        image_url: imageUrl,
-        caption,
-        access_token: accessToken,
+        console.log("Image published successfully:", publishResponse.data);
+        postResults.push({
+          type: "image",
+          postId: publishResponse.data.id,
+        });
       }
-    );
+    }
 
-    const mediaContainerId = imageResponse.data.id;
-    console.log("Image container created:", mediaContainerId);
+    // Process and publish videos one by one
+    if (videos && videos.length > 0) {
+      for (const videoUrl of videos) {
+        console.log(`Uploading video: ${videoUrl}`);
 
-    // Publish the image from the media container
-    const publishResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
-      {
-        creation_id: mediaContainerId,
-        access_token: accessToken,
+        // Create a media container for the current video
+        const videoResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
+          {
+            video_url: videoUrl,
+            caption,
+            access_token: accessToken,
+          }
+        );
+
+        const mediaContainerId = videoResponse.data.id;
+        console.log("Video container created:", mediaContainerId);
+
+        // Publish the video from the media container
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
+          {
+            creation_id: mediaContainerId,
+            access_token: accessToken,
+          }
+        );
+
+        console.log("Video published successfully:", publishResponse.data);
+        postResults.push({
+          type: "video",
+          postId: publishResponse.data.id,
+        });
       }
-    );
-
-    console.log("Image published successfully:", publishResponse.data);
-    postResults.push({
-      type: "image",
-      postId: publishResponse.data.id,
-    });
+    }
 
     console.log("All media published successfully:", postResults);
 
