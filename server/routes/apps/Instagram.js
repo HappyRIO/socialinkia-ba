@@ -7,15 +7,6 @@ const qs = require("qs");
 const isSessionValid = require("../../middleware/isSessionValid.js");
 require("dotenv").config();
 
-// Utility function to generate random string
-const generateRandomString = (length = 32) => {
-  const characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length }, () =>
-    characters.charAt(Math.floor(Math.random() * characters.length))
-  ).join("");
-};
-
 // Step 1: Redirect to Instagram for authorization
 router.get("/auth/instagram", isSessionValid, async (req, res) => {
   console.log("Firing Instagram auth");
@@ -27,21 +18,86 @@ router.get("/auth/instagram", isSessionValid, async (req, res) => {
     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
   }
 
-  const scope = [
-    "instagram_basic",
-    "instagram_content_publish",
-    "instagram_manage_insights",
-    "pages_show_list",
-    "business_management",
-  ].join(",");
+  const user = req.user;
 
-  const randomState = generateRandomString();
-  console.log({ randomState });
+  // Step 2: Get the Instagram Business Account ID from Facebook Graph API
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v17.0/${user.selectedFacebookBusinessPage.id}?fields=instagram_business_account&access_token=${user.selectedFacebookBusinessPage.accessToken}`
+    );
 
-  const instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${req.user._id}&response_type=code&scope=${scope}`;
+    if (!response.ok) {
+      return res.status(500).send("Error fetching Instagram business account");
+    }
 
-  res.redirect(instagramAuthUrl);
+    const data = await response.json();
+
+    // Ensure Instagram business account exists
+    if (
+      !data.instagram_business_account ||
+      !data.instagram_business_account.id
+    ) {
+      return res.status(500).send("Instagram business account not found.");
+    }
+
+    const instagramBusinessAccountId = data.instagram_business_account.id;
+
+    // Step 3: Obtain the Instagram Access Token (if needed)
+    // If you need an Instagram Access Token, you may either request it through Instagram's OAuth flow or use a long-lived token
+    // For now, I'm assuming you might need to store the access token you retrieve from Facebook
+    const instagramAccessToken = user.selectedFacebookBusinessPage.accessToken; // using the same access token for now
+
+    // Step 4: Update user with Instagram business page data
+    await User.findByIdAndUpdate(user._id, {
+      selectedInstagramBusinessPage: {
+        id: instagramBusinessAccountId,
+        name: user.selectedFacebookBusinessPage.name,
+        accessToken: instagramAccessToken, // Assuming we are using the FB page's access token
+      },
+    });
+
+    res.send("Instagram business account data saved successfully.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error processing Instagram authorization.");
+  }
 });
+
+// // Step 1: Redirect to Instagram for authorization
+// router.get("/auth/instagram", isSessionValid, async (req, res) => {
+//   console.log("Firing Instagram auth");
+
+//   const instagramRedirectUri = process.env.INSTAGRAM_REDIRECT_URI;
+//   const instagramClientId = process.env.FACEBOOK_APP_ID; // Shared with Facebook OAuth flow
+
+//   if (!instagramClientId || !instagramRedirectUri) {
+//     return res.status(500).send("Instagram Client ID or Redirect URI not set.");
+//   }
+
+//   const user = req.user;
+
+//   const igbusiness = fetch(
+//     `https://graph.facebook.com/v17.0/${user.selectedFacebookBusinessPage.id}?fields=instagram_business_account&access_token=${user.selectedFacebookBusinessPage.accessToken}`
+//   );
+
+//   const saveUser = User.findByIdAndUpdate{
+//     user._id,{
+
+//     }
+//   }
+
+//   // const scope = [
+//   //   "instagram_basic",
+//   //   "instagram_content_publish",
+//   //   "instagram_manage_insights",
+//   //   "pages_show_list",
+//   //   "business_management",
+//   // ].join(",");
+
+//   // const instagramAuthUrl = `https://www.facebook.com/v17.0/dialog/oauth?client_id=${instagramClientId}&redirect_uri=${instagramRedirectUri}&state=${req.user._id}&response_type=code&scope=${scope}`;
+
+//   // res.redirect(instagramAuthUrl);
+// });
 
 // Step 2: Handle Instagram OAuth callback
 router.get("/auth/instagram/callback", async (req, res) => {
