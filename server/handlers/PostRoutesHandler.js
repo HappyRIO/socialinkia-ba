@@ -3,22 +3,19 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  // const { images, videos } = post; // Assuming 'videos' is an array
+  const { images, video } = post;
   const caption = post.text;
-  const images = [
-    "https://placehold.co/600x400?text=insta\ntest/.png",
-    "https://placehold.co/600x400?text=post\ninsta/.png",
-  ];
 
-  if (!caption) {
-    throw new Error("Caption is required.");
+  if (!caption || !images || images.length === 0) {
+    throw new Error("Caption and at least one image URL are required.");
   }
 
-  console.log("Publishing to Instagram...");
+  console.log("Publishing multiple images to Instagram...");
 
   try {
-    // Fetch user details from the database
+    // Fetch user from the database
     const dbUser = await User.findById(user._id);
+
     if (!dbUser || !dbUser.selectedInstagramBusinessPage) {
       throw new Error("User Instagram credentials not found.");
     }
@@ -26,81 +23,49 @@ const publishToInstagram = async (post, user) => {
     const { id, accessToken } = dbUser.selectedInstagramBusinessPage;
 
     if (!id || !accessToken) {
-      throw new Error("Instagram Business Page credentials are incomplete.");
+      throw new Error("Instagram Business Account credentials are incomplete.");
     }
 
-    // Step 1: Refresh token if expired (uncomment if using token expiry logic)
-    // const tokenExpiryTime = new Date(dbUser.instagramTokenExpiry).getTime();
-    // if (Date.now() > tokenExpiryTime) {
-    //   console.log("Refreshing Instagram access token...");
-    //   const refreshResponse = await axios.get(
-    //     "https://graph.instagram.com/refresh_access_token",
-    //     {
-    //       params: {
-    //         grant_type: "ig_refresh_token",
-    //         access_token: accessToken,
-    //       },
-    //     }
-    //   );
-    //   dbUser.selectedInstagramBusinessPage.accessToken = refreshResponse.data.access_token;
-    //   await dbUser.save();
-    //   console.log("Instagram access token refreshed successfully.");
-    // }
+    // Step 1: Create media containers for each image
+    const mediaContainerIds = await Promise.all(
+      images.map(async (imageUrl) => {
+        const response = await axios.post(
+          `https://graph.facebook.com/v17.0/${id}/media`,
+          {
+            image_url: imageUrl,
+            caption, // Caption can be added to individual images or only to the carousel
+            access_token: accessToken,
+          }
+        );
+        return response.data.id; // Return media container ID
+      })
+    );
 
-    let mediaContainerId;
+    console.log("Media containers created:", mediaContainerIds);
 
-    // Step 2: Create media container (image or video)
-    if (images) {
-      console.log("Creating image media container...");
-      const mediaResponse = await axios.post(
-        `https://graph.facebook.com/v17.0/${id}/media`,
-        {
-          image_url: images,
-          caption,
-          access_token: accessToken,
-        }
-      );
-      mediaContainerId = mediaResponse.data.id;
-    } else if (videos && videos.length > 0) {
-      console.log("Creating video media container...");
-      const mediaResponse = await axios.post(
-        `https://graph.facebook.com/v17.0/${id}/media`,
-        {
-          video_url: videos[0], // Instagram allows one video per post
-          caption,
-          access_token: accessToken,
-        }
-      );
-      mediaContainerId = mediaResponse.data.id;
-    } else {
-      throw new Error("Either an image URL or a video URL is required.");
-    }
-
-    console.log("Media container created with ID:", mediaContainerId);
-
-    // Step 3: Publish media
-    console.log("Publishing media...");
+    // Step 2: Publish carousel post using media container IDs
     const publishResponse = await axios.post(
       `https://graph.facebook.com/v17.0/${id}/media_publish`,
       {
-        creation_id: mediaContainerId,
         access_token: accessToken,
+        children: mediaContainerIds, // Pass media container IDs for the carousel
       }
     );
 
-    console.log("Post published successfully!");
+    console.log("Carousel post published successfully:", publishResponse.data);
+
     return {
       success: true,
       postId: publishResponse.data.id,
     };
   } catch (error) {
     console.error(
-      "Error posting content on Instagram:",
+      "Error posting multiple images to Instagram:",
       error.response?.data || error.message
     );
     throw new Error(
       error.response?.data?.error?.message ||
-        "Failed to post content on Instagram."
+        "Failed to post multiple images to Instagram."
     );
   }
 };
@@ -214,6 +179,96 @@ const publishToFacebook = async (post, user) => {
     );
   }
 };
+// image and video support
+// const publishToFacebook = async (post, user) => {
+//   const { images, videos, text } = post;
+//   const message = text;
+
+//   if (
+//     !message &&
+//     (!images || !videos || (images.length === 0 && videos.length === 0))
+//   ) {
+//     throw new Error(
+//       "Message, at least one image URL, or one video URL is required."
+//     );
+//   }
+
+//   console.log("Publishing to Facebook...");
+
+//   try {
+//     // Fetch user from the database
+//     const dbUser = await User.findById(user._id);
+
+//     if (!dbUser || !dbUser.selectedFacebookBusinessPage) {
+//       throw new Error("User not found or Facebook access token is missing.");
+//     }
+
+//     const accessToken = dbUser.selectedFacebookBusinessPage.accessToken;
+//     const pageId = dbUser.selectedFacebookBusinessPage.id;
+
+//     let postId;
+
+//     if (videos && videos.length > 0) {
+//       // Handle video post
+//       for (const videoUrl of videos) {
+//         const videoResponse = await axios.post(
+//           `https://graph.facebook.com/v17.0/${pageId}/videos`,
+//           {
+//             access_token: accessToken,
+//             file_url: videoUrl,
+//             description: message, // Add the caption or message to the video
+//           }
+//         );
+
+//         console.log("Video uploaded successfully:", videoResponse.data);
+//         postId = videoResponse.data.id; // Store the last video post ID
+//       }
+//     } else if (images && images.length > 0) {
+//       // Handle image post
+//       const mediaContainerIds = await Promise.all(
+//         images.map(async (imageUrl) => {
+//           const mediaResponse = await axios.post(
+//             `https://graph.facebook.com/v17.0/${pageId}/photos`,
+//             {
+//               access_token: accessToken,
+//               url: imageUrl,
+//               published: false, // Create media container without publishing
+//             }
+//           );
+
+//           console.log("Image container created:", mediaResponse.data.id);
+//           return mediaResponse.data.id;
+//         })
+//       );
+
+//       // Create a post with media container IDs
+//       const mediaPublishResponse = await axios.post(
+//         `https://graph.facebook.com/v17.0/${pageId}/feed`,
+//         {
+//           access_token: accessToken,
+//           message,
+//           attached_media: mediaContainerIds.map((id) => ({ media_fbid: id })),
+//         }
+//       );
+
+//       console.log("Images published successfully:", mediaPublishResponse.data);
+//       postId = mediaPublishResponse.data.id; // Store the post ID
+//     }
+
+//     console.log("Post published successfully on Facebook!");
+
+//     return {
+//       success: true,
+//       postId,
+//     };
+//   } catch (error) {
+//     console.error(
+//       "Error posting content on Facebook:",
+//       error.response?.data || error.message
+//     );
+//     throw new Error("Failed to post content on Facebook.");
+//   }
+// };
 
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
