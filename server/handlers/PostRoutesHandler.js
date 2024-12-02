@@ -256,7 +256,6 @@ const publishToFacebook = async (post, user) => {
   }
 };
 
-
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
   const summary = text;
