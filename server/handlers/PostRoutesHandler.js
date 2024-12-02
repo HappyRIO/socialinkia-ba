@@ -27,49 +27,28 @@ const publishToInstagram = async (post, user) => {
     const { id: instagramBusinessAccountId, accessToken } =
       dbUser.selectedInstagramBusinessPage;
 
+    // Debugging: Log critical information
+    console.log({
+      instagramBusinessAccountId,
+      accessToken,
+      images,
+      videos,
+    });
+
+    // Ensure the ID is valid via the API
+    const accountCheck = await axios.get(
+      `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}`,
+      { params: { access_token: accessToken } }
+    );
+    console.log("Verified Instagram Business Account:", accountCheck.data);
+
     const postResults = []; // Store results of each published post
-
-    // Publish each video
-    if (videos && videos.length > 0) {
-      for (const videoUrl of videos) {
-        console.log(`Uploading video: ${videoUrl}`);
-
-        // Step 1: Create the media container
-        const videoResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
-          {
-            video_url: videoUrl,
-            caption,
-            access_token: accessToken,
-          }
-        );
-
-        const mediaContainerId = videoResponse.data.id;
-        console.log("Video container created:", mediaContainerId);
-
-        // Step 2: Publish the media
-        const publishResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
-          {
-            creation_id: mediaContainerId,
-            access_token: accessToken,
-          }
-        );
-
-        console.log("Video published successfully:", publishResponse.data);
-        postResults.push({
-          type: "video",
-          postId: publishResponse.data.id,
-        });
-      }
-    }
 
     // Publish each image
     if (images && images.length > 0) {
       for (const imageUrl of images) {
         console.log(`Uploading image: ${imageUrl}`);
 
-        // Step 1: Create the media container
         const imageResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media`,
           {
@@ -82,7 +61,6 @@ const publishToInstagram = async (post, user) => {
         const mediaContainerId = imageResponse.data.id;
         console.log("Image container created:", mediaContainerId);
 
-        // Step 2: Publish the media
         const publishResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${instagramBusinessAccountId}/media_publish`,
           {
@@ -110,10 +88,12 @@ const publishToInstagram = async (post, user) => {
       "Error posting content on Instagram:",
       error.response?.data || error.message
     );
-    throw new Error("Failed to post content on Instagram.");
+    throw new Error(
+      error.response?.data?.error?.message ||
+        "Failed to post content on Instagram."
+    );
   }
 };
-
 
 const publishToFacebook = async (post, user) => {
   const { images, videos } = post;
@@ -208,7 +188,6 @@ const publishToFacebook = async (post, user) => {
     );
   }
 };
-
 
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
