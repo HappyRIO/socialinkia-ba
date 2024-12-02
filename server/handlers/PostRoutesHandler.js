@@ -3,70 +3,106 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  const { images, video } = post;
+  const { imageUrls, videoUrls } = post; // Arrays of images and videos
   const caption = post.text;
 
-  if (!caption || !images || images.length === 0) {
-    throw new Error("Caption and at least one image URL are required.");
+  if (!caption || (!imageUrls && !videoUrls)) {
+    throw new Error("Caption, image URLs, or video URLs are required.");
   }
 
-  console.log("Publishing multiple images to Instagram...");
+  console.log("Publishing to Instagram...");
 
   try {
-    // Fetch user from the database
+    // Fetch user details from the database
     const dbUser = await User.findById(user._id);
 
     if (!dbUser || !dbUser.selectedInstagramBusinessPage) {
       throw new Error("User Instagram credentials not found.");
     }
 
-    const { id, accessToken } = dbUser.selectedInstagramBusinessPage;
+    const { id: instagramBusinessId, accessToken } =
+      dbUser.selectedInstagramBusinessPage;
 
-    if (!id || !accessToken) {
-      throw new Error("Instagram Business Account credentials are incomplete.");
-    }
+    const postResults = []; // Store results of each post
 
-    // Step 1: Create media containers for each image
-    const mediaContainerIds = await Promise.all(
-      images.map(async (imageUrl) => {
-        const response = await axios.post(
-          `https://graph.facebook.com/v17.0/${id}/media`,
+    // Publish videos
+    if (videoUrls && videoUrls.length > 0) {
+      for (const videoUrl of videoUrls) {
+        console.log(`Uploading video: ${videoUrl}`);
+        const videoResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media`,
           {
-            image_url: imageUrl,
-            caption, // Caption can be added to individual images or only to the carousel
+            video_url: videoUrl,
+            caption,
             access_token: accessToken,
           }
         );
-        return response.data.id; // Return media container ID
-      })
-    );
 
-    console.log("Media containers created:", mediaContainerIds);
+        const { id: mediaContainerId } = videoResponse.data;
+        console.log("Video container created:", mediaContainerId);
 
-    // Step 2: Publish carousel post using media container IDs
-    const publishResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${id}/media_publish`,
-      {
-        access_token: accessToken,
-        children: mediaContainerIds, // Pass media container IDs for the carousel
+        // Publish video
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media_publish`,
+          {
+            creation_id: mediaContainerId,
+            access_token: accessToken,
+          }
+        );
+
+        console.log("Video published successfully:", publishResponse.data);
+        postResults.push({
+          type: "video",
+          postId: publishResponse.data.id,
+        });
       }
-    );
+    }
 
-    console.log("Carousel post published successfully:", publishResponse.data);
+    // Publish images
+    if (imageUrls && imageUrls.length > 0) {
+      for (const imageUrl of imageUrls) {
+        console.log(`Uploading image: ${imageUrl}`);
+        const imageResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media`,
+          {
+            image_url: imageUrl,
+            caption,
+            access_token: accessToken,
+          }
+        );
+
+        const { id: mediaContainerId } = imageResponse.data;
+        console.log("Image container created:", mediaContainerId);
+
+        // Publish image
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media_publish`,
+          {
+            creation_id: mediaContainerId,
+            access_token: accessToken,
+          }
+        );
+
+        console.log("Image published successfully:", publishResponse.data);
+        postResults.push({
+          type: "image",
+          postId: publishResponse.data.id,
+        });
+      }
+    }
+
+    console.log("All media published successfully:", postResults);
 
     return {
       success: true,
-      postId: publishResponse.data.id,
+      results: postResults,
     };
   } catch (error) {
     console.error(
-      "Error posting multiple images to Instagram:",
+      "Error posting content on Instagram:",
       error.response?.data || error.message
     );
-    throw new Error(
-      error.response?.data?.error?.message ||
-        "Failed to post multiple images to Instagram."
-    );
+    throw new Error("Failed to post content on Instagram.");
   }
 };
 
