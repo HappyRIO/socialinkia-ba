@@ -53,7 +53,6 @@ router.get("/gen", async (req, res) => {
   }
 });
 
-// post generation url
 // POST generation route
 router.get("/generate-posts", isSessionValid, async (req, res) => {
   console.log("processing ai text .....");
@@ -116,7 +115,8 @@ dont forget, you can add opacity, shadow and different text styles make the imag
   const messageContent = rawData.choices[0]?.message?.content;
   // Attempt to parse the JSON output
   try {
-    return JSON.parse(messageContent);
+    // return JSON.parse(messageContent);
+    return messageContent;
   } catch (err) {
     console.error("Invalid JSON received from OpenAI:", messageContent);
     return {

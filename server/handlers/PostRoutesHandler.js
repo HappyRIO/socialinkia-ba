@@ -105,8 +105,12 @@ const publishToFacebook = async (post, user) => {
   const { images, videos } = post;
   const message = post.text;
 
-  if (!message && (!images || images.length === 0)) {
-    throw new Error("Message or at least one image URL is required.");
+  if (
+    !message &&
+    (!images || images.length === 0) &&
+    (!videos || videos.length === 0)
+  ) {
+    throw new Error("Message, image URL, or video URL is required.");
   }
 
   console.log("Publishing to Facebook...");
@@ -119,56 +123,78 @@ const publishToFacebook = async (post, user) => {
       throw new Error("User not found or Facebook access token is missing.");
     }
 
-    let accessToken = dbUser.selectedFacebookBusinessPage.accessToken;
+    const { id: pageId, accessToken } = dbUser.selectedFacebookBusinessPage;
 
-    // Check if the token is expired and refresh if necessary
-    // if (Date.now() > new Date(dbUser.facebookTokenExpiry).getTime()) {
-    //   console.log("Refreshing Facebook access token...");
-    //   const refreshResponse = await axios.get(
-    //     "https://graph.facebook.com/v17.0/oauth/access_token",
-    //     {
-    //       params: {
-    //         grant_type: "fb_exchange_token",
-    //         client_id: process.env.FACEBOOK_APP_ID,
-    //         client_secret: process.env.FACEBOOK_APP_SECRET,
-    //         fb_exchange_token: accessToken,
-    //       },
-    //     }
-    //   );
-
-    //   accessToken = refreshResponse.data.access_token;
-    //   dbUser.selectedFacebookBusinessPage.accessToken = accessToken;
-    //   // dbUser.facebookTokenExpiry = new Date(
-    //   //   Date.now() + refreshResponse.data.expires_in * 1000
-    //   // );
-    //   await dbUser.save();
-    // }
-
-    // Create and publish the post
-    const postResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${dbUser.selectedFacebookBusinessPage.id}/feed`,
-      {
-        access_token: accessToken,
-        message,
-      }
-    );
-
-    console.log("Post published successfully on Facebook!");
-    const postId = postResponse.data.id;
-
-    // Handle image uploads
-    if (images && images.length > 0) {
-      await Promise.all(
-        images.map((imageUrl) =>
-          axios.post(`https://graph.facebook.com/v17.0/${postId}/photos`, {
-            access_token: accessToken,
-            url: imageUrl,
-            published: true,
-          })
-        )
-      );
+    if (!pageId || !accessToken) {
+      throw new Error("Facebook Business Page credentials are incomplete.");
     }
 
+    let postId;
+
+    if (images && images.length > 0) {
+      console.log("Creating a post with images...");
+
+      // Step 1: Create media containers for all images
+      const mediaContainers = await Promise.all(
+        images.map(async (imageUrl) => {
+          const response = await axios.post(
+            `https://graph.facebook.com/v17.0/${pageId}/photos`,
+            {
+              access_token: accessToken,
+              url: imageUrl,
+              caption: message, // Optional for each image
+              published: false, // Media container should not be published directly
+            }
+          );
+          return response.data.id; // Media container ID
+        })
+      );
+
+      console.log("Media containers created:", mediaContainers);
+
+      // Step 2: Publish the post with the media container IDs
+      const postResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${pageId}/feed`,
+        {
+          access_token: accessToken,
+          message,
+          attached_media: mediaContainers.map((id) => ({ media_fbid: id })),
+        }
+      );
+
+      postId = postResponse.data.id;
+    } else if (videos && videos.length > 0) {
+      console.log("Creating a post with a video...");
+
+      // Step 1: Create a media container for the video
+      const videoResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${pageId}/videos`,
+        {
+          access_token: accessToken,
+          file_url: videos[0], // Facebook only supports one video per post
+          description: message,
+        }
+      );
+
+      console.log("Video uploaded:", videoResponse.data);
+
+      postId = videoResponse.data.id;
+    } else {
+      console.log("Creating a text-only post...");
+
+      // Text-only post
+      const postResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${pageId}/feed`,
+        {
+          access_token: accessToken,
+          message,
+        }
+      );
+
+      postId = postResponse.data.id;
+    }
+
+    console.log("Post published successfully on Facebook!");
     return {
       success: true,
       postId,
@@ -178,7 +204,10 @@ const publishToFacebook = async (post, user) => {
       "Error posting content on Facebook:",
       error.response?.data || error.message
     );
-    throw new Error("Failed to post content on Facebook.");
+    throw new Error(
+      error.response?.data?.error?.message ||
+        "Failed to post content on Facebook."
+    );
   }
 };
 
