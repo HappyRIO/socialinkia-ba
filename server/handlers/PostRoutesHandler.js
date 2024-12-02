@@ -6,7 +6,7 @@ const publishToInstagram = async (post, user) => {
   const { images, videos } = post; // Arrays of images and videos
   const caption = post.text;
 
-  console.log({ images: image });
+  console.log({ images });
 
   if (!caption || (!images && !videos)) {
     throw new Error("Caption, image URLs, or video URLs are required.");
@@ -25,24 +25,30 @@ const publishToInstagram = async (post, user) => {
     const { id, accessToken } = dbUser.selectedInstagramBusinessPage;
 
     const postResults = []; // Store results of each post
+    let mediaContainerId = null; // Keep track of the first media container
 
-    // Publish videos
+    // Publish videos (only create media container for the first video)
     if (videos && videos.length > 0) {
-      for (const video of videos) {
-        console.log(`Uploading video: ${video}`);
-        const videoResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${id}/media`,
-          {
-            video_url: video,
-            caption,
-            access_token: accessToken,
-          }
-        );
+      for (let i = 0; i < videos.length; i++) {
+        const videoUrl = videos[i];
+        console.log(`Uploading video: ${videoUrl}`);
 
-        const { id: mediaContainerId } = videoResponse.data;
-        console.log("Video container created:", mediaContainerId);
+        if (i === 0) {
+          // Create media container only for the first video
+          const videoResponse = await axios.post(
+            `https://graph.facebook.com/v17.0/${id}/media`,
+            {
+              video_url: videoUrl,
+              caption,
+              access_token: accessToken,
+            }
+          );
 
-        // Publish video
+          mediaContainerId = videoResponse.data.id;
+          console.log("Video container created:", mediaContainerId);
+        }
+
+        // Publish video (all subsequent videos use the first media container)
         const publishResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${id}/media_publish`,
           {
@@ -59,23 +65,28 @@ const publishToInstagram = async (post, user) => {
       }
     }
 
-    // Publish images
+    // Publish images (only create media container for the first image)
     if (images && images.length > 0) {
-      for (const image of images) {
-        console.log(`Uploading image: ${image}`);
-        const imageResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${id}/media`,
-          {
-            image_url: image,
-            caption,
-            access_token: accessToken,
-          }
-        );
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = images[i];
+        console.log(`Uploading image: ${imageUrl}`);
 
-        const { id: mediaContainerId } = imageResponse.data;
-        console.log("Image container created:", mediaContainerId);
+        if (i === 0) {
+          // Create media container only for the first image
+          const imageResponse = await axios.post(
+            `https://graph.facebook.com/v17.0/${id}/media`,
+            {
+              image_url: imageUrl,
+              caption,
+              access_token: accessToken,
+            }
+          );
 
-        // Publish image
+          mediaContainerId = imageResponse.data.id;
+          console.log("Image container created:", mediaContainerId);
+        }
+
+        // Publish image (all subsequent images use the first media container)
         const publishResponse = await axios.post(
           `https://graph.facebook.com/v17.0/${id}/media_publish`,
           {
@@ -107,7 +118,6 @@ const publishToInstagram = async (post, user) => {
   }
 };
 
-// facebook posting route
 const publishToFacebook = async (post, user) => {
   const { images, videos } = post;
   const message = post.text;
@@ -137,14 +147,18 @@ const publishToFacebook = async (post, user) => {
     }
 
     let postId;
+    let mediaContainerId = null; // Variable to store the first media container ID
 
+    // Publish images (only create media container for the first image)
     if (images && images.length > 0) {
       console.log("Creating a post with images...");
 
-      // Step 1: Create media containers for all images
-      const mediaContainers = await Promise.all(
-        images.map(async (imageUrl) => {
-          const response = await axios.post(
+      for (let i = 0; i < images.length; i++) {
+        const imageUrl = images[i];
+
+        if (i === 0) {
+          // Create media container only for the first image
+          const imageResponse = await axios.post(
             `https://graph.facebook.com/v17.0/${pageId}/photos`,
             {
               access_token: accessToken,
@@ -153,43 +167,67 @@ const publishToFacebook = async (post, user) => {
               published: false, // Media container should not be published directly
             }
           );
-          return response.data.id; // Media container ID
-        })
-      );
 
-      console.log("Media containers created:", mediaContainers);
-
-      // Step 2: Publish the post with the media container IDs
-      const postResponse = await axios.post(
-        `https://graph.facebook.com/v17.0/${pageId}/feed`,
-        {
-          access_token: accessToken,
-          message,
-          attached_media: mediaContainers.map((id) => ({ media_fbid: id })),
+          mediaContainerId = imageResponse.data.id;
+          console.log("Image container created:", mediaContainerId);
         }
-      );
 
-      postId = postResponse.data.id;
-    } else if (videos && videos.length > 0) {
+        // For all subsequent images, use the created media container
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${pageId}/feed`,
+          {
+            access_token: accessToken,
+            message,
+            attached_media: [{ media_fbid: mediaContainerId }],
+          }
+        );
+
+        console.log("Image published successfully:", publishResponse.data);
+        postId = publishResponse.data.id;
+      }
+    }
+
+    // Publish videos (only create media container for the first video)
+    else if (videos && videos.length > 0) {
       console.log("Creating a post with a video...");
 
-      // Step 1: Create a media container for the video
-      const videoResponse = await axios.post(
-        `https://graph.facebook.com/v17.0/${pageId}/videos`,
-        {
-          access_token: accessToken,
-          file_url: videos[0], // Facebook only supports one video per post
-          description: message,
+      for (let i = 0; i < videos.length; i++) {
+        const videoUrl = videos[i];
+
+        if (i === 0) {
+          // Create media container only for the first video
+          const videoResponse = await axios.post(
+            `https://graph.facebook.com/v17.0/${pageId}/videos`,
+            {
+              access_token: accessToken,
+              file_url: videoUrl, // Facebook only supports one video per post
+              description: message,
+            }
+          );
+
+          mediaContainerId = videoResponse.data.id;
+          console.log("Video uploaded:", mediaContainerId);
         }
-      );
 
-      console.log("Video uploaded:", videoResponse.data);
+        // For all subsequent videos, use the created media container
+        const publishResponse = await axios.post(
+          `https://graph.facebook.com/v17.0/${pageId}/feed`,
+          {
+            access_token: accessToken,
+            message,
+            attached_media: [{ media_fbid: mediaContainerId }],
+          }
+        );
 
-      postId = videoResponse.data.id;
-    } else {
+        console.log("Video published successfully:", publishResponse.data);
+        postId = publishResponse.data.id;
+      }
+    }
+
+    // If no images or videos, create a text-only post
+    else {
       console.log("Creating a text-only post...");
 
-      // Text-only post
       const postResponse = await axios.post(
         `https://graph.facebook.com/v17.0/${pageId}/feed`,
         {
@@ -217,6 +255,7 @@ const publishToFacebook = async (post, user) => {
     );
   }
 };
+
 
 const publishToGmb = async (post, user) => {
   const { imageUrl, text, callToActionUrl } = post;
