@@ -108,10 +108,10 @@ const UserSchema = new Schema({
   facebookTokenExpiry: { type: Date, default: null },
 
   // instagram zone
-  // , unique: true, sparse: true
-  instagramId: { type: String },
-  instagramAccessToken: { type: String },
-  instagramTokenExpiry: { type: Date, default: null },
+  // // , unique: true, sparse: true
+  // instagramId: { type: String },
+  // instagramAccessToken: { type: String },
+  // instagramTokenExpiry: { type: Date, default: null },
 
   // selected google business
   selectedFacebookBusinessPage: {
