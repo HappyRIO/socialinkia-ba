@@ -19,6 +19,25 @@ const googleScopes = [
   "https://www.googleapis.com/auth/business.manage",
 ];
 
+// Helper for exponential backoff
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const makeRequestWithRetry = async (url, options, retries = 5) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await axios.get(url, options);
+    } catch (error) {
+      if (error.response?.status === 429 && i < retries - 1) {
+        const waitTime = Math.pow(2, i) * 1000; // Exponential backoff
+        console.warn(`Rate limited. Retrying in ${waitTime / 1000}s...`);
+        await delay(waitTime);
+      } else {
+        throw error; // Rethrow after exhausting retries or for other errors
+      }
+    }
+  }
+};
+
 // Redirect to Google for GMB Authentication
 router.get("/auth/gmb", (req, res) => {
   const authEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -38,13 +57,11 @@ router.get("/auth/gmb", (req, res) => {
 
 // Handle GMB OAuth Callback
 router.get("/auth/google/gmb/callback", async (req, res) => {
-  const { code, state } = req.query;
-
+  const { code } = req.query;
+  console.log({ message: "firing gmb call back" });
   if (!code) {
     return res.status(400).json({ error: "Authorization code not provided." });
   }
-
-  connectDB();
 
   try {
     // Exchange the authorization code for tokens
@@ -75,16 +92,12 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       }
     );
 
-    const { email, name } = profileResponse.data;
+    const { email } = profileResponse.data;
 
     // Save user and tokens to database
     let user = await User.findOne({ email });
-
     if (!user) {
-      user = new User({
-        email,
-        gmbRefreshToken: refresh_token,
-      });
+      user = new User({ email, gmbRefreshToken: refresh_token });
       await user.save();
     } else {
       user.gmbRefreshToken = refresh_token;
@@ -107,38 +120,34 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
 
     const newAccessToken = accessTokenResponse.data.access_token;
 
-    // Fetch GMB locations for the user
-    const accountsResponse = await axios.get(
+    // Fetch GMB accounts and locations
+    const accountsResponse = await makeRequestWithRetry(
       "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
-      {
-        headers: { Authorization: `Bearer ${newAccessToken}` },
-      }
+      { headers: { Authorization: `Bearer ${newAccessToken}` } }
     );
 
     const accounts = accountsResponse.data.accounts || [];
     const locations = [];
+    const limit = pLimit(5); // Limit to 5 concurrent requests
 
-    for (const account of accounts) {
-      try {
-        const locationResponse = await axios.get(
+    const locationPromises = accounts.map((account) =>
+      limit(() =>
+        makeRequestWithRetry(
           `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${account.name}/locations?readMask=storeCode,name,locationName`,
-          {
-            headers: { Authorization: `Bearer ${newAccessToken}` },
-          }
-        );
+          { headers: { Authorization: `Bearer ${newAccessToken}` } }
+        )
+      )
+    );
 
-        locations.push(...(locationResponse.data.locations || []));
-      } catch (error) {
-        console.error(
-          `Error fetching locations for account ${account.name}:`,
-          error.response?.data || error.message
-        );
-      }
-    }
+    const results = await Promise.all(locationPromises);
+
+    results.forEach((result) => {
+      locations.push(...(result.data.locations || []));
+    });
 
     // Render HTML page for location selection
     if (locations.length > 0) {
-      let locationHtml = locations
+      const locationHtml = locations
         .map(
           (location) => `
           <li>

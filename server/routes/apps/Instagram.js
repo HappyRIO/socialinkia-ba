@@ -87,6 +87,22 @@ router.get("/auth/instagram/callback", async (req, res) => {
       return res.status(404).json({ message: "No business accounts found." });
     }
 
+    // Fetch Instagram Business Account using Facebook Business Page ID
+    const instagramBusinessAccountResponse = await axios.get(
+      `https://graph.facebook.com/v17.0/${accounts[0].id}?fields=instagram_business_account&access_token=${access_token}`
+    );
+
+    const instagramBusinessAccountId =
+      instagramBusinessAccountResponse.data.instagram_business_account?.id;
+
+    if (!instagramBusinessAccountId) {
+      return res
+        .status(404)
+        .json({ message: "No Instagram Business Account linked." });
+    }
+
+    console.log("Instagram Business Account ID:", instagramBusinessAccountId);
+
     // Prepare HTML for account selection
     const html = `
     <!DOCTYPE html>
@@ -104,7 +120,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
               .map(
                 (account) => `
                 <li class="border rounded-lg p-4 shadow">
-                    <a href="/api/instagram/select-instagram-account?accountId=${account.id}&accountName=${account.name}&accessToken=${access_token}&user=${state}" 
+                    <a href="/api/instagram/select-instagram-account?accountId=${instagramBusinessAccountId}&accountName=${account.name}&accessToken=${access_token}&user=${state}" 
                       class="text-blue-600 hover:underline font-bold">${account.name}</a>
                 </li>`
               )
@@ -137,11 +153,11 @@ router.get("/select-instagram-account", async (req, res) => {
   if (!accountId || !accountName) {
     return res.status(400).send("Account ID and Name are required.");
   }
-  const userid = user;
+
   try {
-    // Save selected account (example: linking to the logged-in user)
-    const user = await User.findByIdAndUpdate(
-      userid,
+    // Save selected Instagram Business Account (linked to the logged-in user)
+    const updatedUser = await User.findByIdAndUpdate(
+      user,
       {
         selectedInstagramBusinessPage: {
           id: accountId,
@@ -152,7 +168,7 @@ router.get("/select-instagram-account", async (req, res) => {
       { new: true }
     );
 
-    if (!user) {
+    if (!updatedUser) {
       return res.status(404).send("User not found.");
     }
 
@@ -169,7 +185,7 @@ router.get("/select-instagram-account", async (req, res) => {
     <body class="flex justify-center items-center h-screen bg-green-100">
         <div class="text-center">
             <h1 class="text-2xl font-bold text-green-600">Connected Successfully</h1>
-            <p>Account Name: ${accountName}</p>
+            <p>Instagram Account: ${accountName}</p>
         </div>
     </body>
     </html>
