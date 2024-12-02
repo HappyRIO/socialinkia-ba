@@ -115,8 +115,7 @@ dont forget, you can add opacity, shadow and different text styles make the imag
   const messageContent = rawData.choices[0]?.message?.content;
   // Attempt to parse the JSON output
   try {
-    // return JSON.parse(messageContent);
-    return messageContent;
+    return JSON.parse(messageContent);
   } catch (err) {
     console.error("Invalid JSON received from OpenAI:", messageContent);
     return {

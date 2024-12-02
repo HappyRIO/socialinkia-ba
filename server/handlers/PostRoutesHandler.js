@@ -3,8 +3,12 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  const { images, videos } = post; // Assuming 'videos' is an array
+  // const { images, videos } = post; // Assuming 'videos' is an array
   const caption = post.text;
+  const images = [
+    "https://placehold.co/600x400?text=insta\ntest/.png",
+    "https://placehold.co/600x400?text=post\ninsta/.png",
+  ];
 
   if (!caption) {
     throw new Error("Caption is required.");
