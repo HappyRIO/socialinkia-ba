@@ -3,11 +3,11 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  const { imageUrl, videos } = post;
+  const { imageUrl, videos } = post; // Assuming 'videos' is an array
   const caption = post.text;
 
-  if (!caption || !imageUrl) {
-    throw new Error("Caption and image URL are required.");
+  if (!caption) {
+    throw new Error("Caption is required.");
   }
 
   console.log("Publishing to Instagram...");
@@ -15,52 +15,69 @@ const publishToInstagram = async (post, user) => {
   try {
     // Fetch user details from the database
     const dbUser = await User.findById(user._id);
-
-    console.log(dbUser);
-
     if (!dbUser || !dbUser.selectedInstagramBusinessPage) {
       throw new Error("User Instagram credentials not found.");
     }
 
-    let accessToken = dbUser.selectedInstagramBusinessPage.accessToken;
+    const { id, accessToken } = dbUser.selectedInstagramBusinessPage;
 
-    // Refresh token if expired
-    if (Date.now() > new Date(dbUser.instagramTokenExpiry).getTime()) {
-      console.log("Refreshing Instagram access token...");
-      const response = await axios.get(
-        "https://graph.instagram.com/refresh_access_token",
-        {
-          params: {
-            grant_type: "ig_refresh_token",
-            access_token: accessToken,
-          },
-        }
-      );
-
-      accessToken = response.data.access_token;
-      dbUser.instagramAccessToken = accessToken;
-      dbUser.instagramTokenExpiry = new Date(
-        Date.now() + response.data.expires_in * 1000
-      );
-      await dbUser.save();
-      console.log("Instagram access token refreshed successfully.");
+    if (!id || !accessToken) {
+      throw new Error("Instagram Business Page credentials are incomplete.");
     }
 
-    // Step 1: Create media container
-    const mediaContainerResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${dbUser.selectedInstagramBusinessPage.id}/media`,
-      {
-        image_url: imageUrl,
-        caption,
-        access_token: accessToken,
-      }
-    );
+    // Step 1: Refresh token if expired (uncomment if using token expiry logic)
+    // const tokenExpiryTime = new Date(dbUser.instagramTokenExpiry).getTime();
+    // if (Date.now() > tokenExpiryTime) {
+    //   console.log("Refreshing Instagram access token...");
+    //   const refreshResponse = await axios.get(
+    //     "https://graph.instagram.com/refresh_access_token",
+    //     {
+    //       params: {
+    //         grant_type: "ig_refresh_token",
+    //         access_token: accessToken,
+    //       },
+    //     }
+    //   );
+    //   dbUser.selectedInstagramBusinessPage.accessToken = refreshResponse.data.access_token;
+    //   await dbUser.save();
+    //   console.log("Instagram access token refreshed successfully.");
+    // }
 
-    const { id: mediaContainerId } = mediaContainerResponse.data;
+    let mediaContainerId;
 
-    // Step 2: Publish media
+    // Step 2: Create media container (image or video)
+    if (imageUrl) {
+      console.log("Creating image media container...");
+      const mediaResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${id}/media`,
+        {
+          image_url: imageUrl,
+          caption,
+          access_token: accessToken,
+        }
+      );
+      mediaContainerId = mediaResponse.data.id;
+    } else if (videos && videos.length > 0) {
+      console.log("Creating video media container...");
+      const mediaResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${id}/media`,
+        {
+          video_url: videos[0], // Instagram allows one video per post
+          caption,
+          access_token: accessToken,
+        }
+      );
+      mediaContainerId = mediaResponse.data.id;
+    } else {
+      throw new Error("Either an image URL or a video URL is required.");
+    }
+
+    console.log("Media container created with ID:", mediaContainerId);
+
+    // Step 3: Publish media
+    console.log("Publishing media...");
     const publishResponse = await axios.post(
-      `https://graph.facebook.com/v17.0/${dbUser.selectedInstagramBusinessPage.id}/media_publish`,
+      `https://graph.facebook.com/v17.0/${id}/media_publish`,
       {
         creation_id: mediaContainerId,
         access_token: accessToken,
@@ -68,7 +85,6 @@ const publishToInstagram = async (post, user) => {
     );
 
     console.log("Post published successfully!");
-
     return {
       success: true,
       postId: publishResponse.data.id,
@@ -78,7 +94,10 @@ const publishToInstagram = async (post, user) => {
       "Error posting content on Instagram:",
       error.response?.data || error.message
     );
-    throw new Error("Failed to post content on Instagram.");
+    throw new Error(
+      error.response?.data?.error?.message ||
+        "Failed to post content on Instagram."
+    );
   }
 };
 
