@@ -106,127 +106,17 @@ const publishToInstagram = async (post, user) => {
   }
 };
 
-// const publishToFacebook = async (post, user) => {
-//   const { images, videos } = post;
-//   const message = post.text;
-
-//   if (
-//     !message &&
-//     (!images || images.length === 0) &&
-//     (!videos || videos.length === 0)
-//   ) {
-//     throw new Error("Message, image URL, or video URL is required.");
-//   }
-
-//   console.log("Publishing to Facebook...");
-
-//   try {
-//     // Fetch user from the database
-//     const dbUser = await User.findById(user._id);
-
-//     if (!dbUser || !dbUser.selectedFacebookBusinessPage) {
-//       throw new Error("User not found or Facebook access token is missing.");
-//     }
-
-//     const { id: pageId, accessToken } = dbUser.selectedFacebookBusinessPage;
-
-//     if (!pageId || !accessToken) {
-//       throw new Error("Facebook Business Page credentials are incomplete.");
-//     }
-
-//     let postId;
-
-//     if (images && images.length > 0) {
-//       console.log("Creating a post with images...");
-
-//       // Step 1: Create media containers for all images
-//       const mediaContainers = await Promise.all(
-//         images.map(async (imageUrl) => {
-//           const response = await axios.post(
-//             `https://graph.facebook.com/v17.0/${pageId}/photos`,
-//             {
-//               access_token: accessToken,
-//               url: imageUrl,
-//               caption: message, // Optional for each image
-//               published: false, // Media container should not be published directly
-//             }
-//           );
-//           return response.data.id; // Media container ID
-//         })
-//       );
-
-//       console.log("Media containers created:", mediaContainers);
-
-//       // Step 2: Publish the post with the media container IDs
-//       const postResponse = await axios.post(
-//         `https://graph.facebook.com/v17.0/${pageId}/feed`,
-//         {
-//           access_token: accessToken,
-//           message,
-//           attached_media: mediaContainers.map((id) => ({ media_fbid: id })),
-//         }
-//       );
-
-//       postId = postResponse.data.id;
-//     } else if (videos && videos.length > 0) {
-//       console.log("Creating a post with a video...");
-
-//       // Step 1: Create a media container for the video
-//       const videoResponse = await axios.post(
-//         `https://graph.facebook.com/v17.0/${pageId}/videos`,
-//         {
-//           access_token: accessToken,
-//           file_url: videos[0], // Facebook only supports one video per post
-//           description: message,
-//         }
-//       );
-
-//       console.log("Video uploaded:", videoResponse.data);
-
-//       postId = videoResponse.data.id;
-//     } else {
-//       console.log("Creating a text-only post...");
-
-//       // Text-only post
-//       const postResponse = await axios.post(
-//         `https://graph.facebook.com/v17.0/${pageId}/feed`,
-//         {
-//           access_token: accessToken,
-//           message,
-//         }
-//       );
-
-//       postId = postResponse.data.id;
-//     }
-
-//     console.log("Post published successfully on Facebook!");
-//     return {
-//       success: true,
-//       postId,
-//     };
-//   } catch (error) {
-//     console.error(
-//       "Error posting content on Facebook:",
-//       error.response?.data || error.message
-//     );
-//     throw new Error(
-//       error.response?.data?.error?.message ||
-//         "Failed to post content on Facebook."
-//     );
-//   }
-// };
-// image and video support
+// facebook posting route
 const publishToFacebook = async (post, user) => {
-  const { images, videos, text } = post;
-  const message = text;
+  const { images, videos } = post;
+  const message = post.text;
 
   if (
     !message &&
-    (!images || !videos || (images.length === 0 && videos.length === 0))
+    (!images || images.length === 0) &&
+    (!videos || videos.length === 0)
   ) {
-    throw new Error(
-      "Message, at least one image URL, or one video URL is required."
-    );
+    throw new Error("Message, image URL, or video URL is required.");
   }
 
   console.log("Publishing to Facebook...");
@@ -239,60 +129,78 @@ const publishToFacebook = async (post, user) => {
       throw new Error("User not found or Facebook access token is missing.");
     }
 
-    const accessToken = dbUser.selectedFacebookBusinessPage.accessToken;
-    const pageId = dbUser.selectedFacebookBusinessPage.id;
+    const { id: pageId, accessToken } = dbUser.selectedFacebookBusinessPage;
+
+    if (!pageId || !accessToken) {
+      throw new Error("Facebook Business Page credentials are incomplete.");
+    }
 
     let postId;
 
-    if (videos && videos.length > 0) {
-      // Handle video post
-      for (const videoUrl of videos) {
-        const videoResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${pageId}/videos`,
-          {
-            access_token: accessToken,
-            file_url: videoUrl,
-            description: message, // Add the caption or message to the video
-          }
-        );
+    if (images && images.length > 0) {
+      console.log("Creating a post with images...");
 
-        console.log("Video uploaded successfully:", videoResponse.data);
-        postId = videoResponse.data.id; // Store the last video post ID
-      }
-    } else if (images && images.length > 0) {
-      // Handle image post
-      const mediaContainerIds = await Promise.all(
+      // Step 1: Create media containers for all images
+      const mediaContainers = await Promise.all(
         images.map(async (imageUrl) => {
-          const mediaResponse = await axios.post(
+          const response = await axios.post(
             `https://graph.facebook.com/v17.0/${pageId}/photos`,
             {
               access_token: accessToken,
               url: imageUrl,
-              published: false, // Create media container without publishing
+              caption: message, // Optional for each image
+              published: false, // Media container should not be published directly
             }
           );
-
-          console.log("Image container created:", mediaResponse.data.id);
-          return mediaResponse.data.id;
+          return response.data.id; // Media container ID
         })
       );
 
-      // Create a post with media container IDs
-      const mediaPublishResponse = await axios.post(
+      console.log("Media containers created:", mediaContainers);
+
+      // Step 2: Publish the post with the media container IDs
+      const postResponse = await axios.post(
         `https://graph.facebook.com/v17.0/${pageId}/feed`,
         {
           access_token: accessToken,
           message,
-          attached_media: mediaContainerIds.map((id) => ({ media_fbid: id })),
+          attached_media: mediaContainers.map((id) => ({ media_fbid: id })),
         }
       );
 
-      console.log("Images published successfully:", mediaPublishResponse.data);
-      postId = mediaPublishResponse.data.id; // Store the post ID
+      postId = postResponse.data.id;
+    } else if (videos && videos.length > 0) {
+      console.log("Creating a post with a video...");
+
+      // Step 1: Create a media container for the video
+      const videoResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${pageId}/videos`,
+        {
+          access_token: accessToken,
+          file_url: videos[0], // Facebook only supports one video per post
+          description: message,
+        }
+      );
+
+      console.log("Video uploaded:", videoResponse.data);
+
+      postId = videoResponse.data.id;
+    } else {
+      console.log("Creating a text-only post...");
+
+      // Text-only post
+      const postResponse = await axios.post(
+        `https://graph.facebook.com/v17.0/${pageId}/feed`,
+        {
+          access_token: accessToken,
+          message,
+        }
+      );
+
+      postId = postResponse.data.id;
     }
 
     console.log("Post published successfully on Facebook!");
-
     return {
       success: true,
       postId,
@@ -302,7 +210,10 @@ const publishToFacebook = async (post, user) => {
       "Error posting content on Facebook:",
       error.response?.data || error.message
     );
-    throw new Error("Failed to post content on Facebook.");
+    throw new Error(
+      error.response?.data?.error?.message ||
+        "Failed to post content on Facebook."
+    );
   }
 };
 
