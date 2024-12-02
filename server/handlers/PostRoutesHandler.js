@@ -20,8 +20,7 @@ const publishToInstagram = async (post, user) => {
       throw new Error("User Instagram credentials not found.");
     }
 
-    const { id: instagramBusinessId, accessToken } =
-      dbUser.selectedInstagramBusinessPage;
+    const { id, accessToken } = dbUser.selectedInstagramBusinessPage;
 
     const postResults = []; // Store results of each post
 
@@ -30,7 +29,7 @@ const publishToInstagram = async (post, user) => {
       for (const videoUrl of videoUrls) {
         console.log(`Uploading video: ${videoUrl}`);
         const videoResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media`,
+          `https://graph.facebook.com/v17.0/${id}/media`,
           {
             video_url: videoUrl,
             caption,
@@ -43,7 +42,7 @@ const publishToInstagram = async (post, user) => {
 
         // Publish video
         const publishResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media_publish`,
+          `https://graph.facebook.com/v17.0/${id}/media_publish`,
           {
             creation_id: mediaContainerId,
             access_token: accessToken,
@@ -63,7 +62,7 @@ const publishToInstagram = async (post, user) => {
       for (const imageUrl of imageUrls) {
         console.log(`Uploading image: ${imageUrl}`);
         const imageResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media`,
+          `https://graph.facebook.com/v17.0/${id}/media`,
           {
             image_url: imageUrl,
             caption,
@@ -76,7 +75,7 @@ const publishToInstagram = async (post, user) => {
 
         // Publish image
         const publishResponse = await axios.post(
-          `https://graph.facebook.com/v17.0/${instagramBusinessId}/media_publish`,
+          `https://graph.facebook.com/v17.0/${id}/media_publish`,
           {
             creation_id: mediaContainerId,
             access_token: accessToken,
