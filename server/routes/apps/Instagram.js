@@ -76,7 +76,7 @@ router.get("/auth/instagram/callback", async (req, res) => {
     const { access_token } = tokenResponse.data;
     console.log("Access token received:", access_token);
 
-    // Fetch user accounts (Business Pages)
+    // Fetch user account information
     const accountsResponse = await axios.get(
       `https://graph.facebook.com/v17.0/me/accounts?access_token=${access_token}`
     );
@@ -137,32 +137,14 @@ router.get("/select-instagram-account", async (req, res) => {
   if (!accountId || !accountName) {
     return res.status(400).send("Account ID and Name are required.");
   }
-  const userid = user;
 
   try {
-    // Fetch Instagram Business Account linked to the Facebook Business Page
-    const instagramAccountResponse = await axios.get(
-      `https://graph.facebook.com/v17.0/${accountId}?fields=instagram_business_account&access_token=${accessToken}`
-    );
-
-    const instagramBusinessAccountId =
-      instagramAccountResponse.data.instagram_business_account?.id;
-
-    if (!instagramBusinessAccountId) {
-      return res.status(404).send("No Instagram Business Account linked.");
-    }
-
-    // Save selected account (linking Instagram Business Account to the user)
+    // Save selected account (example: linking to the logged-in user)
     const user = await User.findByIdAndUpdate(
-      userid,
+      user,
       {
-        selectedFacebookBusinessPage: {
-          id: accountId,
-          name: accountName,
-          accessToken,
-        },
         selectedInstagramBusinessPage: {
-          id: instagramBusinessAccountId,
+          id: accountId,
           name: accountName,
           accessToken,
         },
@@ -187,7 +169,7 @@ router.get("/select-instagram-account", async (req, res) => {
     <body class="flex justify-center items-center h-screen bg-green-100">
         <div class="text-center">
             <h1 class="text-2xl font-bold text-green-600">Connected Successfully</h1>
-            <p>Instagram Business Account: ${accountName}</p>
+            <p>Account Name: ${accountName}</p>
         </div>
     </body>
     </html>
@@ -198,7 +180,6 @@ router.get("/select-instagram-account", async (req, res) => {
     res.status(500).send("An error occurred while selecting the account.");
   }
 });
-
 
 // Middleware to check token validity and refresh if necessary
 const validateAndRefreshToken = async (req, res, next) => {
