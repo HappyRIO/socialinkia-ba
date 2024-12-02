@@ -3,7 +3,7 @@ const axios = require("axios");
 const User = require("../model/User");
 
 const publishToInstagram = async (post, user) => {
-  const { imageUrl, videos } = post; // Assuming 'videos' is an array
+  const { images, videos } = post; // Assuming 'videos' is an array
   const caption = post.text;
 
   if (!caption) {
@@ -46,12 +46,12 @@ const publishToInstagram = async (post, user) => {
     let mediaContainerId;
 
     // Step 2: Create media container (image or video)
-    if (imageUrl) {
+    if (images) {
       console.log("Creating image media container...");
       const mediaResponse = await axios.post(
         `https://graph.facebook.com/v17.0/${id}/media`,
         {
-          image_url: imageUrl,
+          image_url: images,
           caption,
           access_token: accessToken,
         }
