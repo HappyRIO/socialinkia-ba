@@ -140,7 +140,7 @@ router.get("/select-instagram-account", async (req, res) => {
 
   try {
     // Save selected account (example: linking to the logged-in user)
-    const user = await User.findByIdAndUpdate(
+    const Users = await User.findByIdAndUpdate(
       user,
       {
         selectedInstagramBusinessPage: {
@@ -152,7 +152,7 @@ router.get("/select-instagram-account", async (req, res) => {
       { new: true }
     );
 
-    if (!user) {
+    if (!Users) {
       return res.status(404).send("User not found.");
     }
 
