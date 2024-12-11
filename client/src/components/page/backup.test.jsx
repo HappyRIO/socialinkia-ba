@@ -76,36 +76,40 @@ export default function Tester() {
   const parentRef = useRef(null); // Reference for the parent container
 
   // Handle window resize and parent container size changes
-  const handleResize = () => {
-    const parentWidth = parentRef.current.clientWidth;
-    const parentHeight = parentRef.current.clientHeight;
-
-    const aspectRatio = width / height;
-    let newWidth = parentWidth;
-    let newHeight = parentHeight;
-
-    // Scale based on the aspect ratio and parent container size
-    if (parentWidth / parentHeight > aspectRatio) {
-      newWidth = parentHeight * aspectRatio;
-    } else {
-      newHeight = parentWidth / aspectRatio;
-    }
-
-    setScaledWidth(newWidth);
-    setScaledHeight(newHeight);
-  };
-
   useEffect(() => {
-    // Initial resize calculation
-    handleResize();
+    const handleResize = () => {
+      if (parentRef.current) {
+        const parentWidth = parentRef.current.clientWidth;
+        const parentHeight = parentRef.current.clientHeight;
 
-    // Add event listener for window resizing
+        // Calculate aspect ratio
+        const aspectRatio = width / height;
+
+        // Deduct space for toolbars or other UI elements
+        const toolbarHeight = 100; // Example toolbar height, adjust as needed
+        const availableHeight = parentHeight - toolbarHeight;
+
+        let newWidth, newHeight;
+
+        // Calculate dimensions based on aspect ratio
+        if (parentWidth / availableHeight > aspectRatio) {
+          newHeight = availableHeight;
+          newWidth = availableHeight * aspectRatio;
+        } else {
+          newWidth = parentWidth;
+          newHeight = parentWidth / aspectRatio;
+        }
+
+        setScaledWidth(newWidth);
+        setScaledHeight(newHeight);
+      }
+    };
+
+    // Run on mount and resize
+    handleResize();
     window.addEventListener("resize", handleResize);
 
-    // Cleanup the event listener when component unmounts
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, [width, height]);
 
   const toggleSettingsVisibility = () => {
@@ -1045,7 +1049,7 @@ export default function Tester() {
           </Stage>
         </div>
       </div>
-      <div className="main-side-pannel overflow-y-scroll bg-background2 shadow-lg w-[400px] p-2">
+      <div className="main-side-pannel overflow-y-scroll bg-background2 shadow-lg min-w-[400px] w-[400px] p-2">
         <div className="top-side-panel flex flex-row gap-2 border-b-[2px] border-b-accent py-2">
           <button
             onClick={toggleSettingsVisibility}

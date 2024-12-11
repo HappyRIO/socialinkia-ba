@@ -61,9 +61,13 @@ const router = createBrowserRouter([
     path: "/dashboard/posts/edit/:postId",
     element: <PrivateRoute Component={Editpost} />,
   },
+  // {
+  //   path: "/dashboard/create/design",
+  //   element: <PrivateRoute Component={CreateDesign} />,
+  // },
   {
     path: "/dashboard/create/design",
-    element: <PrivateRoute Component={CreateDesign} />,
+    element: <CreateDesign />,
   },
   {
     path: "/dashboard/templates",
