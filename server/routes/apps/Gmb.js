@@ -194,7 +194,7 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       `);
     }
   } catch (error) {
-    console.error("Error during GMB OAuth callback:", error.message);
+    console.error("Error during GMB OAuth callback:", error);
     return res.status(500).send(`
       <!DOCTYPE html>
       <html lang="en">
