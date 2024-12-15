@@ -5,7 +5,9 @@ const jwt = require("jsonwebtoken");
 const connectDB = require("../../data/db");
 const User = require("../../model/User");
 const isSessionValid = require("../../middleware/isSessionValid");
+const { config } = require("dotenv");
 const router = express.Router();
+config()
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -51,21 +53,25 @@ router.get("/auth/gmb", (req, res) => {
     state: JSON.stringify({ flow: "gmbaccess" }), // Optional: pass any required state
   });
 
-  console.log("Redirecting to Google OAuth for GMB:", queryParams.toString());
   res.redirect(`${authEndpoint}?${queryParams}`);
 });
 
 // Handle GMB OAuth Callback
+
 router.get("/auth/google/gmb/callback", async (req, res) => {
+  console.log("--- GMB OAuth Callback Triggered ---");
+
   const { code } = req.query;
-  console.log({ message: "firing gmb call back" });
+  console.log("Authorization Code Received:", code);
+
   if (!code) {
+    console.error("Authorization code missing in callback.");
     return res.status(400).json({ error: "Authorization code not provided." });
   }
 
   try {
-    // Exchange the authorization code for tokens
-    const tokenEndpoint = "https://oauth2.googleapis.com/token";
+    // Step 1: Exchange authorization code for access and refresh tokens
+    console.log("Exchanging authorization code for tokens...");
     const tokenPayload = querystring.stringify({
       code,
       client_id: CLIENT_ID,
@@ -74,17 +80,25 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       grant_type: "authorization_code",
     });
 
-    const tokenResponse = await axios.post(tokenEndpoint, tokenPayload, {
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    });
+    const tokenResponse = await axios.post(
+      "https://oauth2.googleapis.com/token",
+      tokenPayload,
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      }
+    );
+
+    console.log("Token Response:", tokenResponse.data);
 
     const { access_token, refresh_token } = tokenResponse.data;
 
     if (!refresh_token) {
-      throw new Error("No refresh token received from Google.");
+      console.error("No refresh token received from Google.");
+      throw new Error("Failed to retrieve refresh token.");
     }
 
-    // Retrieve user profile from Google
+    // Step 2: Fetch user profile using access token
+    console.log("Fetching user profile with access token...");
     const profileResponse = await axios.get(
       "https://www.googleapis.com/oauth2/v3/userinfo",
       {
@@ -92,60 +106,63 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       }
     );
 
+    console.log("User Profile Response:", profileResponse.data);
+
     const { email } = profileResponse.data;
 
-    // Save user and tokens to database
+    // Step 3: Save user and tokens in the database
+    console.log("Saving user to database...");
     let user = await User.findOne({ email });
+
     if (!user) {
+      console.log("New user detected, creating record...");
       user = new User({ email, gmbRefreshToken: refresh_token });
       await user.save();
     } else {
+      console.log("Existing user detected, updating refresh token...");
       user.gmbRefreshToken = refresh_token;
       await user.save();
     }
 
-    // Exchange refresh token for access token
-    const accessTokenResponse = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      null,
-      {
-        params: {
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-          refresh_token,
-          grant_type: "refresh_token",
-        },
-      }
-    );
-
-    const newAccessToken = accessTokenResponse.data.access_token;
-
-    // Fetch GMB accounts and locations
-    const accountsResponse = await makeRequestWithRetry(
+    // Step 4: Fetch GMB accounts
+    console.log("Fetching GMB accounts...");
+    const accountsResponse = await axios.get(
       "https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
-      { headers: { Authorization: `Bearer ${newAccessToken}` } }
+      { headers: { Authorization: `Bearer ${access_token}` } }
     );
+
+    console.log("GMB Accounts Response:", accountsResponse.data);
 
     const accounts = accountsResponse.data.accounts || [];
+
+    // Step 5: Fetch locations for each account
+    console.log("Fetching locations for accounts...");
     const locations = [];
-    const limit = pLimit(5); // Limit to 5 concurrent requests
 
-    const locationPromises = accounts.map((account) =>
-      limit(() =>
-        makeRequestWithRetry(
-          `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${account.name}/locations?readMask=storeCode,name,locationName`,
-          { headers: { Authorization: `Bearer ${newAccessToken}` } }
-        )
-      )
-    );
+    for (const account of accounts) {
+      try {
+        console.log(`Fetching locations for account: ${account.name}`);
 
-    const results = await Promise.all(locationPromises);
+        const locationsResponse = await axios.get(
+          `https://mybusinessbusinessinformation.googleapis.com/v1/accounts/${account.name}/locations`,
+          {
+            headers: { Authorization: `Bearer ${access_token}` },
+            params: { readMask: "storeCode,name,locationName" },
+          }
+        );
 
-    results.forEach((result) => {
-      locations.push(...(result.data.locations || []));
-    });
+        console.log("Locations Response:", locationsResponse.data);
+        locations.push(...(locationsResponse.data.locations || []));
+      } catch (error) {
+        console.error(
+          `Error fetching locations for account ${account.name}:`,
+          error.response?.data || error.message
+        );
+      }
+    }
 
-    // Render HTML page for location selection
+    // Step 6: Display locations or handle empty case
+    console.log("Locations fetched successfully.", locations);
     if (locations.length > 0) {
       const locationHtml = locations
         .map(
@@ -179,6 +196,7 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
         </html>
       `);
     } else {
+      console.warn("No locations found for the user's GMB account.");
       return res.status(404).send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -194,7 +212,10 @@ router.get("/auth/google/gmb/callback", async (req, res) => {
       `);
     }
   } catch (error) {
-    console.error("Error during GMB OAuth callback:", error);
+    console.error(
+      "Error during GMB OAuth callback:",
+      error.response?.data || error.message
+    );
     return res.status(500).send(`
       <!DOCTYPE html>
       <html lang="en">
